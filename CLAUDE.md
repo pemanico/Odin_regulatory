@@ -151,6 +151,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-16 | Valores de filtros renderizados como literais validados e escapados (`src/semantic/literals.js`); identificadores só do catálogo. Funciona igual em DuckDB, ClickHouse e SQLite, sem depender da API de parâmetros do driver |
 | 2026-10-16 | Dedup: em cada chave de break fica a linha com menor `REC_STAT_ID`; duplicados com valores diferentes não são escondidos, são contados em `data_quality.conflicting_keys` |
 | 2026-10-16 | "Dia anterior" em `breaks_dod` = business date anterior **disponível nos dados**, não o dia de calendário anterior |
+| 2026-10-16 | UI da demo: visual médio e funcional (tabelas densas, filtros claros); polimento visual fica para depois. Cores num ficheiro de tema (tokens) com um verde provisório, a substituir pelos hexadecimais oficiais; logo como ficheiro local fora do Git |
 | 2026-10-16 | `build:db` materializa `breaks_raw` e `breaks` como tabelas numa base DuckDB local (consultas repetidas rápidas) |
 
 ---
