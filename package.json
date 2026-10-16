@@ -1,0 +1,20 @@
+{
+  "name": "odin-regulatory",
+  "version": "0.1.0",
+  "private": true,
+  "description": "KPIs e triagem de breaks regulatórios (EMIR primeiro) sobre data marts processados por Spark.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "synthetic": "node scripts/generate-synthetic.js",
+    "build:db": "node scripts/build-db.js",
+    "metric": "node scripts/metric.js",
+    "profile": "node scripts/profile.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@duckdb/node-api": "latest"
+  }
+}

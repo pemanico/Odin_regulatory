@@ -1,0 +1,29 @@
+// Parser de argumentos minimalista para os scripts (sem dependências).
+// --chave valor | --chave=valor | --flag ; o resto vai para `_`.
+export function parseArgs(argv) {
+  const out = { _: [] };
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (!a.startsWith('--')) {
+      out._.push(a);
+      continue;
+    }
+    const eq = a.indexOf('=');
+    if (eq > -1) {
+      pushArg(out, a.slice(2, eq), a.slice(eq + 1));
+    } else if (i + 1 < argv.length && !argv[i + 1].startsWith('--')) {
+      pushArg(out, a.slice(2), argv[++i]);
+    } else {
+      out[a.slice(2)] = true;
+    }
+  }
+  return out;
+}
+
+function pushArg(out, key, value) {
+  if (key === 'filter') {
+    (out.filter ??= []).push(value);
+  } else {
+    out[key] = value;
+  }
+}

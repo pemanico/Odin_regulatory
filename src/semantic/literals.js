@@ -1,0 +1,43 @@
+// Renderização segura de literais SQL.
+// Os valores dos filtros podem vir do LLM: são validados por tipo e escapados aqui.
+// Identificadores (colunas, tabelas) NUNCA vêm do pedido: vêm só do catálogo (whitelist).
+
+export class ValidationError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const MAX_STRING = 200;
+
+export function isValidDate(s) {
+  if (typeof s !== 'string' || !DATE_RE.test(s)) return false;
+  const d = new Date(`${s}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
+}
+
+export function dateLiteral(value) {
+  if (!isValidDate(value)) throw new ValidationError(`Data inválida (esperado YYYY-MM-DD): ${JSON.stringify(value)}`);
+  return `'${value}'`;
+}
+
+export function stringLiteral(value) {
+  if (typeof value !== 'string') throw new ValidationError(`Esperado texto: ${JSON.stringify(value)}`);
+  if (value.length > MAX_STRING) throw new ValidationError(`Texto demasiado longo (máx. ${MAX_STRING})`);
+  if (/[\u0000-\u001f]/.test(value)) throw new ValidationError('Texto contém caracteres de controlo');
+  return `'${value.replace(/'/g, "''")}'`;
+}
+
+export function intValue(value, { min = 1, max = 1000 } = {}) {
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < min || n > max) {
+    throw new ValidationError(`Inteiro inválido (entre ${min} e ${max}): ${JSON.stringify(value)}`);
+  }
+  return n;
+}
+
+export function literalFor(type, value) {
+  return type === 'date' ? dateLiteral(value) : stringLiteral(value);
+}

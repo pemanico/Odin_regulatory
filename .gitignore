@@ -1,0 +1,17 @@
+# Dependências
+node_modules/
+
+# Dados — NUNCA commitar dados reais nem sintéticos
+data/
+*.parquet
+*.csv
+*.duckdb
+*.duckdb.wal
+*.xlsx
+
+# Logs e auditoria locais
+logs/
+
+# Configuração local
+.env
+config/local.json

@@ -1,0 +1,30 @@
+{
+  "jurisdiction": "EMIR",
+  "source": {
+    "breaksGlob": "data/breaks/*.parquet",
+    "dbPath": "data/odin.duckdb",
+    "businessDateFormat": null
+  },
+  "columns": {
+    "rec_stat_id": "REC_STAT_ID",
+    "business_date": "BUSINESS_DATE",
+    "uti": "UTI",
+    "cp1_lei": "REPORTING_COUNTERPARTY_LEI",
+    "cp2_lei": "OTHER_COUNTERPARTY_LEGAL_LEI",
+    "breaking_field": "BREAKING_FIELD",
+    "bnpp_value": "BNPP_REPORTED",
+    "cpty_value": "CPTY_REPORTED",
+    "asset_class": "C_PRIMARY_ASSET_CLASS",
+    "rec_category": "REC_CATEGORY",
+    "pairing": "PAIRING",
+    "reconciliation": "RECONCILIATION",
+    "valuation_reconciliation": "VALUATION_RECONCILIATION",
+    "business_line": "BNPP_COUNTERPARTY_CRDS_CODE_BNPP_BUSINESS_LINE",
+    "activity_l1": "BNPP_ACTIVITY_L1",
+    "activity_l2": "BNPP_ACTIVITY_L2",
+    "activity_l3": "BNPP_ACTIVITY_L3",
+    "activity_l4": "BNPP_ACTIVITY_L4",
+    "cpty_crds_code": "BNPP_COUNTERPARTY_CRDS_CODE",
+    "trade_number": "BNPP_TRADE_NUMBER"
+  }
+}
