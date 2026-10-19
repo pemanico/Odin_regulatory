@@ -144,6 +144,13 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
   - **Volume real maior do que o descrito:** 4,06M breaks distintos num só dia (~14,7 campos por position). Contradiz "~4,5M linhas em 12–15/10" (secção 4) e "1–2M linhas/dia" (secção 1).
   - **Top 20 deduplicado (12/10):** VALUATION_AMT, VENUE_OF_EXECUTION, VALUATION_CCY, UNIQUE_PRODUCT_ID, ISIN, CLEARING_OBLIGATION, PRODUCT_CLASSIFICATION, EXPIRATION_DATE, DELIVERY_TYPE, EFFECTIVE_DATE, NOTIONAL_AMT_LEG2, SETTLEMENT_DATE, NOTIONAL_AMT_LEG1, EXECUTION_TIMESTAMP, MASTER_AGREEMENT_TYPE, SPREAD_LEG2_TYP, NOTIONAL_AMT_LEG2_CCY, CONTRACT_TYPE, NOTIONAL_AMT_LEG1_CCY, FLOAT_RATE_LEG2_IDENTIFIER.
   - **Os 3 campos de package (`PCKG_TRANS_SPREAD*`) não estão no top 20 deduplicado** (o 20.º tem 66.427), mas estavam em 3.º–5.º no top 10 bruto da secção 4. Hipótese: o ranking bruto estava inflacionado pela duplicação e o fan-out concentra-se em trades de package. Confirmar com 13–15/10 carregados.
+- **Saúde da chave (12/10, breaks distintos):** null_uti 23.247; null_cp1_lei 0; null_cp2_lei 0; same_lei 0; bnpp_null 311.682 (7,7%); **cpty_null 2.817.564 (69%)**.
+  - A maioria dos breaks é a contraparte sem valor no campo. É provavelmente o maior cluster da demo (padrão "CPTY nulo") e o maior fator de redução breaks → decisões.
+  - `same_lei` = 0 neste dia, apesar de ser um caso legítimo.
+- **Positions com mais linhas brutas — todas têm `UTI` NULL.** As 10 primeiras somam 317.063 linhas brutas (≈68% do excesso de 466 mil), com 56–92 campos e **66 a 3.395 `BNPP_TRADE_NUMBER` distintos** cada.
+  - Não são duplicados de uma position: são **milhares de trades diferentes sem UTI agrupados pelo mesmo par de LEIs**.
+  - **A "duplicação grave" da secção 4 é, em grande parte, este artefacto**, não fan-out do enriquecimento.
+  - **Impacto na dedup:** `ROW_NUMBER() OVER (PARTITION BY uti, cp1_lei, cp2_lei, breaking_field ...)` põe todos os UTIs NULL do mesmo par de LEIs na mesma partição. Os breaks de trades diferentes sem UTI são colapsados num só por campo. `distinct_breaks` fica **subcontado** (até ~300 mil breaks em 12/10) e parte das `conflicting_keys` serão estes casos, não conflitos reais. Ver questão 14.
 
 ---
 
@@ -184,6 +191,13 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 11. **Semântica de `BNPP_GLOBAL_BUSINESS_LINE`** face à "business line do código CRDS da contraparte" prevista. Confirmar com a equipa do data mart antes de mostrar como dimensão.
 12. Alinhar os tipos das colunas `BNPP_*` entre os exports por asset class (pedido à equipa; não bloqueia a demo).
 13. Carregar 13–15/10 para validar `breaks_dod` e a hipótese dos campos de package.
+14. **Chave do break com `UTI` NULL (bloqueia números fiáveis).** A dedup atual colapsa trades diferentes sem UTI (ver 4.1). Decisão pendente do Ordep, **não aplicada**:
+    - (a) chave de recurso `COALESCE(uti, 'TN:' || trade_number)` quando o UTI é NULL;
+    - (b) excluir os breaks sem UTI da vista `breaks` e reportá-los à parte em `data_quality`;
+    - (c) manter como está e documentar o subconteio.
+
+    Perceber também porque vêm sem UTI (ex.: `REC_CATEGORY`/`PAIRING` = não emparelhado?).
+15. A secção "combinações de campos" do profile não aparece com dados reais (a execução termina antes). Diagnosticar com `$LASTEXITCODE`.
 
 ## 7. Estado atual
 - **Feito (2026-10-16):** esqueleto do projeto.
@@ -198,9 +212,10 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
   - `npm install` funciona depois de excluir o Artifactory interno do proxy (ver README, "Problemas conhecidos").
   - `npm test` 15/15; teste de fumo sintético completo sem erros. O adaptador `src/db/duckdb.js` funcionou sem alterações; a dedup e o profile detetam o fan-out, os conflitos e os LEIs iguais injetados.
   - Primeiro `build:db` com dados reais (12/10, 5 ficheiros, 13 s). Só foi preciso `config/local.json` para `business_line`. `data_quality` e `breaks_dod` OK (DoD sem comparação: só um dia carregado).
-- **Pendente:** o `profile` com dados reais parou depois da 1.ª secção (questão 4).
+- **Feito (2026-10-19, tarde):** profile de 12/10 com saúde da chave e positions duplicadas. Descoberta: o excesso de linhas vem sobretudo de UTIs NULL, e a dedup colapsa-os (questão 14).
+- **Pendente:** a secção de combinações de campos do profile não aparece (questão 15).
 - **Próximos passos:**
-  1. Repetir o `profile` de 12/10 e diagnosticar a paragem; recolher saúde da chave, positions duplicadas e combinações de campos.
+  1. Decidir a chave para UTIs NULL (questão 14) antes de mostrar qualquer contagem aos operacionais; diagnosticar a secção de combinações (questão 15).
   2. Fixar a versão do `@duckdb/node-api` e fazer commit do lock.
   3. Carregar 13–15/10; validar `breaks_dod` e a hipótese dos campos de package.
   4. Esclarecer com os operacionais o volume (questão 9) e a chave (questão 7).
