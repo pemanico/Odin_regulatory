@@ -4,7 +4,7 @@
 > - Qualquer assistente (Claude do banco, Claude Code, ou outro) deve **ler este ficheiro antes de qualquer trabalho**.
 > - No fim de cada sessão de trabalho, **atualizar** as secções "Estado atual", "Registo de decisões" e "Questões em aberto".
 > - **Nunca colocar dados reais neste ficheiro** (UTIs, valores, nomes de contrapartes). Só estrutura, decisões e métricas agregadas.
-> - Última atualização: 2026-10-19 (sessão da tarde: métrica `persistence` desenhada em modo grill-me, aprovada e implementada)
+> - Última atualização: 2026-10-19 (fim da tarde: correção — valores BNPP/CPTY estão no ficheiro DTCC, não no data mart; chave real de produção)
 
 ---
 
@@ -48,7 +48,7 @@ Os operacionais tratam ~1–2M linhas de breaks por dia, todas categorizadas em 
 - **Motor de regras:** as regras ESMA de formato e domínio dos 10 campos com mais volume são compiladas em SQL e avaliadas **separadamente para o valor BNPP e para o valor da contraparte**. As regras internas ambíguas aparecem como texto, sem verificação automática.
 - **Assinatura de um break** (base do clustering e da sugestão):
   - `BREAKING_FIELD`
-  - padrão de preenchimento (BNPP nulo / CPTY nulo / ambos preenchidos)
+  - padrão de preenchimento (BNPP nulo / CPTY nulo / ambos preenchidos) — ⚠️ **Corrigido em 2026-10-19 (ver 3.1.2):** tem de vir do ficheiro DTCC
   - valor BNPP válido pelas regras? (sim/não + código VR)
   - valor CPTY válido pelas regras? (sim/não + código VR)
   - par de valores (só para enums)
@@ -115,9 +115,22 @@ Notas:
   - A asset class e a data vêm das colunas `C_PRIMARY_ASSET_CLASS` e `BUSINESS_DATE`, não do nome da pasta.
 - **Decisão pendente:** copiar para `data/breaks/` (a funcionar hoje) ou ler diretamente de S3 com a extensão `httpfs` do DuckDB. Depende de a extensão se instalar através do proxy, das credenciais AWS no PC e da autorização para ler produção a partir do desktop.
 
+### 3.1.2 Correção (2026-10-19, Ordep): chave real e onde estão os valores
+- **Chave usada em produção** para os breaks:
+  `RANK() OVER (PARTITION BY BREAKING_FIELD, REPORTING_COUNTERPARTY_LEI, OTHER_COUNTERPARTY_LEGAL_LEI, REPORT_SUBMITTING_ENTITY, UTI, PROPRIETARY, C_PRIMARY_ASSET_CLASS ORDER BY rownum)`.
+  A nossa chave tem menos colunas (sem `REPORT_SUBMITTING_ENTITY` nem `C_PRIMARY_ASSET_CLASS`). Como já não há duplicados com a chave mais estreita (questão 14), a contagem não muda; muda o join entre dias (persistência) se um destes campos mudar.
+  Nota: `RANK() ... ORDER BY rownum` comporta-se como `ROW_NUMBER()` (rownum é único).
+- **`BNPP_REPORTED` / `CPTY_REPORTED` NÃO são os valores do campo em break.** O data mart só diz **qual** campo está em break. Os valores de cada lado estão no **ficheiro da DTCC** (secção 3.2, colunas `TP1_<campo>` / `TP2_<campo>`). É aí que o utilizador valida o campo contra o documento de regras.
+- **Consequências (a rever, nada implementado ainda):**
+  1. Tudo o que interpretou `bnpp_null` / `cpty_null` como "esse lado não tem valor" está sem base: a leitura de 12/10 (70% cpty_null), o "13/10 destoa" (questão 22) e o alerta de qualidade proposto.
+  2. A métrica `persistence` compara `bnpp_value` / `cpty_value` → o grupo "igual" vs "alterado" não mede o que foi aprovado. Só a parte de chave (novo / resolvido / continua) é válida.
+  3. O "padrão de preenchimento" da assinatura do break não pode vir destas colunas.
+  4. **O motor de regras precisa do ficheiro DTCC** (formato largo) e do mapeamento `BREAKING_FIELD` → `TP1_x` / `TP2_x`. A decisão "não usar a 3.2 diretamente" fica revogada para os valores.
+  5. A observação "12/10 tem o dobro dos breaks" continua válida (é contagem, não depende destas colunas).
+
 ### 3.2 Relatório de reconciliação da DTCC (ficheiro recebido, formato LARGO)
 Uma linha por transação, com pares de colunas `TP1_<campo>` / `TP2_<campo>` (TP1 = BNPP, TP2 = contraparte) para centenas de campos EMIR REFIT, mais as colunas de estado (`RCNCLTNRPT_ID`, `TXDTLS_ID`, `REC_CATEGORY`, `PAIRING_RECONCILIATION`, `VALUATION_RECONCILIATION`, LEIs, `FILENAME`, `C_PRIMARY_ASSET_CLASS`, `BUSINESS_DATE`).
-- O nome dos sufixos nem sempre é simétrico (ex.: `TP1_..._LEG1` vs `TP2_..._LEG2`). **Não usar diretamente**: a tabela longa da 3.1 é a fonte da demo.
+- O nome dos sufixos nem sempre é simétrico (ex.: `TP1_..._LEG1` vs `TP2_..._LEG2`). ⚠️ **Corrigido em 2026-10-19 (ver 3.1.2):** é a **única fonte dos valores** de cada lado; a tabela longa só identifica o break. Texto original: **Não usar diretamente**: a tabela longa da 3.1 é a fonte da demo.
 
 ### 3.3 Excel de regras usado manualmente pelos operacionais
 Ficheiro: `EMIR-Refit_Reconciliation status matching.xlsx`. Colunas: `Table`, `Item`, `Section`, `Field`, `Format`, `Conditions`, `Error codes`.
@@ -155,7 +168,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
   - **Volume real maior do que o descrito:** 4,06M breaks distintos num só dia (~14,7 campos por position). Contradiz "~4,5M linhas em 12–15/10" (secção 4) e "1–2M linhas/dia" (secção 1).
   - **Top 20 deduplicado (12/10):** VALUATION_AMT, VENUE_OF_EXECUTION, VALUATION_CCY, UNIQUE_PRODUCT_ID, ISIN, CLEARING_OBLIGATION, PRODUCT_CLASSIFICATION, EXPIRATION_DATE, DELIVERY_TYPE, EFFECTIVE_DATE, NOTIONAL_AMT_LEG2, SETTLEMENT_DATE, NOTIONAL_AMT_LEG1, EXECUTION_TIMESTAMP, MASTER_AGREEMENT_TYPE, SPREAD_LEG2_TYP, NOTIONAL_AMT_LEG2_CCY, CONTRACT_TYPE, NOTIONAL_AMT_LEG1_CCY, FLOAT_RATE_LEG2_IDENTIFIER.
   - **Os 3 campos de package (`PCKG_TRANS_SPREAD*`) não estão no top 20 deduplicado** (o 20.º tem 66.427), mas estavam em 3.º–5.º no top 10 bruto da secção 4. Hipótese: o ranking bruto estava inflacionado pela duplicação e o fan-out concentra-se em trades de package. Confirmar com 13–15/10 carregados.
-- **Saúde da chave (12/10, breaks distintos):** null_uti 23.247; null_cp1_lei 0; null_cp2_lei 0; same_lei 0; bnpp_null 311.682 (7,7%); **cpty_null 2.817.564 (69%)**.
+- ⚠️ **Corrigido em 2026-10-19 (ver 3.1.2):** `bnpp_null` / `cpty_null` abaixo não significam "lado sem valor". **Saúde da chave (12/10, breaks distintos):** null_uti 23.247; null_cp1_lei 0; null_cp2_lei 0; same_lei 0; bnpp_null 311.682 (7,7%); **cpty_null 2.817.564 (69%)**.
   - A maioria dos breaks é a contraparte sem valor no campo. É provavelmente o maior cluster da demo (padrão "CPTY nulo") e o maior fator de redução breaks → decisões.
   - `same_lei` = 0 neste dia, apesar de ser um caso legítimo.
 - **Positions com mais linhas brutas — todas têm `UTI` NULL.** As 10 primeiras somam 317.063 linhas brutas (≈68% do excesso de 466 mil), com 56–92 campos e **66 a 3.395 `BNPP_TRADE_NUMBER` distintos** cada.
@@ -189,7 +202,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-19 | Fixar a versão do `@duckdb/node-api` (`--save-exact`) em vez de `latest`. **Ainda não aplicado** (o `package.json` continua em `latest`): falta a versão instalada no PC do escritório. O `package-lock.json` **não** vai para o Git: os `resolved` apontariam para o Artifactory interno |
 
 | 2026-10-19 | **Persistência = herança da categorização** (não KPI de aging). Motivo: um break que transita igual volta a aparecer sem categoria na app de produção, e o stock varia 0,2–3%/dia |
-| 2026-10-19 | "Mesmo break" para herança = mesma chave **e** `BNPP_REPORTED` e `CPTY_REPORTED` iguais (NULL = NULL). Se só mudar o lado CPTY, não herda (mais arriscado) |
+| 2026-10-19 | ⚠️ **Corrigido em 2026-10-19 (ver 3.1.2):** estas colunas não têm os valores; a definição de "igual" tem de ser refeita. "Mesmo break" para herança = mesma chave **e** `BNPP_REPORTED` e `CPTY_REPORTED` iguais (NULL = NULL). Se só mudar o lado CPTY, não herda (mais arriscado) |
 | 2026-10-19 | Herança (fase 2) a partir da **última categorização** do mesmo break com os mesmos valores, até **N = 5 dias úteis**, com **continuidade** (se o break desaparece e volta, é novo). Ontem estrito perdia o que ainda não estava categorizado |
 | 2026-10-19 | Persistência em 2 fases. **Fase 1 (feita):** métrica `persistence` com 4 grupos (igual / alterado / novo / resolvido), só com dados de breaks; o número é **potencial**, não poupança. **Fase 2:** herança real + backtest de concordância, bloqueada pela questão 2. Se a concordância ficar abaixo de ~95%, a herança passa a sugestão com confiança |
 | 2026-10-19 | `excludedDates` em `config/default.json` (`["2026-10-12"]`; override `ODIN_EXCLUDED_DATES`). `breaks_dod` e `persistence` saltam-nas como dia anterior e recusam-nas como data pedida |
@@ -198,6 +211,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-19 | **Categorização adiada para outra fase** (decisão do Ordep: não é prioritária agora). Fica em espera: schema do histórico (q. 2), fase 2 da persistência (q. 18), métrica `reference_id_distribution`. Impacto no plano: ver decisão seguinte |
 | 2026-10-19 | **Critérios de sucesso revistos** (aprovado pelo Ordep): o backtest sai e é substituído por "explicação pelas regras" (% de breaks dos 10 campos em que se identifica o lado que viola a regra ESMA, numa amostra validada pelos operacionais); mantém-se o fator de redução (persistência + clusters) e os casos reais. A sugestão de reference ID sai da demo. **O Excel de regras passa a ser o bloqueio do caminho crítico** |
 | 2026-10-19 | Glob por omissão `data/breaks/**/*.parquet` (estrutura `{asset_class}/{AAAA-MM-DD}/` do S3) |
+| 2026-10-19 | **Correção do Ordep:** `BNPP_REPORTED`/`CPTY_REPORTED` não são os valores do campo; os valores estão no ficheiro DTCC. Chave real de produção inclui `REPORT_SUBMITTING_ENTITY` e `C_PRIMARY_ASSET_CLASS` (ver 3.1.2). Persistência "igual/alterado", leitura de `cpty_null` e padrão de preenchimento ficam suspensos até redesenho |
 
 ---
 
@@ -231,13 +245,13 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
       - **Top 10 estável em 13 e 15/10** (a lista para as regras dos dias 3–5): VALUATION_AMT (~166–172k), VENUE_OF_EXECUTION, UNIQUE_PRODUCT_ID, ISIN, VALUATION_CCY, SETTLEMENT_CCY_1, PRODUCT_CLASSIFICATION, DELIVERY_TYPE, FLOAT_RATE_LEG2_IDENTIFIER, SPREAD_LEG2_TYP (~62k). Substitui a lista de 12/10 (atípico).
       - **Campos de package estáveis e fora do top 10:** PCKG_TRANS_SPREAD_TYP 27–28k/dia em 12–15/10. Não é pico; também não entra nos 10.
       - **`breaks_dod` 15 vs 14/10:** todos os 20 campos do topo variam entre +0,2% e +3,0%. Os breaks são um stock estável que transita de dia para dia, não um fluxo novo.
-      - **Saúde da chave (13/10):** null_uti 0; null LEIs 0; same_lei 0; **bnpp_null 447.015 (19%); cpty_null 138.644 (5,9%)**. O padrão "CPTY nulo = 69%" medido antes era de 12/10 com a chave antiga e não se aplica a dias normais.
+      - ⚠️ **Corrigido em 2026-10-19 (ver 3.1.2):** ler `bnpp_null` / `cpty_null` com cautela. **Saúde da chave (13/10):** null_uti 0; null LEIs 0; same_lei 0; **bnpp_null 447.015 (19%); cpty_null 138.644 (5,9%)**. O padrão "CPTY nulo = 69%" medido antes era de 12/10 com a chave antiga e não se aplica a dias normais.
       - **Sem duplicação por position:** nas positions com mais linhas, raw_rows = n_fields e 1 trade number (máximo ~37 campos por position).
       - **Combinações de campos (13/10):** as 20 primeiras cobrem 65.751 de 295.510 positions (22,3%). Cauda longa → a unidade de cluster é o break, não a position.
       - **Grupos correlacionados confirmados** (aparecem sempre juntos nas combinações): produto (UNIQUE_PRODUCT_ID + ISIN); valuation (VALUATION_AMT + VALUATION_CCY); package (os 3 PCKG_*); confirmação (CONFIRMATION_TIMESTAMP + CONFIRMED); e um trio DELIVERY_TYPE + FLOAT_RATE_LEG2_IDENTIFIER + SETTLEMENT_CCY_1. A combinação mais frequente (8.029 positions) junta 10 campos, incluindo EXCHANGE_RATE1, FWD_EXCHANGE_RATE e SETTLEMENT_CCY_1/2 (perfil de forwards FX). Implicação: regras por família de campos, não por campo isolado.
     - **12/10 tem o dobro dos outros dias** (4,5M vs ~2,3M), com o mesmo número de positions (~300 mil). Por isso o volume por position é o dobro. Perceber porquê (segunda-feira com acumulado do fim de semana? reprocessamento?) antes de usar 12/10 como referência na demo. Pista: com a chave antiga, 12/10 tinha cpty_null em 69% dos breaks, contra 5,9% em 13/10. Os ~2,2M breaks a mais podem ser quase todos de contraparte sem valor (ex.: um lado do relatório DTCC em falta nesse dia). **Confirmado (2026-10-19), com dados só reais:** 12/10 tem cpty_null = 3.168.040 de 4.526.560 (70%) e bnpp_null 344.010, contra 138.644 (5,9%) de cpty_null em 13/10. Os breaks com CPTY preenchido até são menos em 12/10 (~1,36M) do que em 13/10 (~2,2M). As positions de 12/10 chegam a ~61 campos em break (máx. ~37 em 13/10): campos inteiros sem valor do lado da contraparte.
       - **Conclusão:** 12/10 é um dia anómalo (lado da contraparte em falta para grande parte dos trades). **Excluir da demo e do backtest**; avisar quem gere o feed DTCC.
-      - **Oportunidade para a demo:** um alerta de qualidade "cpty_null passou de ~6% para 70%" teria detetado isto automaticamente.
+      - ⚠️ **Corrigido em 2026-10-19 (ver 3.1.2):** a causa de 12/10 não está explicada. **Oportunidade para a demo:** um alerta de qualidade "cpty_null passou de ~6% para 70%" teria detetado isto automaticamente.
       - Algumas positions de topo em 12/10 têm 0 `BNPP_TRADE_NUMBER` (enriquecimento interno em falta); a medir quando o trade number for usado.
     - **Top 10 com a chave corrigida (12/10, breaks distintos):** VALUATION_AMT 206.697; VENUE_OF_EXECUTION 175.033; VALUATION_CCY 158.384; UNIQUE_PRODUCT_ID 147.030; ISIN 132.397; CLEARING_OBLIGATION 120.406; PRODUCT_CLASSIFICATION 110.474; EXPIRATION_DATE 102.159; DELIVERY_TYPE 100.520; EFFECTIVE_DATE 95.763. Soma ≈ 1,35M (~30% dos breaks).
       - Mesma ordem que antes da correção; os campos de package continuam fora. Os grupos valuation (AMT/CCY) e produto (UPI/ISIN/CFI) estão todos no top 10.
@@ -251,8 +265,11 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 19. **Verificação do `_SUCCESS`** no `build:db` (secção 3.1.1): ainda não implementada. Hoje uma cópia incompleta do S3 entra sem aviso.
 20. Versão exata do `@duckdb/node-api` instalada no PC do escritório (`npm ls @duckdb/node-api`), para fixar no `package.json`.
 21. ~~**Impacto de adiar a categorização no plano aprovado.**~~ **Fechado (2026-10-19):** critérios revistos (ver registo de decisões). Texto original: sem histórico não há sugestão de reference ID com confiança, nem backtest (1.º critério de sucesso), nem herança real. Confirmar se a demo passa a ser "explicação do break pelas regras + fator de redução breaks → clusters + potencial de herança", e que critério substitui o backtest.
-22. **`cpty_null` — 13/10 é que destoa:** 14/10 = 527.447 de 2.307.763 (22,9%; `bnpp_null` 481.265, 20,9%); 15/10 = 535.736 de 2.335.182 (22,9%; `bnpp_null` 21%). Registado antes para 13/10: 138.644 (5,9%). Hipóteses: 13/10 tem a CPTY mais preenchida (dia atípico) ou o valor de 13/10 foi medido com outra versão dos dados. Repetir o profile de 13/10 e ver `persistence --date 2026-10-14` (se 13/10 for real, ~390 mil breaks "alterado" CPTY preenchido → nulo).
+22. ⚠️ **Corrigido em 2026-10-19 (ver 3.1.2):** premissa errada; mantido como registo. **`cpty_null` — 13/10 é que destoa:** 14/10 = 527.447 de 2.307.763 (22,9%; `bnpp_null` 481.265, 20,9%); 15/10 = 535.736 de 2.335.182 (22,9%; `bnpp_null` 21%). Registado antes para 13/10: 138.644 (5,9%). Hipóteses: 13/10 tem a CPTY mais preenchida (dia atípico) ou o valor de 13/10 foi medido com outra versão dos dados. Repetir o profile de 13/10 e ver `persistence --date 2026-10-14` (se 13/10 for real, ~390 mil breaks "alterado" CPTY preenchido → nulo).
 23. **Totais diferentes dos registados:** 15/10 = 2.335.182 (antes 2.336.183, −1.001); 14/10 = 2.307.763 (antes 2.305.762, +2.001). Diferenças "redondas" em dois dias: ou a cópia dos ficheiros mudou depois das primeiras medições, ou os valores foram mal transcritos. Confirmar com `Get-ChildItem` + `data_quality --from 2026-10-13 --to 2026-10-15` e corrigir a tabela da questão 14.
+24. **O que contêm `BNPP_REPORTED` / `CPTY_REPORTED`?** (flag, valor parcial, outra coisa?) Decide se servem para alguma coisa na demo.
+25. **Ficheiro DTCC para a demo:** onde está (S3? Oracle?), formato, um por dia e por asset class?, e como se liga ao break (`RCNCLTNRPT_ID` / `TXDTLS_ID` / UTI?). Sem ele não há regras nem persistência por valor.
+26. **Alinhar a chave do break com a de produção** (acrescentar `REPORT_SUBMITTING_ENTITY` e `C_PRIMARY_ASSET_CLASS`). Contagens não mudam (0 duplicados); muda a persistência se algum destes campos mudar entre dias.
 
 ## 7. Estado atual
 - **Feito (2026-10-16):** esqueleto do projeto.
@@ -275,6 +292,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
   - `profile` com diagnóstico de mudança de identificador entre dias (só agregados).
   - Gerador sintético com breaks alterados, campos resolvidos e trades PROPRIETARY → UTI.
   - 24 testes (SQLite). Profile de 15/10 corre no DuckDB (diagnóstico de identificador: 0 mudanças). **Falta o output da métrica `persistence`.**
+- **Correção (2026-10-19, fim da tarde):** os valores BNPP/CPTY não estão no data mart, estão no ficheiro DTCC (3.1.2). `persistence` só é fiável na parte de chave (novo / resolvido / continua); "igual" vs "alterado" suspenso. Questões 24–26.
 - **Plano mantido** (decisão 2026-10-19): backend Node primeiro (dias 3–8), React só nos dias 9–11.
 - **Próximos passos:**
   1. **Desbloqueio (Ordep), caminho crítico:** partilhar o Excel de regras (`EMIR-Refit_Reconciliation status matching.xlsx`) para o mapeamento `BREAKING_FIELD` → regra dos 10 campos (questão 1). O schema do histórico (questão 2) fica em espera com a categorização.
