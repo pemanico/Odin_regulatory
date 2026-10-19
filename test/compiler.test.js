@@ -84,3 +84,9 @@ test('filtro "in" valida a lista', () => {
   });
   assert.match(sql, /breaking_field IN \('ISIN', 'VALUATION_AMT'\)/);
 });
+
+test('profile: redactIds remove UTI e LEIs e mantém os agregados', async () => {
+  const { redactIds } = await import('../src/analysis/profile.js');
+  const [row] = redactIds([{ uti: 'X', cp1_lei: 'A', cp2_lei: 'B', raw_rows: 3, n_fields: 2, n_trade_numbers: 1 }]);
+  assert.deepEqual(row, { raw_rows: 3, n_fields: 2, n_trade_numbers: 1 });
+});

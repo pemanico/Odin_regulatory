@@ -184,6 +184,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-16 | `build:db` materializa `breaks_raw` e `breaks` como tabelas numa base DuckDB local (consultas repetidas rápidas) |
 | 2026-10-19 | `config/local.json` com `business_line` → `BNPP_GLOBAL_BUSINESS_LINE` (o nível mais agregado da hierarquia Global > Sub > Métier). Provisório até confirmar a semântica com a equipa do data mart. Nenhuma alteração de código |
 | 2026-10-19 | **Chave do break usa `COALESCE(UTI, PROPRIETARY)`** (`columns.uti_alt` em `config/default.json`, resolvido em `logicalSelect` de `src/db/model.js`). Antes, os trades sem UTI do mesmo par de LEIs colapsavam num só break por campo. Aprovado pelo Ordep |
+| 2026-10-19 | `npm run profile` esconde UTIs e LEIs por omissão (`--show-ids` para consulta local). Motivo: o output é colado em chats e documentos, e a regra "só agregados" falhava por mecânica |
 | 2026-10-19 | Fixar a versão do `@duckdb/node-api` (`--save-exact`) e fazer commit do `package-lock.json`, em vez de `latest` |
 
 ---

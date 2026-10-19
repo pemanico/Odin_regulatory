@@ -31,7 +31,7 @@ npm run profile -- --date 2026-10-13
 1. Copiar os Parquet da tabela de breaks para `data/breaks/` (um ficheiro por asset class e por business date, ex.: `matching_ir_20261012.snappy.parquet`; são lidos todos juntos).
 2. No `.env`: `ODIN_BREAKS_GLOB=data/breaks/*.parquet`. Se `BUSINESS_DATE` vier como texto `dd/mm/yyyy`, acrescentar também `ODIN_BUSINESS_DATE_FORMAT=%d/%m/%Y`.
 3. Se os nomes das colunas forem diferentes, corrigir o mapeamento em `config/local.json` (mesma estrutura de `config/default.json`; só as chaves a alterar).
-4. `npm run build:db` e depois `npm run profile -- --date <data>`. **É o primeiro passo com dados reais:** confirma a duplicação, as chaves e os grupos de campos correlacionados.
+4. `npm run build:db` e depois `npm run profile -- --date <data>`. O profile esconde UTIs e LEIs por omissão; `--show-ids` mostra-os, só para consulta no ecrã (nunca colar esse output). **É o primeiro passo com dados reais:** confirma a duplicação, as chaves e os grupos de campos correlacionados.
 
 ## Métricas (semantic layer)
 | Métrica | O que responde |

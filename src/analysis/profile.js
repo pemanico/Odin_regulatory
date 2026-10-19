@@ -52,6 +52,14 @@ FROM breaks
 WHERE business_date = ${d}`;
 }
 
+/** Colunas com identificadores reais (UTI, LEIs) que não devem sair no ecrã por omissão. */
+export const ID_COLUMNS = ['uti', 'cp1_lei', 'cp2_lei'];
+
+/** Remove os identificadores das linhas (só ficam os agregados). */
+export function redactIds(rows) {
+  return rows.map((r) => Object.fromEntries(Object.entries(r).filter(([k]) => !ID_COLUMNS.includes(k))));
+}
+
 /** Corre o perfil completo de uma business date. */
 export async function profileDate(db, date, { combos = 20, dups = 10 } = {}) {
   const [keyHealth] = await db.all(keyHealthSql(date));

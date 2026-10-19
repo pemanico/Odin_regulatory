@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 // Perfil de qualidade e padrões de uma business date. É a primeira coisa a correr com dados reais.
 //
-//   npm run profile -- --date 2026-10-15 [--combos 20] [--dups 10]
+//   npm run profile -- --date 2026-10-15 [--combos 20] [--dups 10] [--show-ids]
+//
+// Por omissão NÃO mostra UTIs nem LEIs (o output pode ser colado em chats e documentos).
+// --show-ids mostra-os, só para consulta no próprio ecrã.
 import { loadConfig } from '../src/config.js';
 import { parseArgs } from '../src/cli.js';
 import { openDuckDb } from '../src/db/duckdb.js';
 import { runMetric } from '../src/semantic/runner.js';
-import { profileDate } from '../src/analysis/profile.js';
+import { profileDate, redactIds } from '../src/analysis/profile.js';
 
 const args = parseArgs(process.argv.slice(2));
 if (!args.date) {
@@ -28,7 +31,8 @@ try {
   console.log('\n== Saúde da chave ==');
   console.table([p.keyHealth]);
   console.log('\n== Positions com mais linhas brutas (n_trade_numbers > 1 sugere fan-out no enriquecimento) ==');
-  console.table(p.duplicated);
+  if (!args['show-ids']) console.log('(UTIs e LEIs escondidos; usar --show-ids só para consulta no ecrã)');
+  console.table(args['show-ids'] ? p.duplicated : redactIds(p.duplicated));
   console.log('\n== Combinações de campos em break por position ==');
   console.table(p.combinations);
 
