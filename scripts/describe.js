@@ -55,7 +55,8 @@ try {
     console.table([...tp1, ...tp2].map((c) => ({ coluna: c.column_name, tipo: c.column_type })));
   }
 
-  for (const c of ['BUSINESS_DATE', 'C_PRIMARY_ASSET_CLASS']) {
+  // REFERENCE_DATE: data do relatório DTCC, para comparar com BUSINESS_DATE e com a pasta.
+  for (const c of ['BUSINESS_DATE', 'REFERENCE_DATE', 'C_PRIMARY_ASSET_CLASS']) {
     if (!names.includes(c)) continue;
     console.log(`\n== Linhas por ${c} ==`);
     console.table(await db.all(`SELECT ${ident(c)} AS valor, COUNT(*) AS linhas FROM ${src} GROUP BY 1 ORDER BY 1`));
