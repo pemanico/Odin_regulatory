@@ -4,7 +4,7 @@
 > - Qualquer assistente (Claude do banco, Claude Code, ou outro) deve **ler este ficheiro antes de qualquer trabalho**.
 > - No fim de cada sessão de trabalho, **atualizar** as secções "Estado atual", "Registo de decisões" e "Questões em aberto".
 > - **Nunca colocar dados reais neste ficheiro** (UTIs, valores, nomes de contrapartes). Só estrutura, decisões e métricas agregadas.
-> - Última atualização: 2026-10-19 (teste de fumo DuckDB no escritório + primeiro build com dados reais)
+> - Última atualização: 2026-10-19 (fim do dia: dados reais 12–15/10, chave UTI/PROPRIETARY, dias 1–2 fechados)
 
 ---
 
@@ -248,14 +248,17 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
   - Primeiro `build:db` com dados reais (12/10, 5 ficheiros, 13 s). Só foi preciso `config/local.json` para `business_line`. `data_quality` e `breaks_dod` OK (DoD sem comparação: só um dia carregado).
 - **Feito (2026-10-19, tarde):** profile de 12/10 com saúde da chave e positions duplicadas. Descoberta: o excesso de linhas vem sobretudo de UTIs NULL, e a dedup colapsa-os (questão 14).
 - **Feito (2026-10-19):** chave com `COALESCE(UTI, PROPRIETARY)`, validada com dados reais de 12–15/10 (20 ficheiros do S3): dup_factor 1,0 e 0 conflitos em todos os dias; gerador sintético passa a ter ~10% de positions só com `PROPRIETARY`; teste novo (16 testes).
-- **Pendente:** a secção de combinações de campos do profile não aparece (questão 15).
+- **Feito (2026-10-19, fim do dia):** 12–15/10 carregados (dados só reais); top 10 dos dias normais fechado; 12/10 confirmado como anómalo (70% cpty_null); `profile` esconde UTIs/LEIs por omissão (17 testes). **Dias 1–2 do plano fechados.**
+- **Plano mantido** (decisão 2026-10-19): backend Node primeiro (dias 3–8), React só nos dias 9–11.
 - **Próximos passos:**
-  1. No escritório: descarregar o `main`, `npm run synthetic` (os Parquet sintéticos antigos não têm `PROPRIETARY`), `npm run build:db` com os dados reais e `npm run profile -- --date 2026-10-12`. Registar o efeito da nova chave (questão 14) e ver se a secção de combinações já aparece (questão 15).
-  2. Fixar a versão do `@duckdb/node-api` e fazer commit do lock.
-  3. Carregar 13–15/10; validar `breaks_dod` e a hipótese dos campos de package.
-  4. Esclarecer com os operacionais o volume (questão 9) e a chave (questão 7).
-  5. Receber o mapeamento `BREAKING_FIELD` → regras e o schema do histórico.
-  6. Dias 3–5: compilar as regras ESMA dos 10 campos com mais volume, as assinaturas e o backtest.
+  1. **Desbloqueios (Ordep):** partilhar o Excel de regras (`EMIR-Refit_Reconciliation status matching.xlsx`) para o mapeamento `BREAKING_FIELD` → regra dos 10 campos (questão 1); partilhar o schema do histórico de categorizações + lista de reference IDs (código + descrição) (questão 2).
+  2. **Reunião com operacionais:** volume ~2,3M/dia é o universo deles? (q. 9); `PROPRIETARY` é o identificador que a contraparte vê?; porque recategorizam do zero se o stock é estável dia a dia?; 3–5 casos difíceis (q. 5).
+  3. **Avisos:** cancelar o pedido de correção da duplicação (não existe); avisar o dono do feed DTCC sobre 12/10; fixar a versão do `@duckdb/node-api` (ainda `latest`).
+  4. **Funcionalidades novas a desenhar (modo grill-me, plano aprovado antes de código):**
+     - **Persistência:** % de breaks de hoje que já existiam ontem. Pergunta em aberto: "existia" = mesma chave, ou mesma chave + mesmos valores BNPP/CPTY? Recomendação: medir os dois.
+     - **Alerta de qualidade:** % cpty_null / bnpp_null por dia com limiar (teria detetado 12/10).
+     - **Assinatura parcial do break:** campo + padrão de preenchimento + contraparte (primeiro "breaks → clusters" sem regras).
+  5. Dias 3–5: regras ESMA por família de campos para os 10 campos de 13–15/10, assinaturas completas, backtest (excluindo 12/10).
 
 ## 8. Estrutura do repositório
 ```
