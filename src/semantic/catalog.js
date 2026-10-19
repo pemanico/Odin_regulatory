@@ -26,7 +26,7 @@ export const DIMENSIONS = {
 export const FILTER_OPS = ['eq', 'in', 'between', 'gte', 'lte'];
 
 /**
- * Métricas certificadas (as 6 do plano aprovado).
+ * Métricas certificadas (as 6 do plano aprovado + persistence, aprovada em 2026-10-19).
  * kind:
  *  - 'aggregate': SELECT dims, medida FROM tabela GROUP BY dims (compilador genérico)
  *  - 'custom':    SQL próprio, construído em compiler.js
@@ -49,11 +49,27 @@ export const METRICS = {
     title: 'Variação face ao dia anterior',
     description:
       'Breaks distintos por campo na business date pedida vs. a business date anterior DISPONÍVEL nos dados ' +
-      '(não o dia de calendário anterior: fins de semana e feriados são saltados).',
+      '(não o dia de calendário anterior: fins de semana, feriados e datas excluídas na config são saltados).',
     requiredFilters: ['business_date'],
     requiredOps: { business_date: ['eq'] },
     allowedFilterDimensions: Object.keys(DIMENSIONS).filter((d) => d !== 'business_date'),
     defaultLimit: 20,
+  },
+  persistence: {
+    kind: 'custom',
+    title: 'Persistência face ao dia anterior',
+    description:
+      'Classifica os breaks distintos da business date pedida (D) face à business date anterior disponível (D-1, ' +
+      'saltando as datas excluídas): igual (mesma chave e mesmos valores BNPP e CPTY, NULL = NULL), alterado (mesma ' +
+      'chave, algum valor diferente), novo (chave só em D) e resolvido (chave só em D-1). As percentagens são sobre ' +
+      'os breaks de D. É um POTENCIAL de herança da categorização, não uma poupança (falta o backtest com o histórico). ' +
+      'Dimensões e filtros usam o valor de D (o de D-1 nos resolvidos).',
+    requiredFilters: ['business_date'],
+    requiredOps: { business_date: ['eq'] },
+    allowedDimensions: ['breaking_field', 'asset_class'],
+    defaultDimensions: [],
+    allowedFilterDimensions: Object.keys(DIMENSIONS).filter((d) => d !== 'business_date'),
+    defaultLimit: 100,
   },
   top_fields: {
     kind: 'aggregate',
@@ -100,7 +116,7 @@ export const METRICS = {
 /** Descrição do catálogo para o agente (tool schema) e para a UI. */
 export function describeCatalog() {
   return {
-    grain: 'break distinto = BUSINESS_DATE + UTI + LEI CP1 + LEI CP2 + BREAKING_FIELD',
+    grain: 'break distinto = BUSINESS_DATE + COALESCE(UTI, PROPRIETARY) + LEI CP1 + LEI CP2 + BREAKING_FIELD',
     metrics: Object.entries(METRICS).map(([id, m]) => ({
       id,
       title: m.title,

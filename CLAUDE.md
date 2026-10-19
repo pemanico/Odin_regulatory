@@ -4,7 +4,7 @@
 > - Qualquer assistente (Claude do banco, Claude Code, ou outro) deve **ler este ficheiro antes de qualquer trabalho**.
 > - No fim de cada sessão de trabalho, **atualizar** as secções "Estado atual", "Registo de decisões" e "Questões em aberto".
 > - **Nunca colocar dados reais neste ficheiro** (UTIs, valores, nomes de contrapartes). Só estrutura, decisões e métricas agregadas.
-> - Última atualização: 2026-10-19 (fim do dia: dados reais 12–15/10, chave UTI/PROPRIETARY, dias 1–2 fechados)
+> - Última atualização: 2026-10-19 (sessão da tarde: métrica `persistence` desenhada em modo grill-me, aprovada e implementada)
 
 ---
 
@@ -37,7 +37,7 @@ Os operacionais tratam ~1–2M linhas de breaks por dia, todas categorizadas em 
 
 ### Arquitetura da demo
 - **Motor:** DuckDB local a ler Parquet copiado para a máquina. Futuro: ClickHouse sobre S3 / tabelas nativas. O SQL deve usar um subconjunto standard (ex.: `COUNT(DISTINCT)`, não `uniq()`) para a migração mudar só a ligação.
-- **Vista deduplicada:** grão = break distinto = `UTI + LEI CP1 + LEI CP2 + BREAKING_FIELD` (por business date).
+- **Vista deduplicada:** grão = break distinto = `COALESCE(UTI, PROPRIETARY) + LEI CP1 + LEI CP2 + BREAKING_FIELD` (por business date).
 - **Semantic layer, 6 métricas certificadas** (grão = break distinto):
   1. Breaks por `BREAKING_FIELD` e business date
   2. Variação face ao dia anterior
@@ -185,7 +185,16 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-19 | `config/local.json` com `business_line` → `BNPP_GLOBAL_BUSINESS_LINE` (o nível mais agregado da hierarquia Global > Sub > Métier). Provisório até confirmar a semântica com a equipa do data mart. Nenhuma alteração de código |
 | 2026-10-19 | **Chave do break usa `COALESCE(UTI, PROPRIETARY)`** (`columns.uti_alt` em `config/default.json`, resolvido em `logicalSelect` de `src/db/model.js`). Antes, os trades sem UTI do mesmo par de LEIs colapsavam num só break por campo. Aprovado pelo Ordep |
 | 2026-10-19 | `npm run profile` esconde UTIs e LEIs por omissão (`--show-ids` para consulta local). Motivo: o output é colado em chats e documentos, e a regra "só agregados" falhava por mecânica |
-| 2026-10-19 | Fixar a versão do `@duckdb/node-api` (`--save-exact`) e fazer commit do `package-lock.json`, em vez de `latest` |
+| 2026-10-19 | Fixar a versão do `@duckdb/node-api` (`--save-exact`) em vez de `latest`. **Ainda não aplicado** (o `package.json` continua em `latest`): falta a versão instalada no PC do escritório. O `package-lock.json` **não** vai para o Git: os `resolved` apontariam para o Artifactory interno |
+
+| 2026-10-19 | **Persistência = herança da categorização** (não KPI de aging). Motivo: um break que transita igual volta a aparecer sem categoria na app de produção, e o stock varia 0,2–3%/dia |
+| 2026-10-19 | "Mesmo break" para herança = mesma chave **e** `BNPP_REPORTED` e `CPTY_REPORTED` iguais (NULL = NULL). Se só mudar o lado CPTY, não herda (mais arriscado) |
+| 2026-10-19 | Herança (fase 2) a partir da **última categorização** do mesmo break com os mesmos valores, até **N = 5 dias úteis**, com **continuidade** (se o break desaparece e volta, é novo). Ontem estrito perdia o que ainda não estava categorizado |
+| 2026-10-19 | Persistência em 2 fases. **Fase 1 (feita):** métrica `persistence` com 4 grupos (igual / alterado / novo / resolvido), só com dados de breaks; o número é **potencial**, não poupança. **Fase 2:** herança real + backtest de concordância, bloqueada pela questão 2. Se a concordância ficar abaixo de ~95%, a herança passa a sugestão com confiança |
+| 2026-10-19 | `excludedDates` em `config/default.json` (`["2026-10-12"]`; override `ODIN_EXCLUDED_DATES`). `breaks_dod` e `persistence` saltam-nas como dia anterior e recusam-nas como data pedida |
+| 2026-10-19 | `persistence`: dimensões e filtros com o valor de D (de D-1 nos resolvidos), aplicados depois do join, para um break não se dividir se mudar de asset class. Primeira data sem dia anterior → contagens `null`, não "100% novo". Igualdade NULL-safe com `(a = b OR (a IS NULL AND b IS NULL))`, SQL standard |
+| 2026-10-19 | Estado DTCC (`PAIRING` etc.) fora da persistência: o que se herda é a categorização do campo |
+| 2026-10-19 | Glob por omissão `data/breaks/**/*.parquet` (estrutura `{asset_class}/{AAAA-MM-DD}/` do S3) |
 
 ---
 
@@ -233,6 +242,12 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
     - Em aberto: o `PROPRIETARY` é o mesmo identificador que a contraparte reporta, ou um ID interno? Só afeta o rótulo na UI.
 15. ~~Secção de combinações de campos do profile não aparecia.~~ **Resolvido (2026-10-19)** com a chave corrigida (os grupos gigantes sem UTI eram a causa provável).
 
+16. **Persistência — medir com dados reais:** `npm run metric -- persistence --date 2026-10-14` e `--date 2026-10-15` (total e `--dims breaking_field`), e `npm run profile -- --date 2026-10-15` (secção "Mudança de identificador"). Primeira execução do SQL no DuckDB: só foi validado em SQLite (o registo npm não estava acessível no ambiente de desenvolvimento).
+17. **Mudança de identificador entre dias** (PROPRIETARY → UTI, ou UTI corrigido): infla "novo" e "resolvido". Se `id_changed_positions` for relevante face a `new_positions`, rever a chave da persistência (ex.: casar pelo trade number).
+18. **Fase 2 da persistência:** precisa do schema do histórico (questão 2): grão (uma linha por break e por dia, ou por evento de categorização?), data da categorização e valores reportados nesse momento.
+19. **Verificação do `_SUCCESS`** no `build:db` (secção 3.1.1): ainda não implementada. Hoje uma cópia incompleta do S3 entra sem aviso.
+20. Versão exata do `@duckdb/node-api` instalada no PC do escritório (`npm ls @duckdb/node-api`), para fixar no `package.json`.
+
 ## 7. Estado atual
 - **Feito (2026-10-16):** esqueleto do projeto.
   - Configuração com mapeamento de colunas.
@@ -249,16 +264,22 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 - **Feito (2026-10-19, tarde):** profile de 12/10 com saúde da chave e positions duplicadas. Descoberta: o excesso de linhas vem sobretudo de UTIs NULL, e a dedup colapsa-os (questão 14).
 - **Feito (2026-10-19):** chave com `COALESCE(UTI, PROPRIETARY)`, validada com dados reais de 12–15/10 (20 ficheiros do S3): dup_factor 1,0 e 0 conflitos em todos os dias; gerador sintético passa a ter ~10% de positions só com `PROPRIETARY`; teste novo (16 testes).
 - **Feito (2026-10-19, fim do dia):** 12–15/10 carregados (dados só reais); top 10 dos dias normais fechado; 12/10 confirmado como anómalo (70% cpty_null); `profile` esconde UTIs/LEIs por omissão (17 testes). **Dias 1–2 do plano fechados.**
+- **Feito (2026-10-19, sessão da tarde):** métrica `persistence` (fase 1), desenhada em modo grill-me e aprovada.
+  - `src/semantic/calendar.js` (dia anterior disponível com datas excluídas); `excludedDates` na config; `breaks_dod` passa a saltar 12/10.
+  - `profile` com diagnóstico de mudança de identificador entre dias (só agregados).
+  - Gerador sintético com breaks alterados, campos resolvidos e trades PROPRIETARY → UTI.
+  - 24 testes (SQLite). **Ainda não corrido no DuckDB nem com dados reais.**
 - **Plano mantido** (decisão 2026-10-19): backend Node primeiro (dias 3–8), React só nos dias 9–11.
 - **Próximos passos:**
   1. **Desbloqueios (Ordep):** partilhar o Excel de regras (`EMIR-Refit_Reconciliation status matching.xlsx`) para o mapeamento `BREAKING_FIELD` → regra dos 10 campos (questão 1); partilhar o schema do histórico de categorizações + lista de reference IDs (código + descrição) (questão 2).
   2. **Reunião com operacionais:** volume ~2,3M/dia é o universo deles? (q. 9); `PROPRIETARY` é o identificador que a contraparte vê?; porque recategorizam do zero se o stock é estável dia a dia?; 3–5 casos difíceis (q. 5).
-  3. **Avisos:** cancelar o pedido de correção da duplicação (não existe); avisar o dono do feed DTCC sobre 12/10; fixar a versão do `@duckdb/node-api` (ainda `latest`).
-  4. **Funcionalidades novas a desenhar (modo grill-me, plano aprovado antes de código):**
-     - **Persistência:** % de breaks de hoje que já existiam ontem. Pergunta em aberto: "existia" = mesma chave, ou mesma chave + mesmos valores BNPP/CPTY? Recomendação: medir os dois.
+  3. **Avisos:** cancelar o pedido de correção da duplicação (não existe); avisar o dono do feed DTCC sobre 12/10; fixar a versão do `@duckdb/node-api` (questão 20).
+  4. **Correr a persistência com dados reais** (questões 16 e 17) e colar só os agregados.
+  5. **Funcionalidades novas a desenhar (modo grill-me, plano aprovado antes de código):**
+     - ~~**Persistência**~~ fase 1 feita; fase 2 depende da questão 2.
      - **Alerta de qualidade:** % cpty_null / bnpp_null por dia com limiar (teria detetado 12/10).
-     - **Assinatura parcial do break:** campo + padrão de preenchimento + contraparte (primeiro "breaks → clusters" sem regras).
-  5. Dias 3–5: regras ESMA por família de campos para os 10 campos de 13–15/10, assinaturas completas, backtest (excluindo 12/10).
+     - **Assinatura parcial do break:** campo + padrão de preenchimento + contraparte (primeiro "breaks → clusters" sem regras). Deve aplicar-se só aos breaks `novo` e `alterado`: os `igual` já têm caminho próprio (herança).
+  6. Dias 3–5: regras ESMA por família de campos para os 10 campos de 13–15/10, assinaturas completas, backtest (excluindo 12/10).
 
 ## 8. Estrutura do repositório
 ```
@@ -267,7 +288,8 @@ src/config.js              carrega config + .env
 src/db/dialects.js         SQL específico de cada motor (duckdb, sqlite de testes)
 src/db/model.js            modelo lógico, chave do break, breaks_raw/breaks (dedup)
 src/db/duckdb.js           adaptador @duckdb/node-api (único ponto ligado ao driver)
-src/semantic/catalog.js    6 métricas certificadas, dimensões e filtros permitidos
+src/semantic/catalog.js    métricas certificadas (6 do plano + persistence), dimensões e filtros permitidos
+src/semantic/calendar.js   dia anterior disponível, datas excluídas
 src/semantic/compiler.js   pedido estruturado -> SQL (whitelist + literais seguros)
 src/semantic/runner.js     executa + auditoria
 src/analysis/profile.js    queries exploratórias (combinações de campos, duplicação, chaves)

@@ -18,6 +18,7 @@ npm run synthetic                          # gera data/synthetic/*.parquet (iden
 Criar um ficheiro `.env` (copiar de `.env.example`) com:
 ```
 ODIN_BREAKS_GLOB=data/synthetic/*.parquet
+ODIN_EXCLUDED_DATES=
 ```
 Depois:
 ```bash
@@ -28,8 +29,8 @@ npm run profile -- --date 2026-10-13
 ```
 
 ## Com dados reais
-1. Copiar os Parquet da tabela de breaks para `data/breaks/` (um ficheiro por asset class e por business date, ex.: `matching_ir_20261012.snappy.parquet`; são lidos todos juntos).
-2. No `.env`: `ODIN_BREAKS_GLOB=data/breaks/*.parquet`. Se `BUSINESS_DATE` vier como texto `dd/mm/yyyy`, acrescentar também `ODIN_BUSINESS_DATE_FORMAT=%d/%m/%Y`.
+1. Copiar os Parquet da tabela de breaks para `data/breaks/`, com a estrutura do S3: `data/breaks/{asset_class}/{AAAA-MM-DD}/*.parquet`. São lidos todos juntos. Só copiar pastas com `_SUCCESS` (execução completa do pipeline); o `build:db` ainda não verifica isto.
+2. No `.env`: `ODIN_BREAKS_GLOB=data/breaks/**/*.parquet` (o `**` apanha as subpastas). Se `BUSINESS_DATE` vier como texto `dd/mm/yyyy`, acrescentar também `ODIN_BUSINESS_DATE_FORMAT=%d/%m/%Y`.
 3. Se os nomes das colunas forem diferentes, corrigir o mapeamento em `config/local.json` (mesma estrutura de `config/default.json`; só as chaves a alterar).
 4. `npm run build:db` e depois `npm run profile -- --date <data>`. O profile esconde UTIs e LEIs por omissão; `--show-ids` mostra-os, só para consulta no ecrã (nunca colar esse output). **É o primeiro passo com dados reais:** confirma a duplicação, as chaves e os grupos de campos correlacionados.
 
@@ -38,6 +39,7 @@ npm run profile -- --date 2026-10-13
 |---|---|
 | `breaks_by_field` | Breaks distintos por campo (e outras dimensões permitidas) |
 | `breaks_dod` | Variação por campo face à business date anterior disponível |
+| `persistence` | Breaks de D face a D-1: igual / alterado / novo / resolvido. Potencial de herança da categorização, **não** poupança |
 | `top_fields` | Top N de campos em break |
 | `breaks_by_counterparty` | Breaks por LEI da contraparte |
 | `reference_id_distribution` | *Pendente:* falta o schema do histórico de categorizações |
@@ -49,8 +51,12 @@ npm run metric -- breaks_by_field --from 2026-10-12 --to 2026-10-15 --dims busin
 npm run metric -- breaks_by_counterparty --date 2026-10-15 --filter breaking_field=VALUATION_AMT
 npm run metric -- breaks_dod --date 2026-10-15 --filter asset_class=COMMODITY
 npm run metric -- data_quality --from 2026-10-12 --to 2026-10-15
+npm run metric -- persistence --date 2026-10-15                       # total do dia
+npm run metric -- persistence --date 2026-10-15 --dims breaking_field # por campo
 npm run metric -- top_fields --date 2026-10-15 --sql      # só mostra o SQL gerado
 ```
+**Datas excluídas:** as comparações entre dias (`breaks_dod`, `persistence`) saltam as datas de `excludedDates` em `config/default.json` (hoje `2026-10-12`, dia anómalo) e recusam-nas como data pedida. Para dados sintéticos, pôr `ODIN_EXCLUDED_DATES=` (vazio) no `.env`.
+
 Cada execução fica registada em `logs/audit-<data>.jsonl` (pedido, SQL, nº de linhas, duração; sem dados).
 
 ## Problemas conhecidos

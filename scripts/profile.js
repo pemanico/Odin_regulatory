@@ -20,16 +20,23 @@ if (!args.date) {
 const config = loadConfig();
 const db = await openDuckDb(config.source.dbPath);
 try {
-  const dq = await runMetric(db, {
-    metric: 'data_quality',
-    filters: [{ dimension: 'business_date', op: 'eq', value: args.date }],
-  });
+  const dq = await runMetric(
+    db,
+    { metric: 'data_quality', filters: [{ dimension: 'business_date', op: 'eq', value: args.date }] },
+    { excludedDates: config.excludedDates },
+  );
   console.log('\n== Qualidade: linhas brutas vs. breaks distintos ==');
   console.table(dq.rows);
 
-  const p = await profileDate(db, args.date, { combos: Number(args.combos ?? 20), dups: Number(args.dups ?? 10) });
+  const p = await profileDate(db, args.date, {
+    combos: Number(args.combos ?? 20),
+    dups: Number(args.dups ?? 10),
+    excludedDates: config.excludedDates,
+  });
   console.log('\n== Saúde da chave ==');
   console.table([p.keyHealth]);
+  console.log('\n== Mudança de identificador face ao dia anterior (inflaciona "novo" e "resolvido" em persistence) ==');
+  console.table([p.idChange]);
   console.log('\n== Positions com mais linhas brutas (n_trade_numbers > 1 sugere fan-out no enriquecimento) ==');
   if (!args['show-ids']) console.log('(UTIs e LEIs escondidos; usar --show-ids só para consulta no ecrã)');
   console.table(args['show-ids'] ? p.duplicated : redactIds(p.duplicated));

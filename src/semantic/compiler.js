@@ -7,6 +7,7 @@
 import { METRICS, DIMENSIONS, FILTER_OPS } from './catalog.js';
 import { ValidationError, literalFor, intValue, isValidDate } from './literals.js';
 import { positionKeyExpr } from '../db/model.js';
+import { previousDateSql, assertNotExcluded } from './calendar.js';
 
 export class MetricUnavailableError extends Error {
   constructor(message) {
@@ -108,11 +109,12 @@ function compileAggregate(id, metric, req) {
   };
 }
 
-function compileDod(metric, req) {
+function compileDod(metric, req, opts) {
   const filters = req.filters ?? [];
   checkRequired(metric, filters);
   const dateFilter = filters.find((f) => f.dimension === 'business_date');
   const date = literalFor('date', dateFilter.value);
+  assertNotExcluded(dateFilter.value, opts.excludedDates);
   const others = filters
     .filter((f) => f.dimension !== 'business_date')
     .map((f) => renderFilter(f, metric.allowedFilterDimensions));
@@ -120,7 +122,7 @@ function compileDod(metric, req) {
   const limit = resolveLimit(metric, req.limit);
 
   const sql = `WITH prev AS (
-  SELECT MAX(business_date) AS d FROM breaks WHERE business_date < ${date}
+  ${previousDateSql(dateFilter.value, opts.excludedDates)}
 ),
 cur AS (
   SELECT breaking_field, COUNT(*) AS n FROM breaks
@@ -151,6 +153,105 @@ LIMIT ${limit}`;
         delta_pct: Number(r.previous) > 0 ? Math.round((Number(r.delta) / Number(r.previous)) * 1000) / 10 : null,
       })),
   };
+}
+
+/** NULL-safe e SQL standard (sem IS NOT DISTINCT FROM, que nem todos os motores aceitam fora de JOIN). */
+const sameValue = (a, b) => `(${a} = ${b} OR (${a} IS NULL AND ${b} IS NULL))`;
+/** Igualdade das colunas da chave (o uti já vem com COALESCE(UTI, PROPRIETARY)). */
+const sameKey = (a, b) => `COALESCE(${a}, '') = COALESCE(${b}, '')`;
+const PERSISTENCE_KEY = ['uti', 'cp1_lei', 'cp2_lei', 'breaking_field'];
+const PERSISTENCE_STATUSES = ['igual', 'alterado', 'novo', 'resolvido'];
+
+function compilePersistence(metric, req, opts) {
+  const filters = req.filters ?? [];
+  checkRequired(metric, filters);
+  const dateFilter = filters.find((f) => f.dimension === 'business_date');
+  const date = literalFor('date', dateFilter.value);
+  assertNotExcluded(dateFilter.value, opts.excludedDates);
+
+  const dims = [...new Set(req.dimensions ?? metric.defaultDimensions)];
+  for (const d of dims) {
+    if (!metric.allowedDimensions.includes(d)) {
+      throw new ValidationError(`Dimensão não permitida em persistence: ${JSON.stringify(d)}`);
+    }
+  }
+  const others = filters.filter((f) => f.dimension !== 'business_date');
+  const conditions = others.map((f) => renderFilter(f, metric.allowedFilterDimensions));
+  const limit = resolveLimit(metric, req.limit);
+
+  // Colunas de dimensão necessárias (agrupamento + filtros). O valor de D prevalece; nos resolvidos, o de D-1.
+  const dimCols = [...new Set([...dims, ...others.map((f) => f.dimension)])].filter((d) => !PERSISTENCE_KEY.includes(d));
+  const sideCols = [...PERSISTENCE_KEY, 'bnpp_value', 'cpty_value', ...dimCols].join(', ');
+  const joinedDims = [...new Set([...dims, ...others.map((f) => f.dimension)])]
+    .map((d) => `COALESCE(c.${d}, p.${d}) AS ${d}`)
+    .join(',\n    ');
+  const status = `CASE
+      WHEN p.present IS NULL THEN 'novo'
+      WHEN c.present IS NULL THEN 'resolvido'
+      WHEN ${sameValue('c.bnpp_value', 'p.bnpp_value')} AND ${sameValue('c.cpty_value', 'p.cpty_value')} THEN 'igual'
+      ELSE 'alterado'
+    END`;
+  const count = (s) => `SUM(CASE WHEN status = '${s}' THEN 1 ELSE 0 END) AS ${s}`;
+  const select = [
+    ...dims,
+    '(SELECT d FROM prev) AS previous_date',
+    ...PERSISTENCE_STATUSES.map(count),
+  ].join(',\n  ');
+  const where = whereClause([`EXISTS (SELECT 1 FROM breaks WHERE business_date = ${date})`, ...conditions]);
+  const groupBy = dims.length ? `\nGROUP BY ${dims.join(', ')}` : '';
+  const todayCount = `SUM(CASE WHEN status IN ('igual', 'alterado', 'novo') THEN 1 ELSE 0 END)`;
+  const orderBy = dims.length ? `\nORDER BY ${todayCount} DESC, ${dims.join(', ')}` : '';
+
+  const sql = `WITH prev AS (
+  ${previousDateSql(dateFilter.value, opts.excludedDates)}
+),
+cur AS (
+  SELECT ${sideCols}, 1 AS present FROM breaks WHERE business_date = ${date}
+),
+pre AS (
+  SELECT ${sideCols}, 1 AS present FROM breaks WHERE business_date = (SELECT d FROM prev)
+),
+j AS (
+  SELECT
+    ${joinedDims ? `${joinedDims},\n    ` : ''}${status} AS status
+  FROM cur c
+  FULL OUTER JOIN pre p
+    ON ${PERSISTENCE_KEY.map((k) => sameKey(`c.${k}`, `p.${k}`)).join('\n   AND ')}
+)
+SELECT
+  ${select}
+FROM j
+${where}${groupBy}${orderBy}
+LIMIT ${limit}`;
+
+  return {
+    sql,
+    postprocess: (rows) =>
+      rows
+        // Sem GROUP BY, um agregado sobre zero linhas devolve uma linha de NULLs: descartar (data sem dados).
+        .filter((r) => PERSISTENCE_STATUSES.some((s) => Number(r[s] ?? 0) > 0))
+        .map(persistenceRow),
+  };
+}
+
+const pct = (n, total) => (total > 0 ? Math.round((n / total) * 1000) / 10 : null);
+
+/** Converte as contagens, calcula totais e percentagens (sobre os breaks de D). */
+function persistenceRow(r) {
+  const out = { ...r };
+  for (const s of PERSISTENCE_STATUSES) out[s] = Number(r[s] ?? 0);
+  out.breaks_today = out.igual + out.alterado + out.novo;
+  if (r.previous_date == null) {
+    // Sem dia anterior: nada a comparar (não é "100% novo").
+    for (const s of PERSISTENCE_STATUSES) out[s] = null;
+    out.pct_igual = out.pct_alterado = out.pct_novo = null;
+    return out;
+  }
+  out.breaks_previous = out.igual + out.alterado + out.resolvido;
+  out.pct_igual = pct(out.igual, out.breaks_today);
+  out.pct_alterado = pct(out.alterado, out.breaks_today);
+  out.pct_novo = pct(out.novo, out.breaks_today);
+  return out;
 }
 
 function compileDataQuality(metric, req) {
@@ -202,10 +303,13 @@ LIMIT ${limit}`;
   };
 }
 
-const CUSTOM = { breaks_dod: compileDod, data_quality: compileDataQuality };
+const CUSTOM = { breaks_dod: compileDod, persistence: compilePersistence, data_quality: compileDataQuality };
 
-/** Compila um pedido. Devolve { metric, title, sql, postprocess }. */
-export function compileMetric(request) {
+/**
+ * Compila um pedido. Devolve { metric, title, sql, postprocess }.
+ * @param opts.excludedDates  business dates a saltar nas comparações entre dias (config.excludedDates)
+ */
+export function compileMetric(request, opts = {}) {
   if (!request || typeof request !== 'object') throw new ValidationError('Pedido inválido');
   const metric = getMetric(request.metric);
   if (request.filters !== undefined && !Array.isArray(request.filters)) {
@@ -215,6 +319,6 @@ export function compileMetric(request) {
     throw new ValidationError('"dimensions" tem de ser uma lista');
   }
   const compiled =
-    metric.kind === 'aggregate' ? compileAggregate(request.metric, metric, request) : CUSTOM[request.metric](metric, request);
+    metric.kind === 'aggregate' ? compileAggregate(request.metric, metric, request) : CUSTOM[request.metric](metric, request, opts);
   return { metric: request.metric, title: metric.title, ...compiled };
 }

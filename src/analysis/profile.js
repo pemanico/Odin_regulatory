@@ -1,6 +1,8 @@
 // Queries de análise exploratória (não são métricas certificadas).
 // Servem para validar hipóteses do plano: duplicação, chaves nulas, grupos de campos correlacionados.
 import { dateLiteral, intValue } from '../semantic/literals.js';
+import { previousDateSql } from '../semantic/calendar.js';
+import { positionKeyExpr } from '../db/model.js';
 
 /** Combinações de campos em break por position (hipótese dos grupos correlacionados). */
 export function fieldCombinationsSql(dialect, date, limit = 20) {
@@ -52,6 +54,36 @@ FROM breaks
 WHERE business_date = ${d}`;
 }
 
+/**
+ * Positions de D sem correspondência pela chave em D-1, mas com o mesmo par de LEIs + trade number em D-1
+ * debaixo de outro identificador (ex.: PROPRIETARY -> UTI). Esses trades inflacionam "novo" e "resolvido"
+ * na métrica persistence. Só agregados. Positions sem trade number não entram no diagnóstico.
+ */
+export function idChangeSql(date, excludedDates = []) {
+  const d = dateLiteral(date);
+  const tradeKey = (a) => `COALESCE(${a}.cp1_lei, '') || '|' || COALESCE(${a}.cp2_lei, '') || '|' || ${a}.trade_number`;
+  return `WITH prev AS (
+  ${previousDateSql(date, excludedDates)}
+),
+cur AS (
+  SELECT DISTINCT uti, cp1_lei, cp2_lei, trade_number FROM breaks WHERE business_date = ${d}
+),
+pre AS (
+  SELECT DISTINCT uti, cp1_lei, cp2_lei, trade_number FROM breaks WHERE business_date = (SELECT d FROM prev)
+),
+new_pos AS (
+  SELECT c.* FROM cur c
+  WHERE NOT EXISTS (SELECT 1 FROM pre p WHERE ${positionKeyExpr('p')} = ${positionKeyExpr('c')})
+)
+SELECT
+  (SELECT d FROM prev) AS previous_date,
+  (SELECT COUNT(DISTINCT ${positionKeyExpr()}) FROM new_pos) AS new_positions,
+  (SELECT COUNT(DISTINCT ${positionKeyExpr('n')}) FROM new_pos n
+    WHERE n.trade_number IS NOT NULL AND n.trade_number <> ''
+      AND EXISTS (SELECT 1 FROM pre p WHERE ${tradeKey('p')} = ${tradeKey('n')} AND COALESCE(p.uti, '') <> COALESCE(n.uti, ''))
+  ) AS id_changed_positions`;
+}
+
 /** Colunas com identificadores reais (UTI, LEIs) que não devem sair no ecrã por omissão. */
 export const ID_COLUMNS = ['uti', 'cp1_lei', 'cp2_lei'];
 
@@ -61,10 +93,11 @@ export function redactIds(rows) {
 }
 
 /** Corre o perfil completo de uma business date. */
-export async function profileDate(db, date, { combos = 20, dups = 10 } = {}) {
+export async function profileDate(db, date, { combos = 20, dups = 10, excludedDates = [] } = {}) {
   const [keyHealth] = await db.all(keyHealthSql(date));
+  const [idChange] = await db.all(idChangeSql(date, excludedDates));
   const duplicated = await db.all(topDuplicatedPositionsSql(date, dups));
   const combinations = await db.all(fieldCombinationsSql(db.dialect, date, combos));
   const positions = combinations.reduce((s, r) => s + Number(r.positions), 0);
-  return { date, keyHealth, duplicated, combinations, combosCoverPositions: positions };
+  return { date, keyHealth, idChange, duplicated, combinations, combosCoverPositions: positions };
 }

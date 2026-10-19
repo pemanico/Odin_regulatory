@@ -3,6 +3,7 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { dirname, resolve, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { normalizeExcludedDates } from './semantic/calendar.js';
 
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -49,7 +50,12 @@ export function loadConfig(overrides = {}) {
       ...(env.ODIN_BUSINESS_DATE_FORMAT ? { businessDateFormat: env.ODIN_BUSINESS_DATE_FORMAT } : {}),
     },
   });
+  if (env.ODIN_EXCLUDED_DATES !== undefined) {
+    // Lista separada por vírgulas; vazio = nenhuma data excluída (ex.: dados sintéticos).
+    config.excludedDates = env.ODIN_EXCLUDED_DATES.split(',').map((s) => s.trim()).filter(Boolean);
+  }
   config = deepMerge(config, overrides);
+  config.excludedDates = normalizeExcludedDates(config.excludedDates);
 
   config.source.breaksGlob = absolute(config.source.breaksGlob);
   config.source.dbPath = absolute(config.source.dbPath);

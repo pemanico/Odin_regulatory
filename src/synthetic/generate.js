@@ -7,7 +7,9 @@
 //  - LEI CP1 = LEI CP2 em alguns casos;
 //  - duplicação em fan-out (mesmo break repetido N vezes, trade_number diferente);
 //  - duplicados com valores diferentes (conflitos);
-//  - positions que se repetem de um dia para o outro.
+//  - positions que se repetem de um dia para o outro (para a métrica persistence):
+//    breaks iguais, breaks com valores alterados, campos resolvidos, positions novas e resolvidas,
+//    e trades que passam de PROPRIETARY para UTI (aparecem como novo + resolvido).
 
 /** PRNG determinístico (mulberry32) para resultados reproduzíveis. */
 export function prng(seed) {
@@ -101,6 +103,25 @@ function positionBreaks(h) {
   return out;
 }
 
+/** Position que transita para o dia seguinte: maioria igual, alguns valores alterados, alguns campos resolvidos. */
+function carryOver(h, p, { changeRate, fieldResolveRate, idSwitchRate }) {
+  const breaks = p.breaks
+    .filter(() => !h.chance(fieldResolveRate))
+    .map((b) => {
+      if (!h.chance(changeRate)) return b;
+      // Muda um dos lados (incluindo passar de NULL a valor e vice-versa).
+      if (h.chance(0.5)) return { ...b, bnpp: b.bnpp === null ? 'SYNTHCHG' : null };
+      return { ...b, cpty: b.cpty === null ? 'SYNTHCHG' : `${b.cpty}C` };
+    });
+  // Trade que só tinha PROPRIETARY recebe UTI: a chave muda (novo + resolvido para o mesmo trade).
+  const switchId = p.proprietary && h.chance(idSwitchRate);
+  return {
+    ...p,
+    ...(switchId ? { uti: p.proprietary.replace('SYNTHPRP', 'SYNTHUTI'), proprietary: null } : {}),
+    breaks,
+  };
+}
+
 function newPosition(h, n, cptyPool) {
   const { pick, chance, code } = h;
   // Distribuição enviesada: poucas contrapartes concentram muitos breaks (como na realidade).
@@ -137,6 +158,9 @@ export function generateBreakRows({
   dupRate = 0.08,
   maxDup = 30,
   conflictRate = 0.01,
+  changeRate = 0.05,
+  fieldResolveRate = 0.05,
+  idSwitchRate = 0.2,
 } = {}) {
   if (!columns) throw new Error('generateBreakRows: falta o mapeamento de colunas (config.columns)');
   const rand = prng(seed);
@@ -180,7 +204,7 @@ export function generateBreakRows({
   };
 
   for (const date of dates) {
-    const carried = previous.filter(() => h.chance(carryOverRate));
+    const carried = previous.filter(() => h.chance(carryOverRate)).map((p) => carryOver(h, p, { changeRate, fieldResolveRate, idSwitchRate }));
     const todays = [...carried];
     while (todays.length < positionsPerDay) todays.push(newPosition(h, positionSeq++, cptyPool));
 

@@ -6,11 +6,11 @@ import { describeCatalog } from '../src/semantic/catalog.js';
 
 const onDate = (value = '2026-10-15') => [{ dimension: 'business_date', op: 'eq', value }];
 
-test('catálogo tem as 6 métricas do plano, com reference_id_distribution pendente', () => {
+test('catálogo tem as 6 métricas do plano + persistence, com reference_id_distribution pendente', () => {
   const cat = describeCatalog();
   assert.deepEqual(
     cat.metrics.map((m) => m.id).sort(),
-    ['breaks_by_counterparty', 'breaks_by_field', 'breaks_dod', 'data_quality', 'reference_id_distribution', 'top_fields'],
+    ['breaks_by_counterparty', 'breaks_by_field', 'breaks_dod', 'data_quality', 'persistence', 'reference_id_distribution', 'top_fields'],
   );
   assert.equal(cat.metrics.find((m) => m.id === 'reference_id_distribution').available, false);
 });
@@ -89,4 +89,34 @@ test('profile: redactIds remove UTI e LEIs e mantém os agregados', async () => 
   const { redactIds } = await import('../src/analysis/profile.js');
   const [row] = redactIds([{ uti: 'X', cp1_lei: 'A', cp2_lei: 'B', raw_rows: 3, n_fields: 2, n_trade_numbers: 1 }]);
   assert.deepEqual(row, { raw_rows: 3, n_fields: 2, n_trade_numbers: 1 });
+});
+
+test('datas excluídas: saltadas no dia anterior e rejeitadas como data pedida', () => {
+  const excludedDates = ['2026-10-12'];
+  for (const metric of ['breaks_dod', 'persistence']) {
+    const { sql } = compileMetric({ metric, filters: onDate('2026-10-13') }, { excludedDates });
+    assert.match(sql, /business_date < '2026-10-13' AND business_date NOT IN \('2026-10-12'\)/);
+    assert.throws(() => compileMetric({ metric, filters: onDate('2026-10-12') }, { excludedDates }), /excluída/);
+  }
+  // Sem datas excluídas, o comportamento antigo mantém-se.
+  const { sql } = compileMetric({ metric: 'breaks_dod', filters: onDate('2026-10-13') });
+  assert.doesNotMatch(sql, /NOT IN/);
+  assert.throws(() => compileMetric({ metric: 'persistence', filters: onDate() }, { excludedDates: ['15/10/2026'] }), /inválida/);
+});
+
+test('persistence: só eq na data, dimensões na whitelist, SQL sem IS NOT DISTINCT FROM', () => {
+  assert.throws(
+    () => compileMetric({ metric: 'persistence', filters: [{ dimension: 'business_date', op: 'between', value: ['2026-10-13', '2026-10-15'] }] }),
+    /só aceita: eq/,
+  );
+  assert.throws(() => compileMetric({ metric: 'persistence', filters: onDate(), dimensions: ['cp2_lei'] }), /Dimensão não permitida/);
+  const { sql } = compileMetric({
+    metric: 'persistence',
+    filters: [...onDate(), { dimension: 'asset_class', op: 'eq', value: 'CREDIT' }],
+    dimensions: ['breaking_field'],
+  });
+  assert.doesNotMatch(sql, /DISTINCT FROM/);
+  assert.match(sql, /FULL OUTER JOIN pre p/);
+  assert.match(sql, /asset_class = 'CREDIT'/);
+  assert.match(sql, /GROUP BY breaking_field/);
 });

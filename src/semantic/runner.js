@@ -7,12 +7,13 @@ import { audit as defaultAudit } from '../audit.js';
  * @param request  { metric, dimensions?, filters?, limit? }
  * @param opts.audit  função de auditoria (false para desligar)
  * @param opts.source  origem do pedido (cli, api, agent...)
+ * @param opts.excludedDates  business dates a saltar nas comparações entre dias (config.excludedDates)
  */
-export async function runMetric(db, request, { audit = defaultAudit, source = 'cli' } = {}) {
+export async function runMetric(db, request, { audit = defaultAudit, source = 'cli', excludedDates = [] } = {}) {
   const t0 = Date.now();
   let compiled;
   try {
-    compiled = compileMetric(request);
+    compiled = compileMetric(request, { excludedDates });
     const rows = compiled.postprocess(await db.all(compiled.sql));
     const ms = Date.now() - t0;
     if (audit) audit({ source, status: 'ok', request, sql: compiled.sql, rowCount: rows.length, ms });

@@ -1,10 +1,11 @@
 {
   "jurisdiction": "EMIR",
   "source": {
-    "breaksGlob": "data/breaks/*.parquet",
+    "breaksGlob": "data/breaks/**/*.parquet",
     "dbPath": "data/odin.duckdb",
     "businessDateFormat": null
   },
+  "excludedDates": ["2026-10-12"],
   "columns": {
     "rec_stat_id": "REC_STAT_ID",
     "business_date": "BUSINESS_DATE",

@@ -6,6 +6,7 @@
 //   npm run metric -- breaks_by_field --from 2026-10-12 --to 2026-10-15 --dims business_date,breaking_field
 //   npm run metric -- breaks_by_counterparty --date 2026-10-15 --filter breaking_field=VALUATION_AMT
 //   npm run metric -- breaks_dod --date 2026-10-15
+//   npm run metric -- persistence --date 2026-10-15 [--dims breaking_field]
 //   npm run metric -- data_quality --from 2026-10-12 --to 2026-10-15
 //   (acrescentar --sql para ver só o SQL, --json para saída JSON)
 import { loadConfig } from '../src/config.js';
@@ -53,14 +54,14 @@ if (args.dims) request.dimensions = String(args.dims).split(',');
 if (args.limit) request.limit = Number(args.limit);
 
 try {
+  const config = loadConfig();
   if (args.sql) {
-    console.log(compileMetric(request).sql);
+    console.log(compileMetric(request, { excludedDates: config.excludedDates }).sql);
     process.exit(0);
   }
-  const config = loadConfig();
   const db = await openDuckDb(config.source.dbPath);
   try {
-    const result = await runMetric(db, request, { source: 'cli' });
+    const result = await runMetric(db, request, { source: 'cli', excludedDates: config.excludedDates });
     if (args.json) {
       console.log(JSON.stringify(result, null, 2));
     } else {
