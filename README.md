@@ -28,7 +28,7 @@ npm run profile -- --date 2026-10-13
 ```
 
 ## Com dados reais
-1. Copiar os Parquet da tabela de breaks para `data/breaks/` (um ficheiro por business date).
+1. Copiar os Parquet da tabela de breaks para `data/breaks/` (um ficheiro por asset class e por business date, ex.: `matching_ir_20261012.snappy.parquet`; são lidos todos juntos).
 2. No `.env`: `ODIN_BREAKS_GLOB=data/breaks/*.parquet`. Se `BUSINESS_DATE` vier como texto `dd/mm/yyyy`, acrescentar também `ODIN_BUSINESS_DATE_FORMAT=%d/%m/%Y`.
 3. Se os nomes das colunas forem diferentes, corrigir o mapeamento em `config/local.json` (mesma estrutura de `config/default.json`; só as chaves a alterar).
 4. `npm run build:db` e depois `npm run profile -- --date <data>`. **É o primeiro passo com dados reais:** confirma a duplicação, as chaves e os grupos de campos correlacionados.
@@ -56,3 +56,7 @@ Cada execução fica registada em `logs/audit-<data>.jsonl` (pedido, SQL, nº de
 ## Problemas conhecidos
 - **`Não foi possível carregar @duckdb/node-api`**: falta correr `npm install`.
 - **Erro do driver DuckDB depois de instalado**: a API do `@duckdb/node-api` ainda está em evolução. O único ficheiro ligado ao driver é `src/db/duckdb.js`; ajustar aí (`DuckDBInstance.create`, `connect`, `runAndReadAll`, `getRowObjects`).
+- **`npm install` dá `E403 Intranetbrowsingblocked`** no Artifactory interno (`artifactory.cib.echonet`): o npm está a mandar o pedido para a intranet pelo proxy de internet. Correção: `npm config set noproxy ".echonet,localhost,127.0.0.1"`. O aviso `Unknown user config "always-auth"` é inofensivo.
+- **Windows / PowerShell — `.env` ignorado:** `echo ... > .env` grava em UTF-16. Criar com `Set-Content -Path .env -Value "..." -Encoding ascii` (acrescentar linhas com `Add-Content -Encoding ascii`).
+- **Windows / PowerShell — `config/local.json` com erro de JSON:** no PowerShell 5.1, `-Encoding utf8` grava com BOM. Criar no VS Code ou com `[IO.File]::WriteAllText("$PWD\config\local.json", '<json>')`.
+- **`Binder Error: Referenced column ... not found`** no `build:db`: o nome físico da coluna difere de `config/default.json`. Corrigir só essa chave em `config/local.json`. O DuckDB reporta uma coluna de cada vez; para ver o schema todo, correr `DESCRIBE SELECT * FROM read_parquet('<ficheiro>')`.

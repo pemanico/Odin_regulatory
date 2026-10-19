@@ -4,7 +4,7 @@
 > - Qualquer assistente (Claude do banco, Claude Code, ou outro) deve **ler este ficheiro antes de qualquer trabalho**.
 > - No fim de cada sessão de trabalho, **atualizar** as secções "Estado atual", "Registo de decisões" e "Questões em aberto".
 > - **Nunca colocar dados reais neste ficheiro** (UTIs, valores, nomes de contrapartes). Só estrutura, decisões e métricas agregadas.
-> - Última atualização: 2026-10-16 (esqueleto do código criado)
+> - Última atualização: 2026-10-19 (teste de fumo DuckDB no escritório + primeiro build com dados reais)
 
 ---
 
@@ -133,6 +133,18 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 - **Duplicação grave:** algumas positions têm ~127 linhas por campo no mesmo dia (ex.: 2.667 linhas para 21 campos distintos). As contagens brutas estão inflacionadas. **Correção pedida à equipa (2026-10-16).** Causa provável a investigar: fan-out no join com o enriquecimento (TSR/BNPP) ou vários `RPT_ID`/`TXDTLS_ID` por UTI. A demo usa sempre a vista deduplicada.
 - O Oracle da origem é anterior à 12.2: não suporta `LISTAGG ... ON OVERFLOW`.
 
+### 4.1 Primeiro build com dados reais (business date 2026-10-12, 2026-10-19)
+- **Ficheiros:** um Parquet por asset class e por business date (`matching_<co|cr|eq|fx|ir>_<yyyymmdd>.snappy.parquet`). Lidos juntos com `union_by_name`.
+- **Schema:** `BUSINESS_DATE` é DATE. `REC_STAT_ID` é INTEGER (ordem numérica correta na dedup). `breaking_field` vem em **minúsculas** (indiferente em DuckDB; atenção em ClickHouse, que distingue maiúsculas).
+- **Divergências de tipo entre asset classes** (colunas não mapeadas, sem impacto hoje): `BNPP_BODY_ID` DECIMAL(38,10) vs INTEGER (`eq`); `BNPP_PORTFOLIO_ID` DECIMAL (`fx`,`ir`) vs VARCHAR; `BNPP_PLATFORM_ID` ausente em `co` e `eq`. Os exports não saem com schema alinhado.
+- **Colunas não previstas:** `BNPP_GLOBAL_BUSINESS_LINE`, `BNPP_SUB_BUSINESS_LINE`, `BNPP_METIER`, `BNPP_PLATFORM_ID`, `TOTAL_NUMBER_TRANSACTIONS_RPT`. Não existe `BNPP_COUNTERPARTY_CRDS_CODE_BNPP_BUSINESS_LINE`.
+- **`data_quality` (12/10):** raw_rows 4.526.560; distinct_breaks 4.060.361; distinct_positions 276.153; conflicting_keys 5.132 (0,13%); dup_factor 1,11.
+- **Leitura:**
+  - A duplicação **não é grave no agregado** (~466 mil linhas em excesso, ~10%). As ~127 linhas/campo da secção 4 serão casos concentrados em poucas positions; a confirmar com a secção "positions com mais linhas brutas" do profile.
+  - **Volume real maior do que o descrito:** 4,06M breaks distintos num só dia (~14,7 campos por position). Contradiz "~4,5M linhas em 12–15/10" (secção 4) e "1–2M linhas/dia" (secção 1).
+  - **Top 20 deduplicado (12/10):** VALUATION_AMT, VENUE_OF_EXECUTION, VALUATION_CCY, UNIQUE_PRODUCT_ID, ISIN, CLEARING_OBLIGATION, PRODUCT_CLASSIFICATION, EXPIRATION_DATE, DELIVERY_TYPE, EFFECTIVE_DATE, NOTIONAL_AMT_LEG2, SETTLEMENT_DATE, NOTIONAL_AMT_LEG1, EXECUTION_TIMESTAMP, MASTER_AGREEMENT_TYPE, SPREAD_LEG2_TYP, NOTIONAL_AMT_LEG2_CCY, CONTRACT_TYPE, NOTIONAL_AMT_LEG1_CCY, FLOAT_RATE_LEG2_IDENTIFIER.
+  - **Os 3 campos de package (`PCKG_TRANS_SPREAD*`) não estão no top 20 deduplicado** (o 20.º tem 66.427), mas estavam em 3.º–5.º no top 10 bruto da secção 4. Hipótese: o ranking bruto estava inflacionado pela duplicação e o fan-out concentra-se em trades de package. Confirmar com 13–15/10 carregados.
+
 ---
 
 ## 5. Registo de decisões
@@ -153,18 +165,25 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-16 | "Dia anterior" em `breaks_dod` = business date anterior **disponível nos dados**, não o dia de calendário anterior |
 | 2026-10-16 | UI da demo: visual médio e funcional (tabelas densas, filtros claros); polimento visual fica para depois. Cores num ficheiro de tema (tokens) com um verde provisório, a substituir pelos hexadecimais oficiais; logo como ficheiro local fora do Git |
 | 2026-10-16 | `build:db` materializa `breaks_raw` e `breaks` como tabelas numa base DuckDB local (consultas repetidas rápidas) |
+| 2026-10-19 | `config/local.json` com `business_line` → `BNPP_GLOBAL_BUSINESS_LINE` (o nível mais agregado da hierarquia Global > Sub > Métier). Provisório até confirmar a semântica com a equipa do data mart. Nenhuma alteração de código |
+| 2026-10-19 | Fixar a versão do `@duckdb/node-api` (`--save-exact`) e fazer commit do `package-lock.json`, em vez de `latest` |
 
 ---
 
 ## 6. Questões em aberto
 1. **Mapeamento `BREAKING_FIELD` → campo do Excel de regras** (ex.: `VALUATION_AMT` → Table/Item ESMA). Os nomes são diferentes. Sem esta tabela de correspondência, as regras não se ligam aos breaks.
 2. **Colunas do histórico de categorizações** e da tabela de reference IDs (código + descrição). Desbloqueia a métrica `reference_id_distribution` e o backtest.
-3. Causa da duplicação e prazo da correção. Pista: `npm run profile` mostra `n_trade_numbers` por position; se for > 1, o fan-out vem do join com o enriquecimento TSR/BNPP.
-4. Confirmar a hipótese dos grupos de campos correlacionados: `npm run profile -- --date <data>` com dados reais.
+3. Causa da duplicação e prazo da correção. Pista: `npm run profile` mostra `n_trade_numbers` por position; se for > 1, o fan-out vem do join com o enriquecimento TSR/BNPP. Com dados reais o `dup_factor` é 1,11 (ver 4.1): falta ver se está concentrado em trades de package.
+4. Confirmar a hipótese dos grupos de campos correlacionados: `npm run profile -- --date <data>` com dados reais. **Bloqueado:** em 12/10 o profile parou depois da 1.ª secção (saúde da chave, positions duplicadas e combinações de campos não apareceram). Repetir sem redirecionar o output e ver o erro em stderr / `$LASTEXITCODE`.
 5. Casos reais difíceis escolhidos pelos operacionais para a demo.
-6. Sistema operativo do PC do escritório (para o binário nativo do DuckDB).
-7. **Confirmar as colunas físicas da chave**: assumido `REPORTING_COUNTERPARTY_LEI` (CP1) e `OTHER_COUNTERPARTY_LEGAL_LEI` (CP2) em `config/default.json`. Ajustar se a chave usada pelos operacionais for outra.
-8. Tipo de `BUSINESS_DATE` no Parquet exportado (DATE ou texto `dd/mm/yyyy`?). Se for texto, definir `ODIN_BUSINESS_DATE_FORMAT=%d/%m/%Y`.
+6. ~~Sistema operativo do PC do escritório.~~ **Fechado (2026-10-19):** Windows x64, Node v24.15.0.
+7. Colunas físicas da chave: `REPORTING_COUNTERPARTY_LEI` e `OTHER_COUNTERPARTY_LEGAL_LEI` **existem** em todos os ficheiros com o mesmo tipo. Falta confirmar com os operacionais que é esta a chave que usam.
+8. ~~Tipo de `BUSINESS_DATE`.~~ **Fechado (2026-10-19):** DATE; não é preciso `ODIN_BUSINESS_DATE_FORMAT`.
+9. **Volume real:** 4,06M breaks distintos em 12/10. Confirmar com os operacionais se é o mesmo universo que veem na app (secção 1 fala de 1–2M/dia). É o primeiro número que vão contestar na demo.
+10. **Chaves em conflito (5.132 em 12/10):** a dedup fica com o menor `REC_STAT_ID`. Confirmar se é o valor mais correto; afeta a verificação das regras BNPP vs CPTY nessas chaves.
+11. **Semântica de `BNPP_GLOBAL_BUSINESS_LINE`** face à "business line do código CRDS da contraparte" prevista. Confirmar com a equipa do data mart antes de mostrar como dimensão.
+12. Alinhar os tipos das colunas `BNPP_*` entre os exports por asset class (pedido à equipa; não bloqueia a demo).
+13. Carregar 13–15/10 para validar `breaks_dod` e a hipótese dos campos de package.
 
 ## 7. Estado atual
 - **Feito (2026-10-16):** esqueleto do projeto.
@@ -175,11 +194,18 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
   - Gerador de dados sintéticos (grupos correlacionados, fan-out, conflitos, LEIs iguais).
   - Script de profiling.
   - 15 testes automáticos (`npm test`); o SQL é validado contra SQLite com expectativas calculadas em JS.
-- **Ainda não validado em DuckDB real:** o ambiente onde o código foi escrito não tinha acesso ao registo npm. O primeiro `npm install` + `npm run synthetic` + `npm run build:db` + `npm run metric -- top_fields --date 2026-10-12` é o teste de fumo. O adaptador em `src/db/duckdb.js` é o único ponto a ajustar se a API do driver diferir.
+- **Feito (2026-10-19):** validação no PC do escritório (Windows x64, Node v24.15.0).
+  - `npm install` funciona depois de excluir o Artifactory interno do proxy (ver README, "Problemas conhecidos").
+  - `npm test` 15/15; teste de fumo sintético completo sem erros. O adaptador `src/db/duckdb.js` funcionou sem alterações; a dedup e o profile detetam o fan-out, os conflitos e os LEIs iguais injetados.
+  - Primeiro `build:db` com dados reais (12/10, 5 ficheiros, 13 s). Só foi preciso `config/local.json` para `business_line`. `data_quality` e `breaks_dod` OK (DoD sem comparação: só um dia carregado).
+- **Pendente:** o `profile` com dados reais parou depois da 1.ª secção (questão 4).
 - **Próximos passos:**
-  1. Teste de fumo DuckDB com dados sintéticos e depois reais (`npm run profile`).
-  2. Receber o mapeamento `BREAKING_FIELD` → regras e o schema do histórico.
-  3. Dias 3–5: compilar as regras ESMA dos 10 campos com mais volume, as assinaturas e o backtest.
+  1. Repetir o `profile` de 12/10 e diagnosticar a paragem; recolher saúde da chave, positions duplicadas e combinações de campos.
+  2. Fixar a versão do `@duckdb/node-api` e fazer commit do lock.
+  3. Carregar 13–15/10; validar `breaks_dod` e a hipótese dos campos de package.
+  4. Esclarecer com os operacionais o volume (questão 9) e a chave (questão 7).
+  5. Receber o mapeamento `BREAKING_FIELD` → regras e o schema do histórico.
+  6. Dias 3–5: compilar as regras ESMA dos 10 campos com mais volume, as assinaturas e o backtest.
 
 ## 8. Estrutura do repositório
 ```
