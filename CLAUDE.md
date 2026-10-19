@@ -138,6 +138,13 @@ Uma linha por transação, com pares de colunas `TP1_<campo>` / `TP2_<campo>` (T
   - Tem todas as colunas da chave de produção do data mart (3.1.2) → join candidato pela mesma chave, sem `BREAKING_FIELD`. Unicidade por medir.
   - Não tem as colunas de enriquecimento BNPP/TSR (essas só no data mart).
 
+
+**Medido em 2026-10-19 (`npm run describe`, 15/10, 5 ficheiros, só estrutura):**
+- 6.271.763 linhas num dia (COMMODITY 166.830; CREDIT 126.012; EQUITY 2.818.411; FOREIGN_EXCHANGE 2.815.513; INTEREST_RATE 850.997). O data mart tem ~293 mil positions com break nesse dia → o ficheiro DTCC traz **todas** as transações reconciliadas, não só as que estão em break (~5%).
+- 380 colunas: **179 pares `TP1_`/`TP2_` todos simétricos** (o mesmo sufixo nos dois lados; a nota acima sobre `LEG1`/`LEG2` assimétricos não se confirma nos nomes) + 22 outras.
+- As 22 outras incluem todas as colunas da chave de produção (`REPORT_SUBMITTING_ENTITY`, os dois LEIs, `UTI`, `PROPRIETARY`, `C_PRIMARY_ASSET_CLASS`, `BUSINESS_DATE` DATE) e `TXDTLS_ID` (VARCHAR), `RCNCLTNRPT_ID` (INTEGER), `RPT_ID` (INTEGER), `REFERENCE_DATE` (VARCHAR), `FILENAME`. **Não há `BREAKING_FIELD`**: o ficheiro tem os valores, o data mart diz qual campo está em break.
+- Implicação de desenho: só interessam os pares `TP1_`/`TP2_` dos 10 campos + a chave. Materializar uma tabela estreita (chave + ~20 colunas), não as 380 × 6,3M.
+
 ### 3.3 Excel de regras usado manualmente pelos operacionais
 Ficheiro: `EMIR-Refit_Reconciliation status matching.xlsx`. Colunas: `Table`, `Item`, `Section`, `Field`, `Format`, `Conditions`, `Error codes`.
 - As regras são as validation rules ESMA EMIR REFIT (códigos `EMIR-VR-xxxx-nn`) mais regras internas.
