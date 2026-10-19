@@ -100,6 +100,7 @@ Origem Oracle: `T_AF_EMIR_RF_MATCHING` (acesso read-only via dblink). Cópia em 
 
 Notas:
 - **Chave do break:** `UTI + LEI CP1 + LEI CP2 + BREAKING_FIELD` (+ `BUSINESS_DATE`). Os dois LEIs **podem ser iguais** (caso legítimo).
+- **O identificador do trade vem em `UTI` ou em `PROPRIETARY`**, nunca nos dois (confirmado em 12/10: 489.446 linhas só com `PROPRIETARY`, 0 com ambos, 0 sem nenhum). A coluna lógica `uti` é `COALESCE(NULLIF(TRIM(UTI),''), NULLIF(TRIM(PROPRIETARY),''))` (config `columns.uti_alt`).
 - Um break existe quando o valor TP1 ≠ TP2. **Sinais e casas decimais já são normalizados no Spark.** Não há tolerâncias a modelar.
 - Uma position pode ter vários breaks (um por campo).
 - As colunas de enriquecimento (`BNPP_ACTIVITY_L1..L4`, business line, asset class, CRDS code) servem de dimensões para KPIs e clusters.
@@ -173,6 +174,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-16 | UI da demo: visual médio e funcional (tabelas densas, filtros claros); polimento visual fica para depois. Cores num ficheiro de tema (tokens) com um verde provisório, a substituir pelos hexadecimais oficiais; logo como ficheiro local fora do Git |
 | 2026-10-16 | `build:db` materializa `breaks_raw` e `breaks` como tabelas numa base DuckDB local (consultas repetidas rápidas) |
 | 2026-10-19 | `config/local.json` com `business_line` → `BNPP_GLOBAL_BUSINESS_LINE` (o nível mais agregado da hierarquia Global > Sub > Métier). Provisório até confirmar a semântica com a equipa do data mart. Nenhuma alteração de código |
+| 2026-10-19 | **Chave do break usa `COALESCE(UTI, PROPRIETARY)`** (`columns.uti_alt` em `config/default.json`, resolvido em `logicalSelect` de `src/db/model.js`). Antes, os trades sem UTI do mesmo par de LEIs colapsavam num só break por campo. Aprovado pelo Ordep |
 | 2026-10-19 | Fixar a versão do `@duckdb/node-api` (`--save-exact`) e fazer commit do `package-lock.json`, em vez de `latest` |
 
 ---
@@ -191,12 +193,8 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 11. **Semântica de `BNPP_GLOBAL_BUSINESS_LINE`** face à "business line do código CRDS da contraparte" prevista. Confirmar com a equipa do data mart antes de mostrar como dimensão.
 12. Alinhar os tipos das colunas `BNPP_*` entre os exports por asset class (pedido à equipa; não bloqueia a demo).
 13. Carregar 13–15/10 para validar `breaks_dod` e a hipótese dos campos de package.
-14. **Chave do break com `UTI` NULL (bloqueia números fiáveis).** A dedup atual colapsa trades diferentes sem UTI (ver 4.1). Decisão pendente do Ordep, **não aplicada**:
-    - (a) chave de recurso `COALESCE(uti, 'TN:' || trade_number)` quando o UTI é NULL;
-    - (b) excluir os breaks sem UTI da vista `breaks` e reportá-los à parte em `data_quality`;
-    - (c) manter como está e documentar o subconteio.
-
-    Perceber também porque vêm sem UTI (ex.: `REC_CATEGORY`/`PAIRING` = não emparelhado?).
+14. ~~Chave do break com `UTI` NULL.~~ **Resolvido (2026-10-19):** o identificador vem em `PROPRIETARY` quando falta o `UTI`; chave = `COALESCE(UTI, PROPRIETARY)`. **Falta medir o efeito:** rebuild + profile de 12/10. Esperado: `dup_factor` ≈ 1,0, `distinct_breaks` perto de 4,5M e muito menos `conflicting_keys`. Se assim for, a correção de duplicação pedida à equipa a 2026-10-16 pode ser cancelada.
+    - Em aberto: o `PROPRIETARY` é o mesmo identificador que a contraparte reporta, ou um ID interno? Só afeta o rótulo na UI.
 15. A secção "combinações de campos" do profile não aparece com dados reais (a execução termina antes). Diagnosticar com `$LASTEXITCODE`.
 
 ## 7. Estado atual
@@ -207,15 +205,16 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
   - Log de auditoria (`logs/audit-*.jsonl`).
   - Gerador de dados sintéticos (grupos correlacionados, fan-out, conflitos, LEIs iguais).
   - Script de profiling.
-  - 15 testes automáticos (`npm test`); o SQL é validado contra SQLite com expectativas calculadas em JS.
+  - Testes automáticos (`npm test`; 16 desde 2026-10-19); o SQL é validado contra SQLite com expectativas calculadas em JS.
 - **Feito (2026-10-19):** validação no PC do escritório (Windows x64, Node v24.15.0).
   - `npm install` funciona depois de excluir o Artifactory interno do proxy (ver README, "Problemas conhecidos").
   - `npm test` 15/15; teste de fumo sintético completo sem erros. O adaptador `src/db/duckdb.js` funcionou sem alterações; a dedup e o profile detetam o fan-out, os conflitos e os LEIs iguais injetados.
   - Primeiro `build:db` com dados reais (12/10, 5 ficheiros, 13 s). Só foi preciso `config/local.json` para `business_line`. `data_quality` e `breaks_dod` OK (DoD sem comparação: só um dia carregado).
 - **Feito (2026-10-19, tarde):** profile de 12/10 com saúde da chave e positions duplicadas. Descoberta: o excesso de linhas vem sobretudo de UTIs NULL, e a dedup colapsa-os (questão 14).
+- **Feito (2026-10-19):** chave com `COALESCE(UTI, PROPRIETARY)`; gerador sintético passa a ter ~10% de positions só com `PROPRIETARY`; teste novo (16 testes).
 - **Pendente:** a secção de combinações de campos do profile não aparece (questão 15).
 - **Próximos passos:**
-  1. Decidir a chave para UTIs NULL (questão 14) antes de mostrar qualquer contagem aos operacionais; diagnosticar a secção de combinações (questão 15).
+  1. No escritório: descarregar o `main`, `npm run synthetic` (os Parquet sintéticos antigos não têm `PROPRIETARY`), `npm run build:db` com os dados reais e `npm run profile -- --date 2026-10-12`. Registar o efeito da nova chave (questão 14) e ver se a secção de combinações já aparece (questão 15).
   2. Fixar a versão do `@duckdb/node-api` e fazer commit do lock.
   3. Carregar 13–15/10; validar `breaks_dod` e a hipótese dos campos de package.
   4. Esclarecer com os operacionais o volume (questão 9) e a chave (questão 7).

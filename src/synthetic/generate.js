@@ -107,8 +107,11 @@ function newPosition(h, n, cptyPool) {
   const idx = Math.floor(cptyPool.length * Math.pow(h.rand(), 3));
   const sameLei = chance(0.05);
   const activity = pick(ACTIVITIES);
+  // ~10% das positions trazem o identificador em PROPRIETARY em vez de UTI (como nos dados reais).
+  const proprietary = chance(0.1);
   return {
-    uti: `SYNTHUTI${String(n).padStart(10, '0')}${code(6)}`,
+    uti: proprietary ? null : `SYNTHUTI${String(n).padStart(10, '0')}${code(6)}`,
+    proprietary: proprietary ? `SYNTHPRP${String(n).padStart(10, '0')}${code(6)}` : null,
     cp1: SYNTH_BNPP_LEI,
     cp2: sameLei ? SYNTH_BNPP_LEI : cptyPool[idx],
     asset_class: pick(ASSET_CLASSES),
@@ -152,6 +155,7 @@ export function generateBreakRows({
       [col('rec_stat_id')]: recStatId++,
       [col('business_date')]: date,
       [col('uti')]: p.uti,
+      [col('uti_alt')]: p.proprietary,
       [col('cp1_lei')]: p.cp1,
       [col('cp2_lei')]: p.cp2,
       [col('breaking_field')]: b.field,

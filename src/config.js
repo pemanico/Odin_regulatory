@@ -67,6 +67,7 @@ export function validateConfig(config) {
     if (!config.columns?.[key]) throw new Error(`Configuração inválida: falta o mapeamento da coluna "${key}"`);
   }
   for (const [logical, physical] of Object.entries(config.columns)) {
+    if (physical == null) continue; // mapeamento opcional desligado (ex.: uti_alt: null)
     if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(physical)) {
       throw new Error(`Nome de coluna inválido para "${logical}": ${physical}`);
     }

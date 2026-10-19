@@ -25,6 +25,13 @@ export const LOGICAL_COLUMNS = [
   'trade_number',
 ];
 
+/**
+ * Colunas físicas que não são colunas lógicas, mas alimentam uma delas:
+ *  - uti_alt: o identificador do trade vem em UTI **ou** em PROPRIETARY (mutuamente exclusivos);
+ *    a coluna lógica `uti` é o primeiro não vazio dos dois.
+ */
+export const AUXILIARY_COLUMNS = ['uti_alt'];
+
 /** Chave de um break (grão da vista deduplicada). */
 export const BREAK_KEY = ['business_date', 'uti', 'cp1_lei', 'cp2_lei', 'breaking_field'];
 
@@ -53,6 +60,11 @@ export function logicalSelect(config, dialect, fromSql) {
       return `${dialect.castDate(ref, config.source?.businessDateFormat)} AS business_date`;
     }
     if (logical === 'rec_stat_id') return `${ref} AS ${logical}`;
+    if (logical === 'uti' && cols.uti_alt) {
+      // SQL standard (COALESCE/NULLIF/TRIM): igual em DuckDB, ClickHouse e SQLite.
+      const nonEmpty = (r) => `NULLIF(TRIM(${dialect.castText(r)}), '')`;
+      return `COALESCE(${nonEmpty(ref)}, ${nonEmpty(quoteIdent(cols.uti_alt))}) AS uti`;
+    }
     return `${dialect.castText(ref)} AS ${logical}`;
   });
   return `SELECT\n  ${parts.join(',\n  ')}\nFROM ${fromSql}`;

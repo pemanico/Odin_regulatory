@@ -16,8 +16,10 @@ const C = config.columns;
 let db;
 let data;
 
-const keyOf = (r) => [r[C.business_date], r[C.uti], r[C.cp1_lei], r[C.cp2_lei], r[C.breaking_field]].join('\u0001');
-const posOf = (r) => [r[C.uti], r[C.cp1_lei], r[C.cp2_lei]].join('\u0001');
+// O identificador do trade vem em UTI ou em PROPRIETARY (uti_alt).
+const utiOf = (r) => r[C.uti] ?? r[C.uti_alt];
+const keyOf = (r) => [r[C.business_date], utiOf(r), r[C.cp1_lei], r[C.cp2_lei], r[C.breaking_field]].join('\u0001');
+const posOf = (r) => [utiOf(r), r[C.cp1_lei], r[C.cp2_lei]].join('\u0001');
 
 /** Expectativas calculadas em JS a partir das linhas geradas. */
 function expectations(rows) {
@@ -138,4 +140,17 @@ test('profile: combinações de campos cobrem todas as positions', { skip: !avai
   assert.ok(p.combinations.some((c) => c.fields === 'PCKG_TRANS_SPREAD,PCKG_TRANS_SPREAD_CCY,PCKG_TRANS_SPREAD_TYP'));
   assert.ok(Number(p.keyHealth.same_lei) > 0);
   assert.ok(Number(p.duplicated[0].n_trade_numbers) > 1, 'fan-out deve aparecer como vários trade numbers');
+});
+
+test('UTI nulo usa PROPRIETARY e não colapsa trades diferentes', { skip: !available && 'node:sqlite indisponível' }, async () => {
+  const date = data.dates[0];
+  const viaAlt = data.rows.filter((r) => r[C.business_date] === date && r[C.uti] == null);
+  assert.ok(viaAlt.length > 0, 'os dados sintéticos devem ter linhas só com PROPRIETARY');
+  const [health] = await db.all(`SELECT COUNT(*) AS n FROM breaks WHERE business_date = '${date}' AND uti IS NULL`);
+  assert.equal(Number(health.n), 0, 'nenhum break fica sem identificador');
+  const expected = new Set(expectations(viaAlt).distinct.map(posOf)).size;
+  const [got] = await db.all(
+    `SELECT COUNT(*) AS n FROM (SELECT DISTINCT uti, cp1_lei, cp2_lei FROM breaks WHERE business_date = '${date}' AND uti LIKE 'SYNTHPRP%') p`,
+  );
+  assert.equal(Number(got.n), expected, 'cada trade só com PROPRIETARY é uma position própria');
 });

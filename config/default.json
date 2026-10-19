@@ -9,6 +9,7 @@
     "rec_stat_id": "REC_STAT_ID",
     "business_date": "BUSINESS_DATE",
     "uti": "UTI",
+    "uti_alt": "PROPRIETARY",
     "cp1_lei": "REPORTING_COUNTERPARTY_LEI",
     "cp2_lei": "OTHER_COUNTERPARTY_LEGAL_LEI",
     "breaking_field": "BREAKING_FIELD",
