@@ -183,7 +183,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 1. **Mapeamento `BREAKING_FIELD` → campo do Excel de regras** (ex.: `VALUATION_AMT` → Table/Item ESMA). Os nomes são diferentes. Sem esta tabela de correspondência, as regras não se ligam aos breaks.
 2. **Colunas do histórico de categorizações** e da tabela de reference IDs (código + descrição). Desbloqueia a métrica `reference_id_distribution` e o backtest.
 3. Causa da duplicação e prazo da correção. Pista: `npm run profile` mostra `n_trade_numbers` por position; se for > 1, o fan-out vem do join com o enriquecimento TSR/BNPP. Com dados reais o `dup_factor` é 1,11 (ver 4.1): falta ver se está concentrado em trades de package.
-4. Confirmar a hipótese dos grupos de campos correlacionados: `npm run profile -- --date <data>` com dados reais. **Bloqueado:** em 12/10 o profile parou depois da 1.ª secção (saúde da chave, positions duplicadas e combinações de campos não apareceram). Repetir sem redirecionar o output e ver o erro em stderr / `$LASTEXITCODE`.
+4. **Parcialmente respondido (12/10):** as 20 combinações exatas de campos mais frequentes cobrem só 99.653 de 304.012 positions (32,8%). Com ~15 campos por position, o conjunto exato é demasiado estrito: um campo a mais cria outra combinação. **Implicação:** a assinatura deve continuar ao nível do break (campo + padrão de preenchimento + regras), como no plano; o conjunto de campos por position serve de KPI ("20 padrões = 1/3 das positions"), não de unidade de cluster. Falta ver as 10 combinações (nomes de campos e contagens) e confirmar os grupos package/produto/valuation. Pergunta original: confirmar a hipótese dos grupos de campos correlacionados: `npm run profile -- --date <data>` com dados reais. **Bloqueado:** em 12/10 o profile parou depois da 1.ª secção (saúde da chave, positions duplicadas e combinações de campos não apareceram). Repetir sem redirecionar o output e ver o erro em stderr / `$LASTEXITCODE`.
 5. Casos reais difíceis escolhidos pelos operacionais para a demo.
 6. ~~Sistema operativo do PC do escritório.~~ **Fechado (2026-10-19):** Windows x64, Node v24.15.0.
 7. Colunas físicas da chave: `REPORTING_COUNTERPARTY_LEI` e `OTHER_COUNTERPARTY_LEGAL_LEI` **existem** em todos os ficheiros com o mesmo tipo. Falta confirmar com os operacionais que é esta a chave que usam.
@@ -194,9 +194,9 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 12. Alinhar os tipos das colunas `BNPP_*` entre os exports por asset class (pedido à equipa; não bloqueia a demo).
 13. Carregar 13–15/10 para validar `breaks_dod` e a hipótese dos campos de package.
 14. ~~Chave do break com `UTI` NULL.~~ **Resolvido (2026-10-19):** o identificador vem em `PROPRIETARY` quando falta o `UTI`; chave = `COALESCE(UTI, PROPRIETARY)`. **Falta medir o efeito:** rebuild + profile de 12/10. Esperado: `dup_factor` ≈ 1,0, `distinct_breaks` perto de 4,5M e muito menos `conflicting_keys`. Se assim for, a correção de duplicação pedida à equipa a 2026-10-16 pode ser cancelada.
-    - **Medido (12/10, depois da correção):** dup_factor 1,0; distinct_breaks ≈ 4,5M; null_uti 0; conflicting_keys 123 (eram 5.132). **Não há duplicação real a corrigir**: o pedido à equipa de 2026-10-16 pode ser cancelado.
+    - **Medido (12/10, depois da correção):** dup_factor 1,0; distinct_breaks ≈ 4,5M; distinct_positions 304.012 (eram 276.153); null_uti 0; conflicting_keys 123 (eram 5.132). **Não há duplicação real a corrigir**: o pedido à equipa de 2026-10-16 pode ser cancelado.
     - Em aberto: o `PROPRIETARY` é o mesmo identificador que a contraparte reporta, ou um ID interno? Só afeta o rótulo na UI.
-15. A secção "combinações de campos" do profile não aparece com dados reais (a execução termina antes). Diagnosticar com `$LASTEXITCODE`.
+15. ~~Secção de combinações de campos do profile não aparecia.~~ **Resolvido (2026-10-19)** com a chave corrigida (os grupos gigantes sem UTI eram a causa provável).
 
 ## 7. Estado atual
 - **Feito (2026-10-16):** esqueleto do projeto.
