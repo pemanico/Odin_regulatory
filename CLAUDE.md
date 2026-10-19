@@ -105,6 +105,15 @@ Notas:
 - Uma position pode ter vários breaks (um por campo).
 - As colunas de enriquecimento (`BNPP_ACTIVITY_L1..L4`, business line, asset class, CRDS code) servem de dimensões para KPIs e clusters.
 
+### 3.1.1 Localização dos Parquet em S3 (produção)
+- Caminho: `s3://uk-prd-s3-v2-prd-odin-airflow/trusted/emir_refit/matching_folder/{asset_class}/{AAAA-MM-DD}/`.
+- Em cada pasta há um ou mais `part-*.snappy.parquet` e o ficheiro de controlo `_SUCCESS` do pipeline.
+- **Regras para a ingestão:**
+  - Só ler pastas com `_SUCCESS`; uma pasta sem ele é uma execução incompleta.
+  - Ler só `*.parquet`, porque os ficheiros de controlo não são dados.
+  - A asset class e a data vêm das colunas `C_PRIMARY_ASSET_CLASS` e `BUSINESS_DATE`, não do nome da pasta.
+- **Decisão pendente:** copiar para `data/breaks/` (a funcionar hoje) ou ler diretamente de S3 com a extensão `httpfs` do DuckDB. Depende de a extensão se instalar através do proxy, das credenciais AWS no PC e da autorização para ler produção a partir do desktop.
+
 ### 3.2 Relatório de reconciliação da DTCC (ficheiro recebido, formato LARGO)
 Uma linha por transação, com pares de colunas `TP1_<campo>` / `TP2_<campo>` (TP1 = BNPP, TP2 = contraparte) para centenas de campos EMIR REFIT, mais as colunas de estado (`RCNCLTNRPT_ID`, `TXDTLS_ID`, `REC_CATEGORY`, `PAIRING_RECONCILIATION`, `VALUATION_RECONCILIATION`, LEIs, `FILENAME`, `C_PRIMARY_ASSET_CLASS`, `BUSINESS_DATE`).
 - O nome dos sufixos nem sempre é simétrico (ex.: `TP1_..._LEG1` vs `TP2_..._LEG2`). **Não usar diretamente**: a tabela longa da 3.1 é a fonte da demo.
