@@ -66,9 +66,10 @@ Os operacionais tratam ~1–2M linhas de breaks por dia, todas categorizadas em 
   Tem um seletor de jurisdição, só com EMIR ativo.
 - **Configuração:** nomes de tabelas, colunas, caminhos e endpoints ficam num ficheiro de configuração/`.env`, nunca hardcoded.
 
-### Critérios de sucesso
-- **Backtest:** % de sugestões corretas face às categorizações reais das últimas 2–4 semanas.
-- **Fator de redução:** breaks → clusters (ex.: "1,1M → N decisões").
+### Critérios de sucesso (revistos em 2026-10-19: categorização adiada)
+- ~~**Backtest:** % de sugestões corretas face às categorizações reais das últimas 2–4 semanas.~~ Adiado com a categorização.
+- **Explicação pelas regras (substitui o backtest):** em X% dos breaks dos 10 campos, a ferramenta indica qual lado viola a regra ESMA. Medido numa amostra validada pelos operacionais.
+- **Fator de redução:** breaks → grupos a decidir (persistência "igual" + clusters por assinatura; ex.: "2,3M → N decisões").
 - **Casos reais:** 3–5 casos difíceis, escolhidos pelos operacionais, resolvidos ao vivo.
 
 ### Calendário (~11 dias úteis)
@@ -194,7 +195,8 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-19 | `excludedDates` em `config/default.json` (`["2026-10-12"]`; override `ODIN_EXCLUDED_DATES`). `breaks_dod` e `persistence` saltam-nas como dia anterior e recusam-nas como data pedida |
 | 2026-10-19 | `persistence`: dimensões e filtros com o valor de D (de D-1 nos resolvidos), aplicados depois do join, para um break não se dividir se mudar de asset class. Primeira data sem dia anterior → contagens `null`, não "100% novo". Igualdade NULL-safe com `(a = b OR (a IS NULL AND b IS NULL))`, SQL standard |
 | 2026-10-19 | Estado DTCC (`PAIRING` etc.) fora da persistência: o que se herda é a categorização do campo |
-| 2026-10-19 | **Categorização adiada para outra fase** (decisão do Ordep: não é prioritária agora). Fica em espera: schema do histórico (q. 2), fase 2 da persistência (q. 18), métrica `reference_id_distribution`. Impacto no plano aprovado em aberto (q. 21) |
+| 2026-10-19 | **Categorização adiada para outra fase** (decisão do Ordep: não é prioritária agora). Fica em espera: schema do histórico (q. 2), fase 2 da persistência (q. 18), métrica `reference_id_distribution`. Impacto no plano: ver decisão seguinte |
+| 2026-10-19 | **Critérios de sucesso revistos** (aprovado pelo Ordep): o backtest sai e é substituído por "explicação pelas regras" (% de breaks dos 10 campos em que se identifica o lado que viola a regra ESMA, numa amostra validada pelos operacionais); mantém-se o fator de redução (persistência + clusters) e os casos reais. A sugestão de reference ID sai da demo. **O Excel de regras passa a ser o bloqueio do caminho crítico** |
 | 2026-10-19 | Glob por omissão `data/breaks/**/*.parquet` (estrutura `{asset_class}/{AAAA-MM-DD}/` do S3) |
 
 ---
@@ -248,7 +250,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 18. **Fase 2 da persistência:** precisa do schema do histórico (questão 2): grão (uma linha por break e por dia, ou por evento de categorização?), data da categorização e valores reportados nesse momento.
 19. **Verificação do `_SUCCESS`** no `build:db` (secção 3.1.1): ainda não implementada. Hoje uma cópia incompleta do S3 entra sem aviso.
 20. Versão exata do `@duckdb/node-api` instalada no PC do escritório (`npm ls @duckdb/node-api`), para fixar no `package.json`.
-21. **Impacto de adiar a categorização no plano aprovado:** sem histórico não há sugestão de reference ID com confiança, nem backtest (1.º critério de sucesso), nem herança real. Confirmar se a demo passa a ser "explicação do break pelas regras + fator de redução breaks → clusters + potencial de herança", e que critério substitui o backtest.
+21. ~~**Impacto de adiar a categorização no plano aprovado.**~~ **Fechado (2026-10-19):** critérios revistos (ver registo de decisões). Texto original: sem histórico não há sugestão de reference ID com confiança, nem backtest (1.º critério de sucesso), nem herança real. Confirmar se a demo passa a ser "explicação do break pelas regras + fator de redução breaks → clusters + potencial de herança", e que critério substitui o backtest.
 
 ## 7. Estado atual
 - **Feito (2026-10-16):** esqueleto do projeto.
@@ -273,7 +275,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
   - 24 testes (SQLite). **Ainda não corrido no DuckDB nem com dados reais.**
 - **Plano mantido** (decisão 2026-10-19): backend Node primeiro (dias 3–8), React só nos dias 9–11.
 - **Próximos passos:**
-  1. **Desbloqueios (Ordep):** partilhar o Excel de regras (`EMIR-Refit_Reconciliation status matching.xlsx`) para o mapeamento `BREAKING_FIELD` → regra dos 10 campos (questão 1); partilhar o schema do histórico de categorizações + lista de reference IDs (código + descrição) (questão 2).
+  1. **Desbloqueio (Ordep), caminho crítico:** partilhar o Excel de regras (`EMIR-Refit_Reconciliation status matching.xlsx`) para o mapeamento `BREAKING_FIELD` → regra dos 10 campos (questão 1). O schema do histórico (questão 2) fica em espera com a categorização.
   2. **Reunião com operacionais:** volume ~2,3M/dia é o universo deles? (q. 9); `PROPRIETARY` é o identificador que a contraparte vê?; porque recategorizam do zero se o stock é estável dia a dia?; 3–5 casos difíceis (q. 5).
   3. **Avisos:** cancelar o pedido de correção da duplicação (não existe); avisar o dono do feed DTCC sobre 12/10; fixar a versão do `@duckdb/node-api` (questão 20).
   4. **Correr a persistência com dados reais** (questões 16 e 17) e colar só os agregados.
