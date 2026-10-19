@@ -131,7 +131,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
   - package (SPREAD_TYP / SPREAD_CCY / SPREAD, contagens quase iguais);
   - produto (UPI / ISIN / CFI);
   - valuation (AMT / CCY).
-- **Duplicação grave:** algumas positions têm ~127 linhas por campo no mesmo dia (ex.: 2.667 linhas para 21 campos distintos). As contagens brutas estão inflacionadas. **Correção pedida à equipa (2026-10-16).** Causa provável a investigar: fan-out no join com o enriquecimento (TSR/BNPP) ou vários `RPT_ID`/`TXDTLS_ID` por UTI. A demo usa sempre a vista deduplicada.
+- ~~**Duplicação grave:**~~ **Desmentido em 2026-10-19 (ver 4.1):** era a chave errada (UTI vs PROPRIETARY), não duplicação. Texto original: algumas positions têm ~127 linhas por campo no mesmo dia (ex.: 2.667 linhas para 21 campos distintos). As contagens brutas estão inflacionadas. **Correção pedida à equipa (2026-10-16).** Causa provável a investigar: fan-out no join com o enriquecimento (TSR/BNPP) ou vários `RPT_ID`/`TXDTLS_ID` por UTI. A demo usa sempre a vista deduplicada.
 - O Oracle da origem é anterior à 12.2: não suporta `LISTAGG ... ON OVERFLOW`.
 
 ### 4.1 Primeiro build com dados reais (business date 2026-10-12, 2026-10-19)
@@ -189,11 +189,12 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 7. Colunas físicas da chave: `REPORTING_COUNTERPARTY_LEI` e `OTHER_COUNTERPARTY_LEGAL_LEI` **existem** em todos os ficheiros com o mesmo tipo. Falta confirmar com os operacionais que é esta a chave que usam.
 8. ~~Tipo de `BUSINESS_DATE`.~~ **Fechado (2026-10-19):** DATE; não é preciso `ODIN_BUSINESS_DATE_FORMAT`.
 9. **Volume real:** 4,06M breaks distintos em 12/10. Confirmar com os operacionais se é o mesmo universo que veem na app (secção 1 fala de 1–2M/dia). É o primeiro número que vão contestar na demo.
-10. **Chaves em conflito (5.132 em 12/10):** a dedup fica com o menor `REC_STAT_ID`. Confirmar se é o valor mais correto; afeta a verificação das regras BNPP vs CPTY nessas chaves.
+10. **Chaves em conflito (123 em 12/10 com a chave corrigida; eram 5.132):** a dedup fica com o menor `REC_STAT_ID`. Confirmar se é o valor mais correto; afeta a verificação das regras BNPP vs CPTY nessas chaves.
 11. **Semântica de `BNPP_GLOBAL_BUSINESS_LINE`** face à "business line do código CRDS da contraparte" prevista. Confirmar com a equipa do data mart antes de mostrar como dimensão.
 12. Alinhar os tipos das colunas `BNPP_*` entre os exports por asset class (pedido à equipa; não bloqueia a demo).
 13. Carregar 13–15/10 para validar `breaks_dod` e a hipótese dos campos de package.
 14. ~~Chave do break com `UTI` NULL.~~ **Resolvido (2026-10-19):** o identificador vem em `PROPRIETARY` quando falta o `UTI`; chave = `COALESCE(UTI, PROPRIETARY)`. **Falta medir o efeito:** rebuild + profile de 12/10. Esperado: `dup_factor` ≈ 1,0, `distinct_breaks` perto de 4,5M e muito menos `conflicting_keys`. Se assim for, a correção de duplicação pedida à equipa a 2026-10-16 pode ser cancelada.
+    - **Medido (12/10, depois da correção):** dup_factor 1,0; distinct_breaks ≈ 4,5M; null_uti 0; conflicting_keys 123 (eram 5.132). **Não há duplicação real a corrigir**: o pedido à equipa de 2026-10-16 pode ser cancelado.
     - Em aberto: o `PROPRIETARY` é o mesmo identificador que a contraparte reporta, ou um ID interno? Só afeta o rótulo na UI.
 15. A secção "combinações de campos" do profile não aparece com dados reais (a execução termina antes). Diagnosticar com `$LASTEXITCODE`.
 
@@ -211,7 +212,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
   - `npm test` 15/15; teste de fumo sintético completo sem erros. O adaptador `src/db/duckdb.js` funcionou sem alterações; a dedup e o profile detetam o fan-out, os conflitos e os LEIs iguais injetados.
   - Primeiro `build:db` com dados reais (12/10, 5 ficheiros, 13 s). Só foi preciso `config/local.json` para `business_line`. `data_quality` e `breaks_dod` OK (DoD sem comparação: só um dia carregado).
 - **Feito (2026-10-19, tarde):** profile de 12/10 com saúde da chave e positions duplicadas. Descoberta: o excesso de linhas vem sobretudo de UTIs NULL, e a dedup colapsa-os (questão 14).
-- **Feito (2026-10-19):** chave com `COALESCE(UTI, PROPRIETARY)`; gerador sintético passa a ter ~10% de positions só com `PROPRIETARY`; teste novo (16 testes).
+- **Feito (2026-10-19):** chave com `COALESCE(UTI, PROPRIETARY)`, validada com dados reais de 12/10: dup_factor 1,0, ~4,5M breaks distintos, 0 sem identificador, 123 chaves em conflito (reais); gerador sintético passa a ter ~10% de positions só com `PROPRIETARY`; teste novo (16 testes).
 - **Pendente:** a secção de combinações de campos do profile não aparece (questão 15).
 - **Próximos passos:**
   1. No escritório: descarregar o `main`, `npm run synthetic` (os Parquet sintéticos antigos não têm `PROPRIETARY`), `npm run build:db` com os dados reais e `npm run profile -- --date 2026-10-12`. Registar o efeito da nova chave (questão 14) e ver se a secção de combinações já aparece (questão 15).
