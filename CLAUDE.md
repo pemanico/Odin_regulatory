@@ -246,11 +246,13 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 15. ~~Secção de combinações de campos do profile não aparecia.~~ **Resolvido (2026-10-19)** com a chave corrigida (os grupos gigantes sem UTI eram a causa provável).
 
 16. **Persistência — medir com dados reais:** `npm run metric -- persistence --date 2026-10-14` e `--date 2026-10-15` (total e `--dims breaking_field`), e `npm run profile -- --date 2026-10-15` (secção "Mudança de identificador"). Primeira execução do SQL no DuckDB: só foi validado em SQLite (o registo npm não estava acessível no ambiente de desenvolvimento).
-17. **Mudança de identificador entre dias** (PROPRIETARY → UTI, ou UTI corrigido): infla "novo" e "resolvido". Se `id_changed_positions` for relevante face a `new_positions`, rever a chave da persistência (ex.: casar pelo trade number).
+17. ~~**Mudança de identificador entre dias**~~ **Medido 14→15/10:** 3.505 positions novas, **0** com mudança de identificador. Não inflaciona a persistência; repetir se aparecerem dias com muitas positions novas. Texto original: **Mudança de identificador entre dias** (PROPRIETARY → UTI, ou UTI corrigido): infla "novo" e "resolvido". Se `id_changed_positions` for relevante face a `new_positions`, rever a chave da persistência (ex.: casar pelo trade number).
 18. **Fase 2 da persistência:** precisa do schema do histórico (questão 2): grão (uma linha por break e por dia, ou por evento de categorização?), data da categorização e valores reportados nesse momento.
 19. **Verificação do `_SUCCESS`** no `build:db` (secção 3.1.1): ainda não implementada. Hoje uma cópia incompleta do S3 entra sem aviso.
 20. Versão exata do `@duckdb/node-api` instalada no PC do escritório (`npm ls @duckdb/node-api`), para fixar no `package.json`.
 21. ~~**Impacto de adiar a categorização no plano aprovado.**~~ **Fechado (2026-10-19):** critérios revistos (ver registo de decisões). Texto original: sem histórico não há sugestão de reference ID com confiança, nem backtest (1.º critério de sucesso), nem herança real. Confirmar se a demo passa a ser "explicação do break pelas regras + fator de redução breaks → clusters + potencial de herança", e que critério substitui o backtest.
+22. **`cpty_null` subiu de 5,9% (13/10) para 22,9% (15/10)** (535.736 de 2.335.182; `bnpp_null` 21%). Com o mesmo volume total. Ver 14/10 e o `persistence` por campo: se for verdade, há ~400 mil breaks que passaram de CPTY preenchido para CPTY nulo, e aparecem como "alterado". Pode ser um segundo dia anómalo, mais suave do que 12/10 — reforça o alerta de qualidade.
+23. **15/10 tem 2.335.182 linhas agora vs. 2.336.183 registadas antes** (−1.001). Confirmar se a cópia dos ficheiros mudou (`Get-ChildItem` + rebuild) ou se o valor anterior foi mal transcrito.
 
 ## 7. Estado atual
 - **Feito (2026-10-16):** esqueleto do projeto.
@@ -272,7 +274,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
   - `src/semantic/calendar.js` (dia anterior disponível com datas excluídas); `excludedDates` na config; `breaks_dod` passa a saltar 12/10.
   - `profile` com diagnóstico de mudança de identificador entre dias (só agregados).
   - Gerador sintético com breaks alterados, campos resolvidos e trades PROPRIETARY → UTI.
-  - 24 testes (SQLite). **Ainda não corrido no DuckDB nem com dados reais.**
+  - 24 testes (SQLite). Profile de 15/10 corre no DuckDB (diagnóstico de identificador: 0 mudanças). **Falta o output da métrica `persistence`.**
 - **Plano mantido** (decisão 2026-10-19): backend Node primeiro (dias 3–8), React só nos dias 9–11.
 - **Próximos passos:**
   1. **Desbloqueio (Ordep), caminho crítico:** partilhar o Excel de regras (`EMIR-Refit_Reconciliation status matching.xlsx`) para o mapeamento `BREAKING_FIELD` → regra dos 10 campos (questão 1). O schema do histórico (questão 2) fica em espera com a categorização.
