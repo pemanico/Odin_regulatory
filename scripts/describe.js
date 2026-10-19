@@ -5,6 +5,8 @@
 //   npm run describe -- "data/dtcc/**/*.parquet"
 //   npm run describe -- "data/dtcc/**/*.parquet" --all                  # lista também as colunas TP1_/TP2_
 //   npm run describe -- "data/dtcc/**/*.parquet" --key UTI,PROPRIETARY  # unicidade de uma chave candidata
+//   npm run describe -- "<glob>" --distinct COL1,COL2                    # nº de valores distintos e nulos por coluna
+//   npm run describe -- "<glob>" --overlap COL_A,COL_B                   # nº de valores que aparecem nas duas colunas
 //
 // O output pode ser colado em chats: não contém valores, só estrutura e agregados.
 import fs from 'node:fs';
@@ -69,6 +71,31 @@ try {
     const nulls = key.map((k) => `SUM(CASE WHEN ${ident(k)} IS NULL THEN 1 ELSE 0 END) AS null_${k}`).join(', ');
     const [r] = await db.all(`SELECT COUNT(*) AS linhas, COUNT(DISTINCT ${keyExpr}) AS chaves_distintas, ${nulls} FROM ${src}`);
     console.log(`\n== Chave candidata: ${key.join(' + ')} ==`);
+    console.table([r]);
+  }
+  if (args.distinct) {
+    const cs = String(args.distinct).split(',').map((k) => k.trim());
+    const rows = [];
+    for (const c of cs) {
+      if (!names.includes(c)) throw new Error(`Coluna não existe: ${c}`);
+      const [r] = await db.all(
+        `SELECT COUNT(DISTINCT ${ident(c)}) AS distintos, SUM(CASE WHEN ${ident(c)} IS NULL THEN 1 ELSE 0 END) AS nulos FROM ${src}`,
+      );
+      rows.push({ coluna: c, ...r });
+    }
+    console.log('\n== Valores distintos por coluna ==');
+    console.table(rows);
+  }
+
+  if (args.overlap) {
+    const [a, b] = String(args.overlap).split(',').map((k) => k.trim());
+    for (const c of [a, b]) if (!c || !names.includes(c)) throw new Error(`--overlap exige duas colunas existentes: ${args.overlap}`);
+    const [r] = await db.all(`SELECT
+  (SELECT COUNT(DISTINCT ${ident(a)}) FROM ${src}) AS distintos_a,
+  (SELECT COUNT(DISTINCT ${ident(b)}) FROM ${src}) AS distintos_b,
+  (SELECT COUNT(*) FROM (SELECT DISTINCT ${ident(a)} AS v FROM ${src} WHERE ${ident(a)} IS NOT NULL
+     INTERSECT SELECT DISTINCT ${ident(b)} FROM ${src} WHERE ${ident(b)} IS NOT NULL) i) AS em_ambas`);
+    console.log(`\n== Sobreposição de valores: ${a} vs ${b} ==`);
     console.table([r]);
   }
 } catch (err) {
