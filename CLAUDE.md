@@ -194,6 +194,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-19 | `excludedDates` em `config/default.json` (`["2026-10-12"]`; override `ODIN_EXCLUDED_DATES`). `breaks_dod` e `persistence` saltam-nas como dia anterior e recusam-nas como data pedida |
 | 2026-10-19 | `persistence`: dimensões e filtros com o valor de D (de D-1 nos resolvidos), aplicados depois do join, para um break não se dividir se mudar de asset class. Primeira data sem dia anterior → contagens `null`, não "100% novo". Igualdade NULL-safe com `(a = b OR (a IS NULL AND b IS NULL))`, SQL standard |
 | 2026-10-19 | Estado DTCC (`PAIRING` etc.) fora da persistência: o que se herda é a categorização do campo |
+| 2026-10-19 | **Categorização adiada para outra fase** (decisão do Ordep: não é prioritária agora). Fica em espera: schema do histórico (q. 2), fase 2 da persistência (q. 18), métrica `reference_id_distribution`. Impacto no plano aprovado em aberto (q. 21) |
 | 2026-10-19 | Glob por omissão `data/breaks/**/*.parquet` (estrutura `{asset_class}/{AAAA-MM-DD}/` do S3) |
 
 ---
@@ -247,6 +248,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 18. **Fase 2 da persistência:** precisa do schema do histórico (questão 2): grão (uma linha por break e por dia, ou por evento de categorização?), data da categorização e valores reportados nesse momento.
 19. **Verificação do `_SUCCESS`** no `build:db` (secção 3.1.1): ainda não implementada. Hoje uma cópia incompleta do S3 entra sem aviso.
 20. Versão exata do `@duckdb/node-api` instalada no PC do escritório (`npm ls @duckdb/node-api`), para fixar no `package.json`.
+21. **Impacto de adiar a categorização no plano aprovado:** sem histórico não há sugestão de reference ID com confiança, nem backtest (1.º critério de sucesso), nem herança real. Confirmar se a demo passa a ser "explicação do break pelas regras + fator de redução breaks → clusters + potencial de herança", e que critério substitui o backtest.
 
 ## 7. Estado atual
 - **Feito (2026-10-16):** esqueleto do projeto.
@@ -275,6 +277,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
   2. **Reunião com operacionais:** volume ~2,3M/dia é o universo deles? (q. 9); `PROPRIETARY` é o identificador que a contraparte vê?; porque recategorizam do zero se o stock é estável dia a dia?; 3–5 casos difíceis (q. 5).
   3. **Avisos:** cancelar o pedido de correção da duplicação (não existe); avisar o dono do feed DTCC sobre 12/10; fixar a versão do `@duckdb/node-api` (questão 20).
   4. **Correr a persistência com dados reais** (questões 16 e 17) e colar só os agregados.
+  - **Em espera (categorização adiada):** schema do histórico, fase 2 da persistência, backtest.
   5. **Funcionalidades novas a desenhar (modo grill-me, plano aprovado antes de código):**
      - ~~**Persistência**~~ fase 1 feita; fase 2 depende da questão 2.
      - **Alerta de qualidade:** % cpty_null / bnpp_null por dia com limiar (teria detetado 12/10).
