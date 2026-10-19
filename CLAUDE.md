@@ -195,6 +195,9 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 13. Carregar 13–15/10 para validar `breaks_dod` e a hipótese dos campos de package.
 14. ~~Chave do break com `UTI` NULL.~~ **Resolvido (2026-10-19):** o identificador vem em `PROPRIETARY` quando falta o `UTI`; chave = `COALESCE(UTI, PROPRIETARY)`. **Falta medir o efeito:** rebuild + profile de 12/10. Esperado: `dup_factor` ≈ 1,0, `distinct_breaks` perto de 4,5M e muito menos `conflicting_keys`. Se assim for, a correção de duplicação pedida à equipa a 2026-10-16 pode ser cancelada.
     - **Medido (12/10, depois da correção):** dup_factor 1,0; distinct_breaks ≈ 4,5M; distinct_positions 304.012 (eram 276.153); null_uti 0; conflicting_keys 123 (eram 5.132). **Não há duplicação real a corrigir**: o pedido à equipa de 2026-10-16 pode ser cancelado.
+    - **Top 10 com a chave corrigida (12/10, breaks distintos):** VALUATION_AMT 206.697; VENUE_OF_EXECUTION 175.033; VALUATION_CCY 158.384; UNIQUE_PRODUCT_ID 147.030; ISIN 132.397; CLEARING_OBLIGATION 120.406; PRODUCT_CLASSIFICATION 110.474; EXPIRATION_DATE 102.159; DELIVERY_TYPE 100.520; EFFECTIVE_DATE 95.763. Soma ≈ 1,35M (~30% dos breaks).
+      - Mesma ordem que antes da correção; os campos de package continuam fora. Os grupos valuation (AMT/CCY) e produto (UPI/ISIN/CFI) estão todos no top 10.
+      - **É esta a lista candidata para as regras dos dias 3–5**, não a da secção 4 (que tinha os 3 campos de package). Confirmar com 13–15/10: se os campos de package só sobem nalgum desses dias, é um pico pontual, não um campo estrutural.
     - Em aberto: o `PROPRIETARY` é o mesmo identificador que a contraparte reporta, ou um ID interno? Só afeta o rótulo na UI.
 15. ~~Secção de combinações de campos do profile não aparecia.~~ **Resolvido (2026-10-19)** com a chave corrigida (os grupos gigantes sem UTI eram a causa provável).
 
