@@ -131,6 +131,12 @@ Notas:
 ### 3.2 Relatório de reconciliação da DTCC (ficheiro recebido, formato LARGO)
 Uma linha por transação, com pares de colunas `TP1_<campo>` / `TP2_<campo>` (TP1 = BNPP, TP2 = contraparte) para centenas de campos EMIR REFIT, mais as colunas de estado (`RCNCLTNRPT_ID`, `TXDTLS_ID`, `REC_CATEGORY`, `PAIRING_RECONCILIATION`, `VALUATION_RECONCILIATION`, LEIs, `FILENAME`, `C_PRIMARY_ASSET_CLASS`, `BUSINESS_DATE`).
 - O nome dos sufixos nem sempre é simétrico (ex.: `TP1_..._LEG1` vs `TP2_..._LEG2`). ⚠️ **Corrigido em 2026-10-19 (ver 3.1.2):** é a **única fonte dos valores** de cada lado; a tabela longa só identifica o break. Texto original: **Não usar diretamente**: a tabela longa da 3.1 é a fonte da demo.
+- **Medido em 2026-10-19 (`npm run describe`, ficheiro de 12/10, 5 ficheiros, um por asset class):**
+  - **6.271.763 linhas** num dia (EQUITY 2,32M; FX 2,32M; COMMODITY 344k; CREDIT 126k; IR 109k). Contém todas as transações reportadas, não só as que têm break (o data mart de 12/10 tem ~300 mil positions).
+  - **200 colunas:** 179 pares `TP1_`/`TP2_` e 22 colunas de contexto. **Todos os 179 pares são simétricos** (mesmo sufixo nos dois lados): o aviso acima sobre `LEG1`/`LEG2` não se confirma neste ficheiro.
+  - Colunas de contexto: `RCNCLTNRPT_ID` (INTEGER), `TXDTLS_ID`, `RPT_ID` (INTEGER), `REFERENCE_DATE` (VARCHAR), `REC_CATEGORY`, `REPORTING_TYPE`, `PAIRING`, `RECONCILIATION`, `VALUATION_RECONCILIATION`, `REVIVED`, `FURTHER_MODIFICATION`, `TOTAL_NUMBER_TRANSACTIONS_RPT`, `ENTITY_RESP_FOR_REPORT`, `TOTAL_NUMBER_TRANSACTIONS`, `REPORT_SUBMITTING_ENTITY`, `REPORTING_COUNTERPARTY_LEI`, `OTHER_COUNTERPARTY_LEGAL_LEI`, `UTI`, `PROPRIETARY`, `FILENAME`, `C_PRIMARY_ASSET_CLASS`, `BUSINESS_DATE` (DATE).
+  - Tem todas as colunas da chave de produção do data mart (3.1.2) → join candidato pela mesma chave, sem `BREAKING_FIELD`. Unicidade por medir.
+  - Não tem as colunas de enriquecimento BNPP/TSR (essas só no data mart).
 
 ### 3.3 Excel de regras usado manualmente pelos operacionais
 Ficheiro: `EMIR-Refit_Reconciliation status matching.xlsx`. Colunas: `Table`, `Item`, `Section`, `Field`, `Format`, `Conditions`, `Error codes`.
@@ -268,7 +274,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 22. ⚠️ **Corrigido em 2026-10-19 (ver 3.1.2):** premissa errada; mantido como registo. **`cpty_null` — 13/10 é que destoa:** 14/10 = 527.447 de 2.307.763 (22,9%; `bnpp_null` 481.265, 20,9%); 15/10 = 535.736 de 2.335.182 (22,9%; `bnpp_null` 21%). Registado antes para 13/10: 138.644 (5,9%). Hipóteses: 13/10 tem a CPTY mais preenchida (dia atípico) ou o valor de 13/10 foi medido com outra versão dos dados. Repetir o profile de 13/10 e ver `persistence --date 2026-10-14` (se 13/10 for real, ~390 mil breaks "alterado" CPTY preenchido → nulo).
 23. **Totais diferentes dos registados:** 15/10 = 2.335.182 (antes 2.336.183, −1.001); 14/10 = 2.307.763 (antes 2.305.762, +2.001). Diferenças "redondas" em dois dias: ou a cópia dos ficheiros mudou depois das primeiras medições, ou os valores foram mal transcritos. Confirmar com `Get-ChildItem` + `data_quality --from 2026-10-13 --to 2026-10-15` e corrigir a tabela da questão 14.
 24. **O que contêm `BNPP_REPORTED` / `CPTY_REPORTED`?** (flag, valor parcial, outra coisa?) Decide se servem para alguma coisa na demo.
-25. **Ficheiro DTCC para a demo:** está em **Parquet**; cópia local em `data/dtcc/{asset_class}/{data}/` (mesma estrutura do data mart; confirmado 2026-10-19). Falta: caminho no S3 e `_SUCCESS`, formato, um por dia e por asset class?, e como se liga ao break (`RCNCLTNRPT_ID` / `TXDTLS_ID` / UTI?). Sem ele não há regras nem persistência por valor.
+25. **Ficheiro DTCC para a demo:** está em **Parquet**; cópia local em `data/dtcc/{asset_class}/{data}/`. Estrutura medida (ver 3.2): 179 pares simétricos, ~6,3M linhas/dia. **A cópia atual é de 12/10 (dia excluído)**: copiar 13–15/10. Falta: caminho no S3 e `_SUCCESS`, um por dia e por asset class?, e como se liga ao break (`RCNCLTNRPT_ID` / `TXDTLS_ID` / UTI?). Sem ele não há regras nem persistência por valor.
 26. **Alinhar a chave do break com a de produção** (acrescentar `REPORT_SUBMITTING_ENTITY` e `C_PRIMARY_ASSET_CLASS`). Contagens não mudam (0 duplicados); muda a persistência se algum destes campos mudar entre dias.
 
 ## 7. Estado atual
