@@ -34,6 +34,9 @@ npm run profile -- --date 2026-10-13
 3. Se os nomes das colunas forem diferentes, corrigir o mapeamento em `config/local.json` (mesma estrutura de `config/default.json`; só as chaves a alterar).
 4. `npm run build:db` e depois `npm run profile -- --date <data>`. O profile esconde UTIs e LEIs por omissão; `--show-ids` mostra-os, só para consulta no ecrã (nunca colar esse output). **É o primeiro passo com dados reais:** confirma a duplicação, as chaves e os grupos de campos correlacionados.
 
+## Estrutura de outros Parquet (ex.: ficheiro DTCC)
+`npm run describe -- "<glob>"` mostra nº de ficheiros e linhas, colunas e tipos (separando `TP1_`/`TP2_` e os pares assimétricos) e linhas por business date / asset class. `--key COL1,COL2` mede a unicidade de uma chave candidata; `--all` lista também as colunas `TP1_`/`TP2_`. Não mostra valores: pode ser colado.
+
 ## Métricas (semantic layer)
 | Métrica | O que responde |
 |---|---|

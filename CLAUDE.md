@@ -268,7 +268,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 22. ⚠️ **Corrigido em 2026-10-19 (ver 3.1.2):** premissa errada; mantido como registo. **`cpty_null` — 13/10 é que destoa:** 14/10 = 527.447 de 2.307.763 (22,9%; `bnpp_null` 481.265, 20,9%); 15/10 = 535.736 de 2.335.182 (22,9%; `bnpp_null` 21%). Registado antes para 13/10: 138.644 (5,9%). Hipóteses: 13/10 tem a CPTY mais preenchida (dia atípico) ou o valor de 13/10 foi medido com outra versão dos dados. Repetir o profile de 13/10 e ver `persistence --date 2026-10-14` (se 13/10 for real, ~390 mil breaks "alterado" CPTY preenchido → nulo).
 23. **Totais diferentes dos registados:** 15/10 = 2.335.182 (antes 2.336.183, −1.001); 14/10 = 2.307.763 (antes 2.305.762, +2.001). Diferenças "redondas" em dois dias: ou a cópia dos ficheiros mudou depois das primeiras medições, ou os valores foram mal transcritos. Confirmar com `Get-ChildItem` + `data_quality --from 2026-10-13 --to 2026-10-15` e corrigir a tabela da questão 14.
 24. **O que contêm `BNPP_REPORTED` / `CPTY_REPORTED`?** (flag, valor parcial, outra coisa?) Decide se servem para alguma coisa na demo.
-25. **Ficheiro DTCC para a demo:** onde está (S3? Oracle?), formato, um por dia e por asset class?, e como se liga ao break (`RCNCLTNRPT_ID` / `TXDTLS_ID` / UTI?). Sem ele não há regras nem persistência por valor.
+25. **Ficheiro DTCC para a demo:** está em **Parquet** (confirmado 2026-10-19). Falta: caminho, formato, um por dia e por asset class?, e como se liga ao break (`RCNCLTNRPT_ID` / `TXDTLS_ID` / UTI?). Sem ele não há regras nem persistência por valor.
 26. **Alinhar a chave do break com a de produção** (acrescentar `REPORT_SUBMITTING_ENTITY` e `C_PRIMARY_ASSET_CLASS`). Contagens não mudam (0 duplicados); muda a persistência se algum destes campos mudar entre dias.
 
 ## 7. Estado atual
@@ -319,6 +319,6 @@ src/semantic/compiler.js   pedido estruturado -> SQL (whitelist + literais segur
 src/semantic/runner.js     executa + auditoria
 src/analysis/profile.js    queries exploratórias (combinações de campos, duplicação, chaves)
 src/synthetic/generate.js  dados sintéticos (identificadores SYNTH*)
-scripts/                   CLIs: synthetic, build-db, metric, profile
+scripts/                   CLIs: synthetic, build-db, metric, profile, describe (estrutura de Parquet sem dados)
 test/                      node:test
 ```

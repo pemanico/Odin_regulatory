@@ -12,6 +12,7 @@
     "build:db": "node scripts/build-db.js",
     "metric": "node scripts/metric.js",
     "profile": "node scripts/profile.js",
+    "describe": "node scripts/describe.js",
     "test": "node --test"
   },
   "dependencies": {
