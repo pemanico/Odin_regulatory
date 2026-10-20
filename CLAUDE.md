@@ -279,6 +279,8 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-20 | **Motor de regras — resultado por break:** só BNPP viola / só contraparte viola / ambos violam (com códigos VR) / **ambos válidos → mensagem fixa "divergência: os dois valores cumprem as regras ESMA; as regras não determinam o lado errado"** com os dois valores lado a lado (opção a). Desempate com o booking interno TSR (opção b) fica para o futuro |
 | 2026-10-20 | **O motor só usa os campos TP1_/TP2_ do ficheiro DTCC** (Ordep): sem listas externas (MIC, ISO 4217, ANNA DSB). Sub-regras que precisam de lista → "não verificável" com o texto da regra. Regras condicionais avaliam cada lado com os **seus** outros campos (BNPP com TP1_*, contraparte com TP2_*) |
 | 2026-10-20 | **Âmbito do motor: regras para todos os campos** do Excel (174 itens), não só os top 10/20 (Ordep). A UI mostra o que o utilizador pedir. Implica representação declarativa das regras (não SQL à mão por regra) — em desenho |
+| 2026-10-20 | Regras traduzidas por Claude para ficheiro declarativo; validação = taxa de violação nos dados reais + revisão por amostra do Ordep (top 20 e regras suspeitas) |
+| 2026-10-20 | Resultados das regras **pré-calculados** por business date (`npm run rules -- --date`) numa tabela `rule_results`; ficheiro DTCC lido como vista sobre o Parquet (não copiado) |
 
 ---
 
