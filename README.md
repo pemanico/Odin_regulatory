@@ -68,6 +68,7 @@ Veredictos: `so_bnpp`, `so_contraparte`, `ambos`, `divergencia` (os dois lados c
 | `top_fields` | Top N de campos em break |
 | `breaks_by_counterparty` | Breaks por LEI da contraparte |
 | `reference_id_distribution` | *Pendente:* falta o schema do histórico de categorizações |
+| `rule_verdict` | Breaks por veredicto das regras ESMA (por campo, asset class, contraparte); requer `npm run rules` |
 | `data_quality` | Linhas brutas vs. breaks distintos, fator de duplicação, chaves com valores em conflito |
 
 Exemplos:

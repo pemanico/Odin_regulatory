@@ -183,6 +183,11 @@ test('fluxo completo: violações por lado -> veredicto por break', { skip }, as
     erro_bnpp: "This field shall contain one of 'CASH', 'PHYS', 'OPTL'", erro_other_cpty: null,
   });
   assert.equal(det[3].veredicto, VERDICT_TEXT.divergencia);
+  // Métrica certificada sobre break_verdict
+  const { runMetric } = await import('../src/semantic/runner.js');
+  const m = await runMetric(db, { metric: 'rule_verdict', filters: [{ dimension: 'business_date', op: 'eq', value: '2026-10-15' }] }, { audit: false });
+  assert.deepEqual(Object.fromEntries(m.rows.map((r) => [r.verdict, Number(r.n_breaks)])),
+    { so_bnpp: 1, so_contraparte: 1, ambos: 1, divergencia: 1, sem_regras_verificaveis: 1 });
   assert.deepEqual([det[4].campo, det[4].valor_bnpp, det[4].valor_other_cpty], ['2.21 Valuation amount', '1', '2']);
   await db.close();
 });

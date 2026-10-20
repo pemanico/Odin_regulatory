@@ -93,7 +93,7 @@ function compileAggregate(id, metric, req) {
   }
   const filters = req.filters ?? [];
   checkRequired(metric, filters);
-  const conditions = filters.map((f) => renderFilter(f, Object.keys(DIMENSIONS)));
+  const conditions = filters.map((f) => renderFilter(f, metric.allowedFilterDimensions ?? Object.keys(DIMENSIONS)));
   const limit = resolveLimit(metric, req.limit);
   const m = metric.measure;
 

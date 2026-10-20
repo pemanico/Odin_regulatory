@@ -21,13 +21,14 @@ export const DIMENSIONS = {
   pairing: { type: 'string', label: 'Estado de pairing' },
   reconciliation: { type: 'string', label: 'Estado de reconciliação' },
   valuation_reconciliation: { type: 'string', label: 'Estado de reconciliação de valuation' },
+  verdict: { type: 'string', label: 'Veredicto das regras ESMA (so_bnpp, so_contraparte, ambos, divergencia, sem_regras_verificaveis)' },
 };
 
 /** Operadores de filtro permitidos. */
 export const FILTER_OPS = ['eq', 'in', 'between', 'gte', 'lte'];
 
 /**
- * Métricas certificadas (as 6 do plano aprovado + persistence, aprovada em 2026-10-19).
+ * Métricas certificadas (as 6 do plano aprovado + persistence, 2026-10-19 + rule_verdict, 2026-10-20).
  * kind:
  *  - 'aggregate': SELECT dims, medida FROM tabela GROUP BY dims (compilador genérico)
  *  - 'custom':    SQL próprio, construído em compiler.js
@@ -70,6 +71,21 @@ export const METRICS = {
     allowedDimensions: ['breaking_field', 'asset_class'],
     defaultDimensions: [],
     allowedFilterDimensions: Object.keys(DIMENSIONS).filter((d) => d !== 'business_date'),
+    defaultLimit: 100,
+  },
+  rule_verdict: {
+    kind: 'aggregate',
+    title: 'Breaks por veredicto das regras ESMA',
+    description:
+      'Breaks distintos por veredicto do motor de regras (validation rules ESMA aplicadas a TP1 = BNPP e TP2 = contraparte): ' +
+      'so_bnpp, so_contraparte, ambos, divergencia (os dois valores cumprem as regras verificáveis) e ' +
+      'sem_regras_verificaveis. Requer npm run rules para a business date.',
+    from: 'break_verdict',
+    measure: { name: 'n_breaks', sql: 'COUNT(*)' },
+    defaultDimensions: ['verdict'],
+    allowedDimensions: ['verdict', 'breaking_field', 'business_date', 'asset_class', 'cp2_lei'],
+    allowedFilterDimensions: ['business_date', 'verdict', 'breaking_field', 'asset_class', 'cp2_lei'],
+    requiredFilters: ['business_date'],
     defaultLimit: 100,
   },
   top_fields: {

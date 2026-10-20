@@ -10,7 +10,7 @@ test('catálogo tem as 6 métricas do plano + persistence, com reference_id_dist
   const cat = describeCatalog();
   assert.deepEqual(
     cat.metrics.map((m) => m.id).sort(),
-    ['breaks_by_counterparty', 'breaks_by_field', 'breaks_dod', 'data_quality', 'persistence', 'reference_id_distribution', 'top_fields'],
+    ['breaks_by_counterparty', 'breaks_by_field', 'breaks_dod', 'data_quality', 'persistence', 'reference_id_distribution', 'rule_verdict', 'top_fields'],
   );
   assert.equal(cat.metrics.find((m) => m.id === 'reference_id_distribution').available, false);
 });
@@ -134,4 +134,18 @@ test('config: uti_alt antigo em config/local.json é aceite como proprietary', a
   const c = loadConfig({ columns: { uti_alt: 'PROPRIETARY_X' } });
   assert.equal(c.columns.proprietary, 'PROPRIETARY_X');
   assert.equal(c.columns.uti_alt, undefined);
+});
+
+test('rule_verdict: lê break_verdict, filtros só nas colunas que a tabela tem', () => {
+  const { sql } = compileMetric({
+    metric: 'rule_verdict',
+    filters: [...onDate(), { dimension: 'breaking_field', op: 'eq', value: 'VALUATION_CCY' }],
+    dimensions: ['breaking_field', 'verdict'],
+  });
+  assert.match(sql, /FROM break_verdict/);
+  assert.match(sql, /GROUP BY breaking_field, verdict/);
+  assert.throws(
+    () => compileMetric({ metric: 'rule_verdict', filters: [...onDate(), { dimension: 'business_line', op: 'eq', value: 'X' }] }),
+    /Filtro não permitido/,
+  );
 });
