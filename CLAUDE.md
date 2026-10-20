@@ -403,7 +403,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 - **Feito (2026-10-20):** `map-fields --all-pairs` (validação dos 179 pares por lotes de 20; CSV de contagens em `data/reports/`); 31 testes.
 - **Feito (2026-10-20):** Excel de regras lido; mapeamento dos top 20 → itens ESMA (3.3.1), 17 diretos e 3 por confirmar; tipos de verificação A/B/C/L.
 - **Feito (2026-10-20):** motor de regras, passos 1–2 do plano: `config/rules/field-map.json` (174 itens: 128 com TP, 6 comuns, 40 sem colunas), `config/rules/emir-vr.json` (54 códigos VR dos top 20: 30 verificáveis, 14 parciais, 10 não verificáveis), compilador DSL → SQL (`src/rules/`), `npm run rules` (`--stats`), tabelas `rule_results` e `break_verdict`; só breaks do data mart, cada regra nos breaks do seu campo; 41 testes. 1.ª execução real em 15/10 (ver 3.3.2).
-- **Feito (2026-10-20, tarde):** passo 3 (409 códigos VR), `rules:sample` para validar 10 breaks de 15/10; 44 testes. **A correr no PC:** `rules`, `rules:sample`, `describe --values TP1_CONFIRMED,TP2_CONFIRMED`.
+- **Feito (2026-10-20, tarde):** passo 3 (409 códigos VR), `rules:sample` para validar 10 breaks de 15/10; 43 testes. **A correr no PC:** `rules`, `rules:sample`, `describe --values TP1_CONFIRMED,TP2_CONFIRMED`.
 - **Plano mantido** (decisão 2026-10-19): backend Node primeiro (dias 3–8), React só nos dias 9–11.
 - **Próximos passos:**
   1. **Desbloqueio (Ordep), caminho crítico:** partilhar o Excel de regras (`EMIR-Refit_Reconciliation status matching.xlsx`) para o mapeamento `BREAKING_FIELD` → regra dos 10 campos (questão 1). O schema do histórico (questão 2) fica em espera com a categorização.
