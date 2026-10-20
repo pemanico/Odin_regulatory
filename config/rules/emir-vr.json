@@ -1,428 +1,8 @@
 {
  "_doc": "Validation rules ESMA EMIR REFIT traduzidas para a DSL de src/rules/compile.js. Tradução de Claude a partir do Excel EMIR-Refit_Reconciliation status matching (texto original não copiado). Validação: npm run rules -- --stats (taxa de violação) + revisão do Ordep por amostra.",
- "version": "2026-10-20.2",
+ "version": "2026-10-20.3",
  "scope": "todos os 408 códigos VR do Excel (174 campos); campos sem colunas DTCC ou comuns = não verificáveis",
  "rules": [
-  {
-   "code": "EMIR-VR-1001-01",
-   "item": "1.1",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1001-02",
-   "item": "1.1",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1001-03",
-   "item": "1.1",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1001-04",
-   "item": "1.1",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1001-05",
-   "item": "1.1",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1002-01",
-   "item": "1.2",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1002-02",
-   "item": "1.2",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1002-03",
-   "item": "1.2",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1002-04",
-   "item": "1.2",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1003-01",
-   "item": "1.3",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1003-02",
-   "item": "1.3",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1003-03",
-   "item": "1.3",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1003-04",
-   "item": "1.3",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1003-05",
-   "item": "1.3",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1004-01",
-   "item": "1.4",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1004-02",
-   "item": "1.4",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1004-03",
-   "item": "1.4",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1004-04",
-   "item": "1.4",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1004-05",
-   "item": "1.4",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1005-01",
-   "item": "1.5",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1006-01",
-   "item": "1.6",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1006-02",
-   "item": "1.6",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1006-03",
-   "item": "1.6",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1007-01",
-   "item": "1.7",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1007-02",
-   "item": "1.7",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1008-01",
-   "item": "1.8",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1008-02",
-   "item": "1.8",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1009-01",
-   "item": "1.9",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1009-02",
-   "item": "1.9",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1009-03",
-   "item": "1.9",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1009-04",
-   "item": "1.9",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1009-05",
-   "item": "1.9",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1009-06",
-   "item": "1.9",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1009-07",
-   "item": "1.9",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1009-08",
-   "item": "1.9",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1009-09",
-   "item": "1.9",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-1010-01",
-   "item": "1.10",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1010-02",
-   "item": "1.10",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1011-01",
-   "item": "1.11",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1011-02",
-   "item": "1.11",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1012-01",
-   "item": "1.12",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1012-02",
-   "item": "1.12",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1012-03",
-   "item": "1.12",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1013-01",
-   "item": "1.13",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1013-02",
-   "item": "1.13",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1014-01",
-   "item": "1.14",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1014-02",
-   "item": "1.14",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1015-01",
-   "item": "1.15",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1015-02",
-   "item": "1.15",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1016-01",
-   "item": "1.16",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1016-02",
-   "item": "1.16",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1016-03",
-   "item": "1.16",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1016-04",
-   "item": "1.16",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1016-05",
-   "item": "1.16",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1016-06",
-   "item": "1.16",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1016-07",
-   "item": "1.16",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1017-01",
-   "item": "1.17",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1017-02",
-   "item": "1.17",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1018-01",
-   "item": "1.18",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1018-02",
-   "item": "1.18",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1018-03",
-   "item": "1.18",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1019-01",
-   "item": "1.19",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1019-02",
-   "item": "1.19",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1019-03",
-   "item": "1.19",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1020-01",
-   "item": "1.20",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-1020-02",
-   "item": "1.20",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2001-01",
-   "item": "2.1",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-2001-02",
-   "item": "2.1",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-2001-03",
-   "item": "2.1",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
-  {
-   "code": "EMIR-VR-2001-04",
-   "item": "2.1",
-   "status": "nao_verificavel",
-   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
-  },
   {
    "code": "EMIR-VR-2002-01",
    "item": "2.2",
@@ -526,60 +106,6 @@
    },
    "status": "parcial",
    "nota": "comparado com UTI (2.1) e report tracking number (2.2); 2.4 sem colunas DTCC"
-  },
-  {
-   "code": "EMIR-VR-2004-01",
-   "item": "2.4",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2004-02",
-   "item": "2.4",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2004-03",
-   "item": "2.4",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2004-04",
-   "item": "2.4",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2005-01",
-   "item": "2.5",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2005-02",
-   "item": "2.5",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2005-03",
-   "item": "2.5",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2005-04",
-   "item": "2.5",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2006-01",
-   "item": "2.6",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
   },
   {
    "code": "EMIR-VR-2007-01",
@@ -813,48 +339,6 @@
    "status": "verificavel"
   },
   {
-   "code": "EMIR-VR-2015-01",
-   "item": "2.15",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2015-02",
-   "item": "2.15",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2016-01",
-   "item": "2.16",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2017-01",
-   "item": "2.17",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2017-02",
-   "item": "2.17",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2017-03",
-   "item": "2.17",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2018-01",
-   "item": "2.18",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
    "code": "EMIR-VR-2019-01",
    "item": "2.19",
    "when": {
@@ -1026,48 +510,6 @@
    "status": "verificavel"
   },
   {
-   "code": "EMIR-VR-2023-01",
-   "item": "2.23",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2023-02",
-   "item": "2.23",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2023-03",
-   "item": "2.23",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2023-04",
-   "item": "2.23",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2023-05",
-   "item": "2.23",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2023-06",
-   "item": "2.23",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2023-07",
-   "item": "2.23",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
    "code": "EMIR-VR-2024-01",
    "item": "2.24",
    "when": {
@@ -1220,18 +662,6 @@
     ]
    },
    "status": "verificavel"
-  },
-  {
-   "code": "EMIR-VR-2026-01",
-   "item": "2.26",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2027-01",
-   "item": "2.27",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
   },
   {
    "code": "EMIR-VR-2028-01",
@@ -1533,12 +963,6 @@
    "status": "verificavel"
   },
   {
-   "code": "EMIR-VR-2035-01",
-   "item": "2.35",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
    "code": "EMIR-VR-2036-01",
    "item": "2.36",
    "when": {
@@ -1581,24 +1005,6 @@
    },
    "status": "parcial",
    "nota": "verificados os valores permitidos; depende do tipo de venue do MIC (RM/MTF/OTF/SI/país terceiro): não há lista MIC (decisão 2026-10-20, só campos TP)"
-  },
-  {
-   "code": "EMIR-VR-2038-01",
-   "item": "2.38",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2038-02",
-   "item": "2.38",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2039-01",
-   "item": "2.39",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
   },
   {
    "code": "EMIR-VR-2040-01",
@@ -2048,18 +1454,6 @@
    "item": "2.50",
    "status": "nao_verificavel",
    "nota": "compara com o período anterior do calendário (campo repetível): não verificável com um valor por transação"
-  },
-  {
-   "code": "EMIR-VR-2052-01",
-   "item": "2.52",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2052-02",
-   "item": "2.52",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
   },
   {
    "code": "EMIR-VR-2053-01",
@@ -3037,18 +2431,6 @@
    "nota": "depende do campo 2.15 (Indicator of the underlying index), que não está no ficheiro DTCC"
   },
   {
-   "code": "EMIR-VR-2085-01",
-   "item": "2.85",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2085-02",
-   "item": "2.85",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
    "code": "EMIR-VR-2086-01",
    "item": "2.86",
    "check": {
@@ -3532,18 +2914,6 @@
    "item": "2.100",
    "status": "nao_verificavel",
    "nota": "depende do campo 2.15 (Indicator of the underlying index), que não está no ficheiro DTCC"
-  },
-  {
-   "code": "EMIR-VR-2101-01",
-   "item": "2.101",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2101-02",
-   "item": "2.101",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
   },
   {
    "code": "EMIR-VR-2102-01",
@@ -4709,12 +4079,6 @@
    "status": "verificavel"
   },
   {
-   "code": "EMIR-VR-2119-01",
-   "item": "2.119",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
    "code": "EMIR-VR-2120-01",
    "item": "2.120",
    "check": {
@@ -5048,36 +4412,6 @@
    "nota": "depende do campo 2.137 (Strike price in effect on associated effective date), que não está no ficheiro DTCC"
   },
   {
-   "code": "EMIR-VR-2137-01",
-   "item": "2.137",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2137-02",
-   "item": "2.137",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2138-01",
-   "item": "2.138",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2138-02",
-   "item": "2.138",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2138-03",
-   "item": "2.138",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
    "code": "EMIR-VR-2139-01",
    "item": "2.139",
    "check": {
@@ -5238,12 +4572,6 @@
     }
    },
    "status": "verificavel"
-  },
-  {
-   "code": "EMIR-VR-2143-01",
-   "item": "2.143",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
   },
   {
    "code": "EMIR-VR-2144-01",
@@ -5466,144 +4794,6 @@
     }
    },
    "status": "verificavel"
-  },
-  {
-   "code": "EMIR-VR-2149-01",
-   "item": "2.149",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2149-02",
-   "item": "2.149",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2150-01",
-   "item": "2.150",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2150-02",
-   "item": "2.150",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2151-01",
-   "item": "2.151",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2151-02",
-   "item": "2.151",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2151-03",
-   "item": "2.151",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2151-04",
-   "item": "2.151",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2151-05",
-   "item": "2.151",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2151-06",
-   "item": "2.151",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2152-01",
-   "item": "2.152",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2152-02",
-   "item": "2.152",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2152-03",
-   "item": "2.152",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2152-04",
-   "item": "2.152",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2152-05",
-   "item": "2.152",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2153-01",
-   "item": "2.153",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2153-02",
-   "item": "2.153",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2153-03",
-   "item": "2.153",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2153-04",
-   "item": "2.153",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2153-05",
-   "item": "2.153",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2153-06",
-   "item": "2.153",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2153-07",
-   "item": "2.153",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
-  },
-  {
-   "code": "EMIR-VR-2153-08",
-   "item": "2.153",
-   "status": "nao_verificavel",
-   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
   },
   {
    "code": "EMIR-VR-2154-01",

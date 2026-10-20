@@ -133,6 +133,8 @@ test('validateRules rejeita códigos, checks e estados inválidos', () => {
   assert.throws(() => validateRules({ rules: [R('EMIR-VR-2047-01', '2.47', { foo: 1 })] }, FIELD_MAP), /check inválido/);
   assert.throws(() => validateRules({ rules: [R('EMIR-VR-2047-01', '2.47', { enum: [] }, { status: 'parcial' })] }, FIELD_MAP), /nota/);
   assert.throws(() => validateRules({ rules: [ok.rules[0], ok.rules[0]] }, FIELD_MAP), /repetido/);
+  assert.throws(() => validateRules({ rules: [R('EMIR-VR-2101-01', '2.101', { required: true })] }, FIELD_MAP), /não tem colunas TP1_\/TP2_/);
+  assert.throws(() => validateRules({ rules: [R('EMIR-VR-1001-01', '1.1', { required: true })] }, FIELD_MAP), /não tem colunas TP1_\/TP2_/);
 });
 
 test('fluxo completo: violações por lado -> veredicto por break', { skip }, async () => {
@@ -191,7 +193,8 @@ test('ruleInputSql: só colunas usadas e semi-join com os breaks', () => {
 
 test('config real: regras válidas, referências resolvidas e compiláveis com todas as colunas TP', () => {
   const { fieldMap, rulesDoc } = loadRules();
-  assert.equal(rulesDoc.rules.length, 409, 'todos os códigos VR do Excel (passo 3)');
+  assert.equal(rulesDoc.rules.length, 274, 'códigos VR dos 128 campos com TP1_/TP2_ (passo 3)');
+  assert.ok(rulesDoc.rules.every((r) => fieldMap.items[r.item].tp?.length), 'só campos com colunas TP');
   for (const r of rulesDoc.rules) for (const i of referencedItems(r)) assert.ok(fieldMap.items[i], `${r.code}: ${i}`);
   const cols = new Map();
   for (const e of Object.values(fieldMap.items)) {

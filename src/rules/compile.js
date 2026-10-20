@@ -57,6 +57,10 @@ export function validateRules(rulesDoc, fieldMap) {
     if (seen.has(r.code)) throw new ValidationError(`Código repetido: ${r.code}`);
     seen.add(r.code);
     if (!fieldMap.items[r.item]) throw new ValidationError(`${r.code}: item desconhecido ${r.item}`);
+    // Só se validam campos com pares TP1_/TP2_ no ficheiro DTCC (decisão 2026-10-20).
+    if (!fieldMap.items[r.item].tp?.length) {
+      throw new ValidationError(`${r.code}: o item ${r.item} não tem colunas TP1_/TP2_ no ficheiro DTCC (só esses campos são validados)`);
+    }
     if (!STATUSES.includes(r.status)) throw new ValidationError(`${r.code}: status inválido ${r.status}`);
     if (r.status !== 'nao_verificavel') {
       const keys = Object.keys(r.check ?? {});
