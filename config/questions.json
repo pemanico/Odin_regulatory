@@ -1,0 +1,17 @@
+{
+  "_comment": "Perguntas sugeridas do ecrã 1 (chips). Cada uma = pergunta em português -> pedido estruturado esperado. É também o CONJUNTO DE TESTE DO AGENTE: o agente tem de traduzir a pergunta no mesmo pedido. $date = business date selecionada na UI. Versão inicial escrita por Claude (2026-10-20); a corrigir com as perguntas reais dos operacionais.",
+  "questions": [
+    { "id": "top10", "text": "Top 10 campos em break", "request": { "metric": "top_fields", "filters": [{ "dimension": "business_date", "op": "eq", "value": "$date" }] } },
+    { "id": "dod", "text": "O que mudou face ao dia anterior?", "request": { "metric": "breaks_dod", "filters": [{ "dimension": "business_date", "op": "eq", "value": "$date" }], "limit": 20 } },
+    { "id": "verdicts", "text": "Breaks por veredicto das regras ESMA", "request": { "metric": "rule_verdict", "dimensions": ["verdict"], "filters": [{ "dimension": "business_date", "op": "eq", "value": "$date" }] } },
+    { "id": "cpty_fields", "text": "Em que campos o erro é da contraparte?", "request": { "metric": "rule_verdict", "dimensions": ["breaking_field"], "filters": [{ "dimension": "business_date", "op": "eq", "value": "$date" }, { "dimension": "verdict", "op": "eq", "value": "so_contraparte" }], "limit": 20 } },
+    { "id": "bnpp_fields", "text": "Em que campos o erro é do BNPP?", "request": { "metric": "rule_verdict", "dimensions": ["breaking_field"], "filters": [{ "dimension": "business_date", "op": "eq", "value": "$date" }, { "dimension": "verdict", "op": "eq", "value": "so_bnpp" }], "limit": 20 } },
+    { "id": "keys", "text": "Transações por veredicto", "request": { "metric": "key_verdict", "dimensions": ["key_verdict"], "filters": [{ "dimension": "business_date", "op": "eq", "value": "$date" }] } },
+    { "id": "combos", "text": "Combinações de campos mais frequentes", "request": { "metric": "field_combinations", "filters": [{ "dimension": "business_date", "op": "eq", "value": "$date" }], "limit": 20 } },
+    { "id": "combos_val", "text": "Com que campos parte o VALUATION_AMT?", "request": { "metric": "field_combinations", "filters": [{ "dimension": "business_date", "op": "eq", "value": "$date" }, { "dimension": "breaking_field", "op": "eq", "value": "VALUATION_AMT" }], "limit": 20 } },
+    { "id": "cpty", "text": "Que contrapartes têm mais breaks?", "request": { "metric": "breaks_by_counterparty", "filters": [{ "dimension": "business_date", "op": "eq", "value": "$date" }], "limit": 20 } },
+    { "id": "cpty_ccy", "text": "Contrapartes com mais breaks em VALUATION_CCY", "request": { "metric": "breaks_by_counterparty", "filters": [{ "dimension": "business_date", "op": "eq", "value": "$date" }, { "dimension": "breaking_field", "op": "eq", "value": "VALUATION_CCY" }], "limit": 20 } },
+    { "id": "asset", "text": "Breaks por asset class", "request": { "metric": "breaks_by_field", "dimensions": ["asset_class"], "filters": [{ "dimension": "business_date", "op": "eq", "value": "$date" }] } },
+    { "id": "unexplained", "text": "Transações sem explicação por asset class", "request": { "metric": "key_verdict", "dimensions": ["asset_class"], "filters": [{ "dimension": "business_date", "op": "eq", "value": "$date" }, { "dimension": "key_verdict", "op": "eq", "value": "sem_explicacao" }] } }
+  ]
+}

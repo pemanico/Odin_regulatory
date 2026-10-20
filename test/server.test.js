@@ -166,3 +166,14 @@ test('tools do agente: nenhuma tool devolve linhas; keysQuery só com literais v
   assert.match(q.join, /bv\.breaking_field = 'ISIN'/);
   assert.equal(statusFor(new ValidationError('x')), 400);
 });
+
+test('perguntas sugeridas: todas compilam (conjunto de teste do agente)', async () => {
+  const { compileMetric } = await import('../src/semantic/compiler.js');
+  const api = createApi(createDbPool(async () => ({})), { audit: false });
+  const qs = api.questions();
+  assert.ok(qs.length >= 10);
+  for (const q of qs) {
+    const req = JSON.parse(JSON.stringify(q.request).replaceAll('$date', D));
+    assert.doesNotThrow(() => compileMetric(req), q.id);
+  }
+});

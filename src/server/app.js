@@ -28,6 +28,7 @@ export function createApp(express, api, { staticDir } = {}) {
   // Tools do agente (só agregados)
   app.get('/api/tools', handle(() => api.tools()));
   app.get('/api/metrics', handle(() => api.listMetrics()));
+  app.get('/api/questions', handle(() => api.questions()));
   app.post('/api/query', handle((req) => api.queryMetric(req.body, { source: req.get('x-odin-source') === 'agent' ? 'agent' : 'ui' })));
   // Só UI (linhas): nunca expostos ao agente
   app.get('/api/keys', handle((req) => api.listKeys(req.query)));

@@ -12,6 +12,9 @@ import { VERDICTS, KEY_VERDICTS } from '../rules/sql.js';
 import { audit as defaultAudit } from '../audit.js';
 import { AGENT_TOOLS } from './tools.js';
 import { DbBusyError } from './dbpool.js';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { ROOT } from '../config.js';
 
 /** Jurisdições do seletor: só EMIR ativa na demo. */
 export const JURISDICTIONS = [
@@ -139,6 +142,11 @@ FROM key_summary GROUP BY business_date ORDER BY business_date DESC`);
 
     tools() {
       return AGENT_TOOLS;
+    },
+
+    /** Perguntas sugeridas (chips do ecrã 1) = conjunto de teste do agente. */
+    questions() {
+      return JSON.parse(readFileSync(resolve(ROOT, 'config/questions.json'), 'utf8')).questions;
     },
 
     async queryMetric(request, { source = 'api' } = {}) {

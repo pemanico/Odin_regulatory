@@ -59,6 +59,32 @@ Validação manual: `npm run rules:sample -- --date 2026-10-15 [--n 10] [--field
 Âmbito: as regras só correm sobre os breaks do data mart, e cada regra só nos breaks do seu campo. Validar o ficheiro DTCC inteiro é "data quality" (requisito futuro). Regra suspeita = viola nos dois lados em > 5% dos breaks do seu campo.
 Veredictos: `so_bnpp`, `so_contraparte`, `ambos`, `divergencia` (os dois lados cumprem as regras verificáveis) e `sem_regras_verificaveis`. O motor é SQL determinístico (DuckDB); não usa o LLM. Só mostra contagens.
 
+## Demo web (backend + frontend)
+Pré-requisitos: `npm install` (instala também Express, React e Vite) e, **para cada business date**, `npm run rules -- --date <data>`. É o `rules` que grava a tabela `key_summary` usada pela UI; datas corridas antes de 2026-10-20 (noite) têm de ser corridas outra vez.
+```bash
+npm run build      # compila o frontend para web/dist (repetir depois de mudar web/)
+npm start          # http://localhost:3001  (porta: ODIN_PORT; só escuta em localhost, sem autenticação)
+npm run dev        # desenvolvimento: API com --watch + Vite em http://localhost:5173
+```
+- **Ecrãs:** `1` Consulta (perguntas sugeridas + consulta avançada, em fio de conversa; o texto livre fica para o agente), `2` Top 10 (campo, Δ vs dia anterior, barra de veredictos, % com lado identificado), `3` Drill-down (combinações de campos → transações/Keys → todos os breaks da Key com valor BNPP = `TP1_<campo>`, valor other cpty = `TP2_<campo>`, veredicto e regra violada). Atalhos: `1`/`2`/`3`, `j`/`k`, `Enter`, `Esc`, `/`, `n`/`p`.
+- **O seletor de datas só mostra datas com `key_summary`** (regras corridas), fora das `excludedDates`.
+- **A base é aberta em READ_ONLY só durante cada pedido:** `npm run rules` e `build:db` podem correr com o servidor ligado. Se um pedido apanhar a escrita a meio, a UI mostra "base a ser atualizada"; basta repetir.
+- **Perguntas sugeridas:** `config/questions.json` (pergunta → pedido estruturado esperado). É também o conjunto de teste do agente.
+
+| Endpoint | Para quem | O que devolve |
+|---|---|---|
+| `GET /api/meta` | UI | jurisdições (só EMIR ativa), datas com regras, versão das regras |
+| `GET /api/metrics` | **tool `list_metrics`** | catálogo de métricas certificadas |
+| `POST /api/query` | **tool `query_metric`** | linhas agregadas de uma métrica (com o SQL) |
+| `GET /api/tools` | agente (futuro) | schemas das tools (`list_metrics`, `query_metric`, `open_drilldown`) |
+| `GET /api/questions` | UI | perguntas sugeridas |
+| `GET /api/keys` | **só UI** | transações (Keys) paginadas, com filtros: `field`, `field_verdict`, `combo`, `key_verdict`, `asset_class`, `cp2_lei`, `trade`, `min_fields`, `sort`, `page` |
+| `GET /api/keys/:id?date=` | **só UI** | todos os breaks da Key (campo ESMA, TP1, TP2, veredicto, erros) |
+
+**Regra de arquitetura:** o agente só vê agregados. `/api/keys` devolve UTIs, LEIs e valores e **nunca** é uma tool. A tool `open_drilldown` só devolve à UI os filtros do ecrã 3 (o URL `#/drill?...`). Todos os pedidos ficam em `logs/audit-<data>.jsonl` (parâmetros e nº de linhas, sem dados).
+
+Veredicto de uma transação (Key = chave de produção sem o campo): `bnpp` (só há campos com erro BNPP), `contraparte` (só da contraparte), `misto` (erros dos dois lados; um campo `ambos` conta como misto), `sem_explicacao` (nenhum campo com lado identificado).
+
 ## Métricas (semantic layer)
 | Métrica | O que responde |
 |---|---|
@@ -69,6 +95,8 @@ Veredictos: `so_bnpp`, `so_contraparte`, `ambos`, `divergencia` (os dois lados c
 | `breaks_by_counterparty` | Breaks por LEI da contraparte |
 | `reference_id_distribution` | *Pendente:* falta o schema do histórico de categorizações |
 | `rule_verdict` | Breaks por veredicto das regras ESMA (por campo, asset class, contraparte); requer `npm run rules` |
+| `key_verdict` | Transações (Keys) por veredicto da Key (bnpp, contraparte, misto, sem_explicacao); requer `npm run rules` |
+| `field_combinations` | Combinações de campos em break na mesma transação, com o nº de transações; o filtro `breaking_field` devolve as que contêm o campo |
 | `data_quality` | Linhas brutas vs. breaks distintos, fator de duplicação, chaves com valores em conflito |
 
 Exemplos:
@@ -86,6 +114,8 @@ npm run metric -- top_fields --date 2026-10-15 --sql      # só mostra o SQL ger
 Cada execução fica registada em `logs/audit-<data>.jsonl` (pedido, SQL, nº de linhas, duração; sem dados).
 
 ## Problemas conhecidos
+- **`npm run build` falha a instalar/correr o Vite:** o `@vitejs/plugin-react` e o `vite` vêm do Artifactory como o resto. Se faltar algum pacote, `npm install` outra vez e ver o erro. O frontend só foi compilado com esbuild no ambiente de desenvolvimento; a 1.ª compilação com Vite é no PC do escritório.
+- **A UI diz "Ainda não há resultados das regras"** ou não mostra uma data: falta `npm run rules -- --date <data>` (grava `key_summary`).
 - **`Não foi possível carregar @duckdb/node-api`**: falta correr `npm install`.
 - **Erro do driver DuckDB depois de instalado**: a API do `@duckdb/node-api` ainda está em evolução. O único ficheiro ligado ao driver é `src/db/duckdb.js`; ajustar aí (`DuckDBInstance.create`, `connect`, `runAndReadAll`, `getRowObjects`).
 - **`npm install` dá `E403 Intranetbrowsingblocked`** no Artifactory interno (`artifactory.cib.echonet`): o npm está a mandar o pedido para a intranet pelo proxy de internet. Correção: `npm config set noproxy ".echonet,localhost,127.0.0.1"`. O aviso `Unknown user config "always-auth"` é inofensivo.

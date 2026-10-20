@@ -4,7 +4,7 @@
 > - Qualquer assistente (Claude do banco, Claude Code, ou outro) deve **ler este ficheiro antes de qualquer trabalho**.
 > - No fim de cada sessão de trabalho, **atualizar** as secções "Estado atual", "Registo de decisões" e "Questões em aberto".
 > - **Nunca colocar dados reais neste ficheiro** (UTIs, valores, nomes de contrapartes). Só estrutura, decisões e métricas agregadas.
-> - Última atualização: 2026-10-20 (fim da sessão: motor de regras fechado; próximo: backend + frontend, agente depois)
+> - Última atualização: 2026-10-20, noite (backend + frontend da demo feitos; próximo: validar no PC do escritório e o agente)
 
 ---
 
@@ -57,14 +57,25 @@ Os operacionais tratam ~1–2M linhas de breaks por dia, todas categorizadas em 
   Hipótese adicional: o cluster útil pode ser o **conjunto de campos em break por position** (ver secção 4).
 - **Sugestão:** para cada assinatura, o reference ID mais frequente no histórico, com a % de confiança. Abaixo de um limiar mínimo → "sem sugestão". **A validação é sempre humana (operacionais).** A concordância entre a sugestão e a decisão humana é o KPI de qualidade do motor.
 - **Agente:** Claude através do gateway interno do banco, com tool calling. Tools: `list_metrics`, `query_metric(métrica, dimensões, filtros, data)`, `get_clusters(campo, data)`. **O LLM nunca vê linhas de dados**, só o schema, as definições de métricas e os resultados agregados. A evidência dos breaks é mostrada de forma determinística pela UI.
-- **Backend:** Node.js (npm install funciona no escritório). Cliente DuckDB, chamadas ao gateway, log de auditoria (prompt → métrica → SQL).
-- **Frontend:** React, 3 ecrãs:
+- **Backend:** Node.js + Express (npm install funciona no escritório). Cliente DuckDB (READ_ONLY, ligação curta), chamadas ao gateway, log de auditoria (prompt → métrica → SQL). **Revisto em 2026-10-20 (noite), ver 2.1.**
+- **Frontend:** React + Vite, 3 ecrãs:
   1. Prompt com resposta em tabela ou gráfico
   2. Top 10 de breaking fields por business date
-  3. Drill-down campo → clusters → evidência (BNPP vs CPTY, regra VR, se cada lado a cumpre, sugestão + confiança)
+  3. Drill-down campo → ~~clusters~~ combinações de campos → transações (Keys) → evidência (BNPP vs CPTY, regra violada) — ver 2.1
 
   Tem um seletor de jurisdição, só com EMIR ativo.
 - **Configuração:** nomes de tabelas, colunas, caminhos e endpoints ficam num ficheiro de configuração/`.env`, nunca hardcoded.
+
+### 2.1 Plano APROVADO do backend + frontend (2026-10-20, noite, grill-me)
+- **Duas classes de endpoints.** Tools do agente, só agregados: `GET /api/metrics` (`list_metrics`), `POST /api/query` (`query_metric`), mais a tool `open_drilldown`, que só devolve filtros à UI. Endpoints só da UI, com linhas: `GET /api/keys` e `GET /api/keys/:id`. O LLM nunca chama estes.
+- **Demo em `localhost`** no PC de quem apresenta, sem autenticação (assumido; não confirmado explicitamente).
+- **UI densa e escura** (tabelas compactas, barras inline, atalhos de teclado), com uma faixa de 4 KPIs no topo: breaks, Δ vs D-1, transações, % sem explicação. Audiência: só operacionais.
+- **Unidade do drill-down = Key/transação** (chave de produção sem o campo): campo → combinações de campos (opcional) → lista de Keys com filtros → expandir a Key mostra **todos** os seus breaks. Os padrões por par de valores ficam para depois.
+- **Veredicto da Key:** contagens por veredicto (mostrar) + `bnpp` / `contraparte` / `misto` / `sem_explicacao` (filtrar e ordenar). A demo mostra abertamente a % sem explicação.
+- **Ecrã 1:** chips de perguntas sugeridas + consulta avançada (construtor). O texto livre fica desativado até ao agente. **Os chips são o conjunto de teste do agente** (`config/questions.json`).
+- **Stack:** React + Vite + Express. Revoga "sem passo de build / zip" (2026-10-16).
+- **DuckDB READ_ONLY com ligação curta por pedido**, para os scripts poderem escrever com o servidor ligado. Seletor de datas só com datas que têm `key_summary`.
+- **Fora:** agente, export CSV, autenticação, padrões por par de valores.
 
 ### Critérios de sucesso (revistos em 2026-10-19: categorização adiada)
 - ~~**Backtest:** % de sugestões corretas face às categorizações reais das últimas 2–4 semanas.~~ Adiado com a categorização.
@@ -312,6 +323,18 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-20 | **Motor de regras fechado** (Ordep); teste com dados de produção fica do lado do Ordep. Passo 4 do plano: métrica certificada `rule_verdict` (sobre `break_verdict`; dimensões veredicto, campo, data, asset class, contraparte) |
 | 2026-10-20 | **Ordem revista: backend + frontend antes do agente** (Ordep). A próxima sessão começa num chat novo com o prompt da secção 7 |
 | 2026-10-20 | **A demo não é apresentada antes do agente** (Ordep). O ecrã 1 com seletor de métrica + filtros é só intermédio; a API do backend deve expor as mesmas operações que as tools do agente (`list_metrics`, `query_metric`, drill-down), para o agente encaixar sem refazer o backend |
+| 2026-10-20 | **Plano do backend + frontend aprovado** (Ordep, grill-me; ver 2.1) |
+| 2026-10-20 | Endpoints em duas classes: tools do agente só com agregados; `/api/keys` com linhas só para a UI, nunca tool (Ordep) |
+| 2026-10-20 | UI: densidade de terminal (tema escuro, tabelas compactas, atalhos) + faixa de KPIs; audiência = operacionais (Ordep) |
+| 2026-10-20 | Drill-down por **Key/transação**: combinações de campos (opcional) + lista de Keys com filtros; expandir mostra todos os breaks da Key (Ordep, opções c + a). Substitui o agrupamento por padrão/par de valores, que fica para depois |
+| 2026-10-20 | Veredicto da Key: contagens por veredicto + `bnpp`/`contraparte`/`misto`/`sem_explicacao` (Ordep, b + c). Um campo `ambos` conta como `misto` (Claude) |
+| 2026-10-20 | Ecrã 1: chips de perguntas sugeridas + consulta avançada (Ordep, opção c). Perguntas iniciais escritas por Claude; os operacionais corrigem |
+| 2026-10-20 | **React + Vite + Express** (Ordep). Revoga "sem passo de build, correr a partir de um zip" (2026-10-16) |
+| 2026-10-20 | DuckDB READ_ONLY com ligação curta por pedido (Ordep, opção a); erro de lock → 503 "base a ser atualizada" |
+| 2026-10-20 | `key_summary` pré-calculado no `npm run rules` (Claude; sem oposição): `key_id` sintético por data, para a chave nunca ir no URL |
+| 2026-10-20 | Métricas certificadas novas: `key_verdict` e `field_combinations`. Filtros em `breaking_field` passam a ignorar maiúsculas (minúsculas no data mart, maiúsculas em `break_verdict`) |
+| 2026-10-20 | Lógica da API num módulo sem framework (`src/server/api.js`), testada com SQLite; o Express é só invólucro (`app.js`) |
+| 2026-10-20 | Cores dos veredictos validadas (CVD) no fundo escuro: violeta = ambos/misto, laranja = BNPP, azul = contraparte; divergência e sem regras em neutros (sem regras com textura) |
 
 ---
 
@@ -381,6 +404,12 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 35. **Requisito futuro — data quality:** validar todas as transações do ficheiro DTCC (não só os breaks) com o mesmo motor de regras; inclui o alerta de qualidade por dia.
 36. **Códigos reais de CONFIRMED no ficheiro DTCC** (regra 2029-01 viola em 93% dos breaks nos dois lados): `npm run describe -- "data/dtcc/**/*.parquet" --values TP1_CONFIRMED,TP2_CONFIRMED`. Provavelmente o ficheiro usa outros códigos; o mesmo pode acontecer noutros enums.
 37. **Cobertura do critério "explicação pelas regras"**: na 1.ª execução só ~1,3% dos breaks têm um lado identificado. Rever com o Ordep o que a demo promete (ver 3.3.2).
+39. **O que faz um operacional com os ~170 mil breaks de VALUATION_AMT no Excel?** (filtra por contraparte, ordena por valor, categoriza em massa por algum critério?) Decide o que o ecrã 3 tem de fazer mais depressa. Levar à reunião com os operacionais.
+40. **Perguntas reais dos operacionais** (10–15) para substituir os chips de `config/questions.json`, que são o conjunto de teste do agente.
+41. **1.ª execução da demo no PC do escritório:** `npm install` (Express, React, Vite, `@vitejs/plugin-react` pelo Artifactory); `npm run rules` para 13, 14 e 15/10 (grava `key_summary`); `npm run build`; `npm start`. Medir o tempo de `/api/keys` com filtro de campo em VALUATION_AMT (join `key_summary` × `break_verdict`, ~170 mil). O frontend só foi compilado com esbuild e testado sobre SQLite com dados sintéticos; Vite, Express e DuckDB nunca correram juntos.
+42. **Export CSV** da lista de Keys filtrada: ficou fora do plano. Os operacionais vivem no Excel, e é provável que o peçam na primeira demo.
+43. **Onde corre a demo:** assumido `localhost` no PC de quem apresenta, sem autenticação. Por confirmar.
+44. **O gerador sintético não cria o ficheiro DTCC:** com dados sintéticos não se consegue correr `npm run rules` e a UI fica sem datas. Para desenvolver a UI fora do escritório, gerar também um DTCC sintético (TP1_/TP2_ dos campos em break).
 38. ~~Regras que comparam com colunas comuns.~~ **Fechado (2026-10-20, Ordep):** passam a não verificáveis (2002-02, 2003-05, 2028-03, 2032-03, 2045-05, 2077-04, 2078-04); o compilador também recusa referências a colunas comuns.
 
 ## 7. Estado atual
@@ -414,32 +443,36 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 - **Feito (2026-10-20, tarde):** passo 3 (409 códigos VR), `rules:sample` para validar 10 breaks de 15/10; 43 testes. **A correr no PC:** `rules`, `rules:sample`, `describe --values TP1_CONFIRMED,TP2_CONFIRMED`.
 - **Feito (2026-10-20, fim da tarde):** classificação validada pelo Ordep na amostra; `break_detail` com campo ESMA, valores TP1/TP2 e erro em texto (`src/rules/describe.js`); 44 testes.
 - **Feito (2026-10-20):** motor de regras fechado (passos 1–4); métrica `rule_verdict` na semantic layer. Validação com dados de produção: Ordep.
-- **Ordem revista (Ordep, 2026-10-20):** **backend + frontend primeiro, agente depois.** A próxima sessão continua num chat novo (prompt de arranque abaixo).
+- **Ordem revista (Ordep, 2026-10-20):** **backend + frontend primeiro, agente depois.**
+- **Feito (2026-10-20, noite):** backend + frontend da demo (plano 2.1, desenhado em grill-me e aprovado).
+  - `npm run rules` grava `key_summary`; métricas `key_verdict` e `field_combinations` (10 métricas no catálogo).
+  - `src/server/`: `api.js` (lógica), `app.js` (Express), `dbpool.js` (READ_ONLY, ligação curta, lock → 503), `tools.js` (schemas das tools do agente). `npm start`, `npm run dev`, `npm run build`.
+  - `web/` (React + Vite): topo com jurisdição, data, versão das regras e 4 KPIs; ecrãs Consulta (chips + consulta avançada, cartões com tabela/gráfico/SQL/"ver breaks"), Top 10 (Δ, barra de veredictos clicável, % lado identificado), Drill-down (combinações → transações → todos os breaks da Key, com "copiar chave"). Estado do drill-down no URL (`#/drill?...`), que é o formato da tool `open_drilldown`.
+  - 53 testes. Verificado ponta a ponta com dados sintéticos sobre SQLite (esbuild + browser headless, sem erros de consola). **Não testado com Vite, Express nem DuckDB** (o registo npm não está acessível no ambiente de desenvolvimento): questão 41.
 - **Próximos passos:**
-  1. **Backend + frontend (próxima sessão, modo grill-me, plano aprovado antes de código).** Base já pronta: semantic layer (8 métricas, incl. `rule_verdict`), `break_detail` (chave + campo ESMA + valores TP1/TP2 + veredicto + erro em texto), auditoria. Ecrãs do plano: (1) prompt → tabela/gráfico (seletor de métrica + filtros só como versão intermédia: a demo não é apresentada antes do agente), (2) top 10 de breaking fields por business date, (3) drill-down campo → breaks com BNPP vs other cpty, veredicto e erro. Seletor de jurisdição só com EMIR.
-  2. **Agente (depois, mas no caminho crítico da demo):** pergunta em aberto — formato do gateway interno de LLM (Anthropic Messages / OpenAI / próprio) e suporte de tool calling. Convém obter a resposta já, em paralelo com o backend.
+  1. **Validar a demo no PC do escritório (Ordep):** questão 41. Colar só agregados e erros, nunca linhas.
+  2. **Agente (próxima sessão, grill-me):** formato do gateway interno de LLM (Anthropic Messages / OpenAI / próprio) e suporte de tool calling. As tools já existem: `GET /api/tools`. Ligar o texto livre do ecrã 1; medir a tradução contra `config/questions.json`.
   3. **Validação com dados de produção (Ordep):** `npm run rules` + `rules:sample`; corrigir a regra CONFIRMED (q. 36) com `describe --values`.
   4. **Reunião com operacionais:** universo ~2,3M/dia (q. 9); `PROPRIETARY` é o identificador que a contraparte vê?; 3–5 casos difíceis (q. 5).
   5. **Avisos:** cancelar o pedido de correção da duplicação (não existe); avisar o dono do feed DTCC sobre 12/10; fixar a versão do `@duckdb/node-api` (q. 20).
   6. **A desenhar depois (grill-me):** agrupamento das divergências por par de valores BNPP × contraparte (fator de redução breaks → decisões); persistência "igual/alterado" com valores TP1/TP2; data quality sobre o ficheiro DTCC inteiro (q. 35); desempate com booking TSR.
   - **Em espera (categorização adiada):** schema do histórico, fase 2 da persistência, backtest.
 
-### Prompt de arranque para a próxima sessão (backend + frontend)
+### Prompt de arranque para a próxima sessão (agente)
 ```
 Contexto: projeto "Odin Regulatory — EMIR Breaks", demo Node.js + DuckDB sobre breaks de reconciliação EMIR (relatório DTCC).
 Repo: github.com/pemanico/Odin_regulatory (branch main).
 
-Antes de qualquer coisa, clona o repo e lê o CLAUDE.md e o README.md na raiz (plano aprovado, decisões, descobertas,
-motor de regras ESMA fechado em 2026-10-20, questões em aberto e próximos passos na secção 7).
+Antes de qualquer coisa, clona o repo e lê o CLAUDE.md e o README.md na raiz (planos aprovados nas secções 2 e 2.1,
+decisões, questões em aberto e próximos passos na secção 7).
 
-Onde estamos: motor de regras fechado (274 códigos VR dos 128 campos com TP1_/TP2_; tabelas rule_results,
-break_verdict e break_detail; métrica rule_verdict). Dados reais de 13–15/10 no meu PC (Windows x64, Node v24,
-PowerShell) em data/breaks/ e data/dtcc/; 12/10 é anómalo e fica fora.
+Onde estamos: motor de regras fechado; backend (Express, src/server/) + frontend (React + Vite, web/) feitos em 2026-10-20.
+As tools do agente já existem (GET /api/tools: list_metrics, query_metric, open_drilldown); o texto livre do ecrã 1 está
+desativado à espera do agente. Dados reais de 13–15/10 no meu PC (Windows x64, Node v24, PowerShell); 12/10 fica fora.
+Resultado da 1.ª execução da demo no PC: <colar aqui o que correu e o que falhou (questão 41)>.
 
-Objetivo desta sessão: backend + frontend da demo (o agente/LLM fica para depois, mas a demo só é apresentada com o agente:
-os endpoints do backend devem espelhar as tools do agente). Ecrãs do plano: prompt/consulta
-de métricas, top 10 de breaking fields por business date, drill-down campo → breaks (chave, campo ESMA, valor BNPP =
-TP1_<campo>, valor other cpty = TP2_<campo>, veredicto, erro de format/condition). Seletor de jurisdição só com EMIR.
+Objetivo desta sessão: o agente (Claude via gateway interno do banco, com tool calling). O LLM só vê agregados;
+/api/keys nunca é tool. As perguntas de config/questions.json são o conjunto de teste do agente.
 
 Regras:
 - Eu corro os comandos no PC do escritório e colo-te os resultados. Tu não tens acesso aos dados.
@@ -466,6 +499,10 @@ src/synthetic/generate.js  dados sintéticos (identificadores SYNTH*)
 scripts/                   CLIs: synthetic, build-db, metric, profile, describe (estrutura de Parquet sem dados), map-fields
 src/analysis/fieldmap.js   mapeamento BREAKING_FIELD -> TP1_/TP2_ e validação (matriz de confusão)
 config/rules/              field-map.json (item ESMA -> colunas TP) e emir-vr.json (regras VR em DSL)
-src/rules/                 compile.js (DSL -> SQL por lado), sql.js (rule_results, break_verdict, break_detail), describe.js (erro em texto), catalog.js
+src/rules/                 compile.js (DSL -> SQL por lado), sql.js (rule_results, break_verdict, break_detail, key_summary), describe.js (erro em texto), catalog.js
+src/server/                api.js (lógica da API, sem framework), app.js (Express), dbpool.js (DuckDB READ_ONLY, ligação curta), tools.js (tools do agente)
+scripts/serve.js, dev.js   npm start (API + web/dist) e npm run dev (API + Vite)
+web/                       frontend React + Vite (vite.config.js, src/App.jsx, src/views/{Consulta,Top10,Drill}.jsx, src/components/, src/theme.css)
+config/questions.json      perguntas sugeridas do ecrã 1 = conjunto de teste do agente
 test/                      node:test
 ```
