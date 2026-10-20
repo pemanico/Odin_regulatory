@@ -2,7 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { compileRule, compileAll, validateRules } from '../src/rules/compile.js';
 import { loadRules, referencedItems } from '../src/rules/catalog.js';
-import { insertViolationsSql, fieldRulesSql, insertVerdictSql, RESULTS_DDL, VERDICT_DDL, usedColumns, ruleInputSql, isSuspect, violationCountsSql } from '../src/rules/sql.js';
+import { insertViolationsSql, fieldRulesSql, insertVerdictSql, RESULTS_DDL, VERDICT_DDL, usedColumns, ruleInputSql, isSuspect, violationCountsSql, catalogTablesSql, DETAIL_DDL, insertDetailSql, VERDICT_TEXT } from '../src/rules/sql.js';
+import { describeRule, fieldLabel } from '../src/rules/describe.js';
 import { openSqlite, sqliteAvailable } from '../src/db/sqlite.js';
 import { dialects } from '../src/db/dialects.js';
 import { loadConfig } from '../src/config.js';
@@ -166,6 +167,18 @@ test('fluxo completo: violações por lado -> veredicto por break', { skip }, as
   assert.deepEqual(counts, { BNPP: 2, CPTY: 2 });
   const [u4] = await db.all("SELECT COUNT(*) AS n FROM rule_results WHERE uti = 'U4'");
   assert.equal(Number(u4.n), 0);
+
+  // Detalhe para os operacionais: campo ESMA, valores TP1/TP2 do campo em break, veredicto e erro em texto.
+  for (const sql of catalogTablesSql(compiled, FIELD_MAP, describeRule, fieldLabel)) await db.exec(sql);
+  await db.exec(DETAIL_DDL);
+  await db.exec(insertDetailSql('2026-10-15', db.dialect, ['DELIVERY_TYPE', 'VALUATION_AMT'], 't1'));
+  const det = await db.all('SELECT uti, campo, valor_bnpp, valor_other_cpty, veredicto, erro_bnpp, erro_other_cpty FROM break_detail ORDER BY uti');
+  assert.deepEqual(det[0], {
+    uti: 'U0', campo: '2.47 Delivery type', valor_bnpp: 'XXXX', valor_other_cpty: 'CASH', veredicto: VERDICT_TEXT.so_bnpp,
+    erro_bnpp: "This field shall contain one of 'CASH', 'PHYS', 'OPTL'", erro_other_cpty: null,
+  });
+  assert.equal(det[3].veredicto, VERDICT_TEXT.divergencia);
+  assert.deepEqual([det[4].campo, det[4].valor_bnpp, det[4].valor_other_cpty], ['2.21 Valuation amount', '1', '2']);
   await db.close();
 });
 
@@ -237,4 +250,15 @@ test('if / equals_any / not_equal', { skip }, async () => {
   assert.deepEqual(await violating(db2, R('EMIR-VR-2077-04', '2.19', { equals_any: ['2.47', '2.10'] })), ['U2']);
   assert.deepEqual(await violating(db2, R('EMIR-VR-2077-05', '2.19', { not_equal: { ref: '2.47', unless: '2.10' } })), ['U0']);
   await db2.close();
+});
+
+test('describeRule: erro de format/condition em texto, sem código', () => {
+  const fm = FIELD_MAP;
+  assert.equal(describeRule(R('EMIR-VR-2019-01', '2.19', { required: true }, { when: { eq: ['2.47', 'CASH'] } }), fm),
+    "If Delivery type (2.47) = 'CASH': this field shall be populated");
+  assert.equal(describeRule(R('EMIR-VR-2021-01', '2.21', { decimal: { digits: 25, decimals: 5, sign: 'any' } }), fm),
+    'Format: value positive or negative, up to 25 numeric characters including up to 5 decimal places');
+  assert.match(describeRule(R('EMIR-VR-2044-02', '2.44', { compare: { op: '>=', ref: '2.42', as: 'date' } }), fm), /Execution timestamp \(2\.42\)/);
+  assert.equal(fieldLabel('delivery_type', fm), '2.47 Delivery type');
+  assert.equal(fieldLabel('NAO_EXISTE', fm), 'NAO_EXISTE');
 });

@@ -53,7 +53,8 @@ Configuração em `config/rules/`: `field-map.json` (item ESMA → colunas `TP1_
 npm run rules -- --date 2026-10-15           # grava rule_results e break_verdict; veredicto por break/campo e regras suspeitas
 npm run rules -- --date 2026-10-15 --stats   # idem + tabela completa por regra (CSV sempre em data/reports/)
 ```
-Validação manual: `npm run rules:sample -- --date 2026-10-15 [--n 10] [--field CAMPO]` escreve `data/reports/sample-<data>.csv` (chave, valores TP1/TP2, veredicto, códigos VR; colunas para marcar correto S/N). Só local.
+Detalhe por break (tabela `break_detail` e `data/reports/break-verdict-<data>.csv`, só local): chave de produção, **campo** (nome do documento de regras, ex. "2.22 Valuation currency"), **valor_bnpp** (`TP1_<campo>`), **valor_other_cpty** (`TP2_<campo>`), veredicto e **erro_bnpp / erro_other_cpty** (a regra de format/condition violada, em texto).
+Validação manual: `npm run rules:sample -- --date 2026-10-15 [--n 10] [--field CAMPO]` escreve `data/reports/sample-<data>.csv` com as mesmas colunas + correto S/N e comentário. Só local.
 
 Âmbito: as regras só correm sobre os breaks do data mart, e cada regra só nos breaks do seu campo. Validar o ficheiro DTCC inteiro é "data quality" (requisito futuro). Regra suspeita = viola nos dois lados em > 5% dos breaks do seu campo.
 Veredictos: `so_bnpp`, `so_contraparte`, `ambos`, `divergencia` (os dois lados cumprem as regras verificáveis) e `sem_regras_verificaveis`. O motor é SQL determinístico (DuckDB); não usa o LLM. Só mostra contagens.

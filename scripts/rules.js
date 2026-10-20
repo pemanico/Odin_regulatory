@@ -21,8 +21,9 @@ import { loadRules } from '../src/rules/catalog.js';
 import { compileAll } from '../src/rules/compile.js';
 import {
   ruleInputSql, usedColumns, RESULTS_DDL, VERDICT_DDL, insertViolationsSql, insertVerdictSql, fieldRulesSql,
-  violationCountsSql, breaksByFieldSql, isSuspect, DIVERGENCE_MESSAGE,
+  violationCountsSql, breaksByFieldSql, isSuspect, DIVERGENCE_MESSAGE, catalogTablesSql, DETAIL_DDL, insertDetailSql,
 } from '../src/rules/sql.js';
+import { describeRule, fieldLabel } from '../src/rules/describe.js';
 import { toCsv } from '../src/synthetic/generate.js';
 
 const args = parseArgs(process.argv.slice(2));
@@ -49,8 +50,13 @@ try {
   const columns = new Map(described.map((c) => [String(c.column_name).toUpperCase(), String(c.column_type)]));
   const compiled = compileAll(rulesDoc, { fieldMap, columns, dialect: db.dialect });
 
-  // Entrada: transações DTCC com break, só com as colunas que as regras usam.
-  await db.exec(`CREATE OR REPLACE TEMP TABLE rule_input AS\n${ruleInputSql(config, db.dialect, src, D, { columns: usedColumns(compiled) })}`);
+  // Entrada: transações DTCC com break, com as colunas que as regras usam + as TP1_/TP2_ dos campos em break
+  // (para mostrar os valores dos dois lados no detalhe).
+  const breakFields = (await db.all(breaksByFieldSql(D))).map((r) => String(r.target));
+  const valueFields = breakFields.filter((f) => columns.has(`TP1_${f}`) && columns.has(`TP2_${f}`)).sort();
+  const inputCols = [...new Set([...usedColumns(compiled), ...valueFields.flatMap((f) => [`TP1_${f}`, `TP2_${f}`])])]
+    .map((c) => described.find((d) => String(d.column_name).toUpperCase() === c)?.column_name ?? c);
+  await db.exec(`CREATE OR REPLACE TEMP TABLE rule_input AS\n${ruleInputSql(config, db.dialect, src, D, { columns: inputCols })}`);
   const [{ n: inputRows }] = await db.all('SELECT COUNT(*) AS n FROM rule_input');
   if (Number(inputRows) === 0) throw new Error(`Nenhuma transação DTCC de ${D} com break no data mart (build:db feito? ficheiro DTCC certo?)`);
 
@@ -121,13 +127,15 @@ GROUP BY breaking_field ORDER BY breaks DESC LIMIT 20`);
     console.log('\n== Todas as regras ==');
     console.table(rows);
   }
-  // Detalhe por break com a chave de produção (ficheiro local, gitignored: data/).
+  // Detalhe por break (tabela break_detail + CSV local): chave, campo ESMA, valores TP1/TP2, veredicto e erros.
+  for (const sql of catalogTablesSql(compiled, fieldMap, describeRule, fieldLabel)) await db.exec(sql);
+  await db.exec(DETAIL_DDL);
+  await db.exec(`DELETE FROM break_detail WHERE business_date = '${D}'`);
+  await db.exec(insertDetailSql(D, db.dialect, valueFields, version));
   const detail = resolve(outDir, `break-verdict-${D}.csv`);
   await db.exec(`COPY (
-  SELECT business_date, report_submitting_entity, cp1_lei, cp2_lei, uti, proprietary, asset_class,
-         breaking_field, verdict, bnpp_codes, cpty_codes, verifiable_rules, rules_version
-  FROM break_verdict WHERE business_date = '${D}'
-  ORDER BY breaking_field, verdict, cp2_lei, uti, proprietary
+  SELECT * EXCLUDE (rules_version) FROM break_detail WHERE business_date = '${D}'
+  ORDER BY campo, veredicto, cp2_lei, uti, proprietary
 ) TO '${detail.replace(/'/g, "''")}' (HEADER, DELIMITER ',')`);
 
   console.log(`\nResultado completo por regra (só contagens): ${csv}`);

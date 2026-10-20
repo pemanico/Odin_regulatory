@@ -165,3 +165,73 @@ export function usedColumns(compiled) {
   }
   return [...out].sort();
 }
+
+/** Tabelas temporárias de apoio: rule_catalog (código -> mensagem de erro) e field_names (sufixo -> campo ESMA). */
+export function catalogTablesSql(compiled, fieldMap, describeRule, fieldLabel) {
+  const rows = compiled.map((c) => `SELECT ${sqlString(c.rule.code)} AS code, ${sqlString(describeRule(c.rule, fieldMap))} AS message`);
+  const names = new Map();
+  for (const e of Object.values(fieldMap.items)) for (const t of e.tp ?? []) names.set(t.toUpperCase(), fieldLabel(t, fieldMap));
+  const nrows = [...names.entries()].map(([t, l]) => `SELECT ${sqlString(t)} AS target, ${sqlString(l)} AS campo`);
+  return [
+    'DROP TABLE IF EXISTS rule_catalog',
+    `CREATE TEMP TABLE rule_catalog AS ${rows.length ? rows.join('\nUNION ALL ') : "SELECT '' AS code, '' AS message WHERE 1 = 0"}`,
+    'DROP TABLE IF EXISTS field_names',
+    `CREATE TEMP TABLE field_names AS ${nrows.length ? nrows.join('\nUNION ALL ') : "SELECT '' AS target, '' AS campo WHERE 1 = 0"}`,
+  ];
+}
+
+export const DETAIL_DDL = `CREATE TABLE IF NOT EXISTS break_detail (
+  business_date DATE,
+  ${POSITION_KEY.map((k) => `${k} VARCHAR`).join(',\n  ')},
+  campo VARCHAR,
+  breaking_field VARCHAR,
+  valor_bnpp VARCHAR,
+  valor_other_cpty VARCHAR,
+  veredicto VARCHAR,
+  erro_bnpp VARCHAR,
+  erro_other_cpty VARCHAR,
+  rules_version VARCHAR
+)`;
+
+/** Texto do veredicto para o operacional (os erros vêm das regras; divergência e sem regras têm mensagem fixa). */
+export const VERDICT_TEXT = {
+  so_bnpp: 'Erro do lado BNPP',
+  so_contraparte: 'Erro do lado da contraparte',
+  ambos: 'Erro dos dois lados',
+  divergencia: DIVERGENCE_MESSAGE,
+  sem_regras_verificaveis: 'Sem regras ESMA verificáveis para este campo com os dados do ficheiro DTCC.',
+};
+
+/**
+ * Detalhe por break para os operacionais: chave, campo ESMA, valores TP1 (BNPP) / TP2 (other cpty) do campo em break,
+ * veredicto e mensagens das regras violadas em cada lado. `valueFields` = sufixos com colunas TP1_/TP2_ em rule_input.
+ */
+export function insertDetailSql(date, dialect, valueFields, version, input = 'rule_input') {
+  const d = dateLiteral(date);
+  const val = (prefix) => (valueFields.length
+    ? `CASE bv.breaking_field\n${valueFields.map((f) => `    WHEN ${sqlString(f)} THEN ${dialect.castText(quoteIdent(`${prefix}_${f}`))}`).join('\n')}\n  END`
+    : 'NULL');
+  const onInput = POSITION_KEY.map((k) => `COALESCE(i.k_${k}, '') = COALESCE(bv.${k}, '')`).join(' AND ');
+  const onMsg = (a) => POSITION_KEY.map((k) => `COALESCE(${a}.${k}, '') = COALESCE(bv.${k}, '')`).join(' AND ');
+  const verdictText = `CASE bv.verdict ${Object.entries(VERDICT_TEXT).map(([k, t]) => `WHEN ${sqlString(k)} THEN ${sqlString(t)}`).join(' ')} END`;
+  return `INSERT INTO break_detail
+WITH m AS (
+  SELECT ${POSITION_KEY.map((k) => `r.${k}`).join(', ')}, r.target, r.side,
+         ${dialect.stringAgg('c.message', ' | ', 'c.message')} AS msg
+  FROM rule_results r JOIN rule_catalog c ON c.code = r.code
+  WHERE r.business_date = ${d}
+  GROUP BY ${POSITION_KEY.map((k) => `r.${k}`).join(', ')}, r.target, r.side
+)
+SELECT ${d}, ${POSITION_KEY.map((k) => `bv.${k}`).join(', ')},
+  COALESCE(fn.campo, bv.breaking_field), bv.breaking_field,
+  ${val('TP1')},
+  ${val('TP2')},
+  ${verdictText},
+  mb.msg, mc.msg, ${sqlString(version)}
+FROM break_verdict bv
+LEFT JOIN ${input} i ON ${onInput}
+LEFT JOIN field_names fn ON fn.target = bv.breaking_field
+LEFT JOIN m mb ON mb.side = 'BNPP' AND mb.target = bv.breaking_field AND ${onMsg('mb')}
+LEFT JOIN m mc ON mc.side = 'CPTY' AND mc.target = bv.breaking_field AND ${onMsg('mc')}
+WHERE bv.business_date = ${d}`;
+}

@@ -305,6 +305,8 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-20 | **Passo 3 feito: todos os 409 códigos VR do Excel traduzidos** (regras v2026-10-20.2): 150 verificáveis, 73 parciais, 186 não verificáveis. 126 dos 128 campos com colunas TP têm pelo menos uma regra verificável (exceções: 2.51, sem códigos no Excel; 2.109 spread de leg 2). Não verificáveis: campos sem colunas DTCC (40) ou comuns, GLEIF, lista MIC, ciclo de vida, calendários repetíveis, notação monetário/percentagem. DSL ganhou `if`, `equals_any`, `not_equal` |
 | 2026-10-20 | Gralhas do Excel interpretadas: 'ENRVR' → ENVR, 'FRLTL' → FRTL (2.116/2.117); código 'EMIR -VR-2042-03' → EMIR-VR-2042-03; 2.51 sem códigos de erro |
 | 2026-10-20 | Validação manual: `npm run rules:sample` (10 breaks repartidos pelos veredictos; CSV local com chave e valores; o Ordep devolve só nº + correto S/N + motivo) |
+| 2026-10-20 | **Classificação validada pelo Ordep na amostra de 15/10** ("a classificação está bem") |
+| 2026-10-20 | **Apresentação por break** (Ordep): campo = nome do documento de regras ("2.22 Valuation currency"); valor BNPP = `TP1_<campo>`; valor other cpty = `TP2_<campo>`; **sem código VR por agora**; o erro é a regra de format/condition violada, em texto (gerado da tradução, em inglês como o documento ESMA). Tabela `break_detail` + CSV local; `rules:sample` lê dela |
 
 ---
 
@@ -404,6 +406,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 - **Feito (2026-10-20):** Excel de regras lido; mapeamento dos top 20 → itens ESMA (3.3.1), 17 diretos e 3 por confirmar; tipos de verificação A/B/C/L.
 - **Feito (2026-10-20):** motor de regras, passos 1–2 do plano: `config/rules/field-map.json` (174 itens: 128 com TP, 6 comuns, 40 sem colunas), `config/rules/emir-vr.json` (54 códigos VR dos top 20: 30 verificáveis, 14 parciais, 10 não verificáveis), compilador DSL → SQL (`src/rules/`), `npm run rules` (`--stats`), tabelas `rule_results` e `break_verdict`; só breaks do data mart, cada regra nos breaks do seu campo; 41 testes. 1.ª execução real em 15/10 (ver 3.3.2).
 - **Feito (2026-10-20, tarde):** passo 3 (409 códigos VR), `rules:sample` para validar 10 breaks de 15/10; 43 testes. **A correr no PC:** `rules`, `rules:sample`, `describe --values TP1_CONFIRMED,TP2_CONFIRMED`.
+- **Feito (2026-10-20, fim da tarde):** classificação validada pelo Ordep na amostra; `break_detail` com campo ESMA, valores TP1/TP2 e erro em texto (`src/rules/describe.js`); 44 testes.
 - **Plano mantido** (decisão 2026-10-19): backend Node primeiro (dias 3–8), React só nos dias 9–11.
 - **Próximos passos:**
   1. **Desbloqueio (Ordep), caminho crítico:** partilhar o Excel de regras (`EMIR-Refit_Reconciliation status matching.xlsx`) para o mapeamento `BREAKING_FIELD` → regra dos 10 campos (questão 1). O schema do histórico (questão 2) fica em espera com a categorização.
@@ -433,6 +436,6 @@ src/synthetic/generate.js  dados sintéticos (identificadores SYNTH*)
 scripts/                   CLIs: synthetic, build-db, metric, profile, describe (estrutura de Parquet sem dados), map-fields
 src/analysis/fieldmap.js   mapeamento BREAKING_FIELD -> TP1_/TP2_ e validação (matriz de confusão)
 config/rules/              field-map.json (item ESMA -> colunas TP) e emir-vr.json (regras VR em DSL)
-src/rules/                 compile.js (DSL -> SQL por lado), sql.js (rule_results, break_verdict), catalog.js
+src/rules/                 compile.js (DSL -> SQL por lado), sql.js (rule_results, break_verdict, break_detail), describe.js (erro em texto), catalog.js
 test/                      node:test
 ```
