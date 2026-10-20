@@ -1,19 +1,609 @@
 {
  "_doc": "Validation rules ESMA EMIR REFIT traduzidas para a DSL de src/rules/compile.js. Tradução de Claude a partir do Excel EMIR-Refit_Reconciliation status matching (texto original não copiado). Validação: npm run rules -- --stats (taxa de violação) + revisão do Ordep por amostra.",
- "version": "2026-10-20.1",
- "scope": "top 20 BREAKING_FIELD de 13-15/10 (passo 2 do plano); restantes campos no passo 3",
+ "version": "2026-10-20.2",
+ "scope": "todos os 408 códigos VR do Excel (174 campos); campos sem colunas DTCC ou comuns = não verificáveis",
  "rules": [
   {
-   "code": "EMIR-VR-2021-01",
-   "item": "2.21",
+   "code": "EMIR-VR-1001-01",
+   "item": "1.1",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1001-02",
+   "item": "1.1",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1001-03",
+   "item": "1.1",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1001-04",
+   "item": "1.1",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1001-05",
+   "item": "1.1",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1002-01",
+   "item": "1.2",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1002-02",
+   "item": "1.2",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1002-03",
+   "item": "1.2",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1002-04",
+   "item": "1.2",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1003-01",
+   "item": "1.3",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1003-02",
+   "item": "1.3",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1003-03",
+   "item": "1.3",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1003-04",
+   "item": "1.3",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1003-05",
+   "item": "1.3",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1004-01",
+   "item": "1.4",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1004-02",
+   "item": "1.4",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1004-03",
+   "item": "1.4",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1004-04",
+   "item": "1.4",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1004-05",
+   "item": "1.4",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1005-01",
+   "item": "1.5",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1006-01",
+   "item": "1.6",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1006-02",
+   "item": "1.6",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1006-03",
+   "item": "1.6",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1007-01",
+   "item": "1.7",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1007-02",
+   "item": "1.7",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1008-01",
+   "item": "1.8",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1008-02",
+   "item": "1.8",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1009-01",
+   "item": "1.9",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1009-02",
+   "item": "1.9",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1009-03",
+   "item": "1.9",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1009-04",
+   "item": "1.9",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1009-05",
+   "item": "1.9",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1009-06",
+   "item": "1.9",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1009-07",
+   "item": "1.9",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1009-08",
+   "item": "1.9",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1009-09",
+   "item": "1.9",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-1010-01",
+   "item": "1.10",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1010-02",
+   "item": "1.10",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1011-01",
+   "item": "1.11",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1011-02",
+   "item": "1.11",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1012-01",
+   "item": "1.12",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1012-02",
+   "item": "1.12",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1012-03",
+   "item": "1.12",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1013-01",
+   "item": "1.13",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1013-02",
+   "item": "1.13",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1014-01",
+   "item": "1.14",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1014-02",
+   "item": "1.14",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1015-01",
+   "item": "1.15",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1015-02",
+   "item": "1.15",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1016-01",
+   "item": "1.16",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1016-02",
+   "item": "1.16",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1016-03",
+   "item": "1.16",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1016-04",
+   "item": "1.16",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1016-05",
+   "item": "1.16",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1016-06",
+   "item": "1.16",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1016-07",
+   "item": "1.16",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1017-01",
+   "item": "1.17",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1017-02",
+   "item": "1.17",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1018-01",
+   "item": "1.18",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1018-02",
+   "item": "1.18",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1018-03",
+   "item": "1.18",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1019-01",
+   "item": "1.19",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1019-02",
+   "item": "1.19",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1019-03",
+   "item": "1.19",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1020-01",
+   "item": "1.20",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-1020-02",
+   "item": "1.20",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2001-01",
+   "item": "2.1",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-2001-02",
+   "item": "2.1",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-2001-03",
+   "item": "2.1",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-2001-04",
+   "item": "2.1",
+   "status": "nao_verificavel",
+   "nota": "campo comum aos dois lados (chave / cabeçalho do relatório), não é campo em break; formato e LEI verificados pela DTCC"
+  },
+  {
+   "code": "EMIR-VR-2002-01",
+   "item": "2.2",
+   "status": "nao_verificavel",
+   "nota": "depende do tipo de venue do MIC (RM/MTF/OTF/SI/país terceiro): não há lista MIC (decisão 2026-10-20, só campos TP)"
+  },
+  {
+   "code": "EMIR-VR-2002-02",
+   "item": "2.2",
    "check": {
-    "decimal": {
-     "digits": 25,
-     "decimals": 5,
-     "sign": "any"
-    }
+    "all": [
+     {
+      "not_equal": {
+       "ref": "2.1"
+      }
+     },
+     {
+      "not_equal": {
+       "ref": "2.3"
+      }
+     }
+    ]
+   },
+   "status": "parcial",
+   "nota": "comparado com UTI (2.1) e prior UTI (2.3); 2.4 sem colunas DTCC"
+  },
+  {
+   "code": "EMIR-VR-2002-03",
+   "item": "2.2",
+   "when": {
+    "in": [
+     "2.41",
+     [
+      "XXXX",
+      "XOFF"
+     ]
+    ]
+   },
+   "check": {
+    "blank": true
+   },
+   "status": "parcial",
+   "nota": "verificado para XXXX e XOFF; outros MIC fora de venue precisam da lista MIC"
+  },
+  {
+   "code": "EMIR-VR-2002-04",
+   "item": "2.2",
+   "when": {
+    "eq": [
+     "2.154",
+     "PSTN"
+    ]
+   },
+   "check": {
+    "blank": true
    },
    "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2003-01",
+   "item": "2.3",
+   "status": "nao_verificavel",
+   "nota": "depende do action type / event type (2.151, 2.152 sem colunas DTCC)"
+  },
+  {
+   "code": "EMIR-VR-2003-02",
+   "item": "2.3",
+   "status": "nao_verificavel",
+   "nota": "depende do action type / event type (2.151, 2.152 sem colunas DTCC)"
+  },
+  {
+   "code": "EMIR-VR-2003-03",
+   "item": "2.3",
+   "status": "nao_verificavel",
+   "nota": "depende do action type / event type (2.151, 2.152 sem colunas DTCC)"
+  },
+  {
+   "code": "EMIR-VR-2003-04",
+   "item": "2.3",
+   "check": {
+    "regex": "[A-Za-z0-9]([A-Za-z0-9:._-]{0,50}[A-Za-z0-9])?"
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2003-05",
+   "item": "2.3",
+   "check": {
+    "all": [
+     {
+      "not_equal": {
+       "ref": "2.1"
+      }
+     },
+     {
+      "not_equal": {
+       "ref": "2.2"
+      }
+     }
+    ]
+   },
+   "status": "parcial",
+   "nota": "comparado com UTI (2.1) e report tracking number (2.2); 2.4 sem colunas DTCC"
+  },
+  {
+   "code": "EMIR-VR-2004-01",
+   "item": "2.4",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2004-02",
+   "item": "2.4",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2004-03",
+   "item": "2.4",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2004-04",
+   "item": "2.4",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2005-01",
+   "item": "2.5",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2005-02",
+   "item": "2.5",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2005-03",
+   "item": "2.5",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2005-04",
+   "item": "2.5",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2006-01",
+   "item": "2.6",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2007-01",
+   "item": "2.7",
+   "when": {
+    "eq": [
+     "2.41",
+     "XOFF"
+    ]
+   },
+   "check": {
+    "required": true
+   },
+   "status": "parcial",
+   "nota": "verificado só para MIC 'XOFF'; venues RM/MTF/OTF/SI precisam da lista MIC"
+  },
+  {
+   "code": "EMIR-VR-2007-02",
+   "item": "2.7",
+   "check": {
+    "regex": "[A-Z]{2}[A-Z0-9]{9}[0-9]"
+   },
+   "status": "parcial",
+   "nota": "estrutura ISIN (2 letras + 9 alfanuméricos + 1 dígito); check digit ainda não verificado"
   },
   {
    "code": "EMIR-VR-2008-01",
@@ -48,53 +638,132 @@
    "nota": "só 12 caracteres alfanuméricos; existência na base ANNA DSB e check digit não verificados"
   },
   {
-   "code": "EMIR-VR-2041-01",
-   "item": "2.41",
+   "code": "EMIR-VR-2009-01",
+   "item": "2.9",
    "check": {
-    "regex": "[A-Z0-9]{4}"
+    "regex": "[A-Z]{6}"
    },
    "status": "parcial",
-   "nota": "só 4 caracteres alfanuméricos; existência na lista ISO 10383 não verificada"
+   "nota": "só 6 letras; conformidade completa com ISO 10962 não verificada"
   },
   {
-   "code": "EMIR-VR-2041-02",
-   "item": "2.41",
+   "code": "EMIR-VR-2009-02",
+   "item": "2.9",
    "check": {
-    "not_in": [
-     "BILT"
+    "regex": "[A-WYZ]{2}[A-Z]{4}"
+   },
+   "status": "parcial",
+   "nota": "verificados os 2 primeiros caracteres ≠ 'X'; o carácter da asset class não é verificado"
+  },
+  {
+   "code": "EMIR-VR-2010-01",
+   "item": "2.10",
+   "check": {
+    "enum": [
+     "CFDS",
+     "FRAS",
+     "FUTR",
+     "FORW",
+     "OPTN",
+     "SPDB",
+     "SWAP",
+     "SWPT",
+     "OTHR"
     ]
    },
    "status": "verificavel"
   },
   {
-   "code": "EMIR-VR-2007-01",
-   "item": "2.7",
+   "code": "EMIR-VR-2011-01",
+   "item": "2.11",
+   "check": {
+    "enum": [
+     "COMM",
+     "CRDT",
+     "CURR",
+     "EQUI",
+     "INTR"
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2012-01",
+   "item": "2.12",
+   "check": {
+    "enum": [
+     "TRUE",
+     "FALSE"
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2013-01",
+   "item": "2.13",
    "when": {
     "eq": [
-     "2.41",
-     "XOFF"
+     "2.11",
+     "EQUI"
     ]
    },
    "check": {
     "required": true
    },
-   "status": "parcial",
-   "nota": "verificado só para MIC 'XOFF'; venues RM/MTF/OTF/SI precisam da lista MIC"
+   "status": "verificavel"
   },
   {
-   "code": "EMIR-VR-2007-02",
-   "item": "2.7",
-   "check": {
-    "regex": "[A-Z]{2}[A-Z0-9]{9}[0-9]"
-   },
-   "status": "parcial",
-   "nota": "estrutura ISIN (2 letras + 9 alfanuméricos + 1 dígito); check digit ainda não verificado"
-  },
-  {
-   "code": "EMIR-VR-2022-01",
-   "item": "2.22",
+   "code": "EMIR-VR-2013-02",
+   "item": "2.13",
    "when": {
-    "populated": "2.21"
+    "eq": [
+     "2.11",
+     "CRDT"
+    ]
+   },
+   "check": {
+    "count_populated": {
+     "refs": [
+      "2.13",
+      "2.144"
+     ],
+     "min": 1
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2013-03",
+   "item": "2.13",
+   "status": "nao_verificavel",
+   "nota": "depende do campo 2.85 (Name of the floating rate of leg 1), que não está no ficheiro DTCC"
+  },
+  {
+   "code": "EMIR-VR-2013-04",
+   "item": "2.13",
+   "status": "nao_verificavel",
+   "nota": "regra permissiva (campo opcional nesta situação): não gera violação"
+  },
+  {
+   "code": "EMIR-VR-2013-05",
+   "item": "2.13",
+   "check": {
+    "enum": [
+     "I",
+     "B",
+     "X"
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2014-01",
+   "item": "2.14",
+   "when": {
+    "eq": [
+     "2.13",
+     "I"
+    ]
    },
    "check": {
     "all": [
@@ -102,44 +771,88 @@
       "required": true
      },
      {
-      "regex": "[A-Z]{3}"
+      "regex": "[A-Z]{2}[A-Z0-9]{9}[0-9]"
      }
     ]
    },
    "status": "parcial",
-   "nota": "obrigatoriedade e 3 letras; pertença à lista oficial ISO 4217 não verificada"
+   "nota": "estrutura ISIN; check digit não verificado"
   },
   {
-   "code": "EMIR-VR-2022-02",
-   "item": "2.22",
-   "check": {
-    "not_in": [
-     "XAG",
-     "XAU",
-     "XBA",
-     "XBB",
-     "XBC",
-     "XBD",
-     "XDR",
-     "XEU",
-     "XFU",
-     "XPD",
-     "XPT",
-     "XXX"
+   "code": "EMIR-VR-2014-02",
+   "item": "2.14",
+   "when": {
+    "eq": [
+     "2.13",
+     "X"
     ]
    },
-   "status": "verificavel"
+   "check": {
+    "regex": "[A-Z]{2}[A-Z0-9]{9}[0-9]"
+   },
+   "status": "parcial",
+   "nota": "estrutura ISIN; check digit não verificado"
   },
   {
-   "code": "EMIR-VR-2022-03",
-   "item": "2.22",
+   "code": "EMIR-VR-2014-03",
+   "item": "2.14",
    "when": {
-    "blank": "2.21"
+    "not": {
+     "in": [
+      "2.13",
+      [
+       "I",
+       "X"
+      ]
+     ]
+    }
    },
    "check": {
     "blank": true
    },
    "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2015-01",
+   "item": "2.15",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2015-02",
+   "item": "2.15",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2016-01",
+   "item": "2.16",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2017-01",
+   "item": "2.17",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2017-02",
+   "item": "2.17",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2017-03",
+   "item": "2.17",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2018-01",
+   "item": "2.18",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
   },
   {
    "code": "EMIR-VR-2019-01",
@@ -250,59 +963,62 @@
    "status": "verificavel"
   },
   {
-   "code": "EMIR-VR-2047-01",
-   "item": "2.47",
+   "code": "EMIR-VR-2021-01",
+   "item": "2.21",
    "check": {
-    "enum": [
-     "CASH",
-     "PHYS",
-     "OPTL"
+    "decimal": {
+     "digits": 25,
+     "decimals": 5,
+     "sign": "any"
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2022-01",
+   "item": "2.22",
+   "when": {
+    "populated": "2.21"
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "regex": "[A-Z]{3}"
+     }
+    ]
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade e 3 letras; pertença à lista oficial ISO 4217 não verificada"
+  },
+  {
+   "code": "EMIR-VR-2022-02",
+   "item": "2.22",
+   "check": {
+    "not_in": [
+     "XAG",
+     "XAU",
+     "XBA",
+     "XBB",
+     "XBC",
+     "XBD",
+     "XDR",
+     "XEU",
+     "XFU",
+     "XPD",
+     "XPT",
+     "XXX"
     ]
    },
    "status": "verificavel"
   },
   {
-   "code": "EMIR-VR-2009-01",
-   "item": "2.9",
-   "check": {
-    "regex": "[A-Z]{6}"
-   },
-   "status": "parcial",
-   "nota": "só 6 letras; conformidade completa com ISO 10962 não verificada"
-  },
-  {
-   "code": "EMIR-VR-2009-02",
-   "item": "2.9",
-   "check": {
-    "regex": "[A-WYZ]{2}[A-Z]{4}"
-   },
-   "status": "parcial",
-   "nota": "verificados os 2 primeiros caracteres ≠ 'X'; o carácter da asset class não é verificado"
-  },
-  {
-   "code": "EMIR-VR-2099-01",
-   "item": "2.99",
-   "check": {
-    "regex": "[A-Z0-9]{12}"
-   },
-   "status": "parcial",
-   "nota": "só 12 caracteres alfanuméricos; check digit não verificado"
-  },
-  {
-   "code": "EMIR-VR-2099-02",
-   "item": "2.99",
+   "code": "EMIR-VR-2022-03",
+   "item": "2.22",
    "when": {
-    "all": [
-     {
-      "eq": [
-       "2.11",
-       "INTR"
-      ]
-     },
-     {
-      "populated": "2.14"
-     }
-    ]
+    "blank": "2.21"
    },
    "check": {
     "blank": true
@@ -310,46 +1026,61 @@
    "status": "verificavel"
   },
   {
-   "code": "EMIR-VR-2109-01",
-   "item": "2.109",
-   "column": "SPREAD_LEG2",
+   "code": "EMIR-VR-2023-01",
+   "item": "2.23",
    "status": "nao_verificavel",
-   "nota": "depende do campo 2.101 (Name of the floating rate of leg 2, sem colunas DTCC) e dos códigos de notação em SPREAD_LEG2_TYP (não documentados no Excel)"
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
   },
   {
-   "code": "EMIR-VR-2109-02",
-   "item": "2.109",
-   "column": "SPREAD_LEG2",
+   "code": "EMIR-VR-2023-02",
+   "item": "2.23",
    "status": "nao_verificavel",
-   "nota": "depende do campo 2.101 (Name of the floating rate of leg 2, sem colunas DTCC) e dos códigos de notação em SPREAD_LEG2_TYP (não documentados no Excel)"
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
   },
   {
-   "code": "EMIR-VR-2109-03",
-   "item": "2.109",
-   "column": "SPREAD_LEG2",
+   "code": "EMIR-VR-2023-03",
+   "item": "2.23",
    "status": "nao_verificavel",
-   "nota": "depende do campo 2.101 (Name of the floating rate of leg 2, sem colunas DTCC) e dos códigos de notação em SPREAD_LEG2_TYP (não documentados no Excel)"
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
   },
   {
-   "code": "EMIR-VR-2030-01",
-   "item": "2.30",
-   "check": {
-    "enum": [
-     "TRUE",
-     "FLSE",
-     "UKWN"
-    ]
-   },
-   "status": "parcial",
-   "nota": "verificados os valores permitidos; a obrigatoriedade depende do tipo de venue (RM), não verificada"
+   "code": "EMIR-VR-2023-04",
+   "item": "2.23",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
   },
   {
-   "code": "EMIR-VR-2030-02",
-   "item": "2.30",
+   "code": "EMIR-VR-2023-05",
+   "item": "2.23",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2023-06",
+   "item": "2.23",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2023-07",
+   "item": "2.23",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2024-01",
+   "item": "2.24",
    "when": {
-    "eq": [
-     "2.31",
-     "Y"
+    "all": [
+     {
+      "populated": "2.21"
+     },
+     {
+      "eq": [
+       "2.31",
+       "Y"
+      ]
+     }
     ]
    },
    "check": {
@@ -359,7 +1090,7 @@
      },
      {
       "enum": [
-       "UKWN"
+       "CCPV"
       ]
      }
     ]
@@ -367,27 +1098,86 @@
    "status": "verificavel"
   },
   {
-   "code": "EMIR-VR-2030-03",
-   "item": "2.30",
-   "status": "nao_verificavel",
-   "nota": "depende do tipo de venue do MIC (RM/MTF/OTF/SI/país terceiro): não há lista MIC (decisão 2026-10-20, só campos TP)"
-  },
-  {
-   "code": "EMIR-VR-2036-01",
-   "item": "2.36",
+   "code": "EMIR-VR-2024-02",
+   "item": "2.24",
    "when": {
     "all": [
      {
-      "populated": "2.34"
+      "populated": "2.21"
      },
      {
-      "not_in": [
-       "2.34",
+      "eq": [
+       "2.31",
+       "N"
+      ]
+     }
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "MTMA",
+       "MTMO"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2024-03",
+   "item": "2.24",
+   "when": {
+    "not": {
+     "all": [
+      {
+       "populated": "2.21"
+      },
+      {
+       "in": [
+        "2.31",
+        [
+         "Y",
+         "N"
+        ]
+       ]
+      }
+     ]
+    }
+   },
+   "check": {
+    "blank": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2025-01",
+   "item": "2.25",
+   "when": {
+    "all": [
+     {
+      "populated": "2.21"
+     },
+     {
+      "in": [
+       "2.10",
        [
-        "BIAG",
-        "OTHR"
+        "OPTN",
+        "SWPT"
        ]
       ]
+     },
+     {
+      "not": {
+       "eq": [
+        "2.13",
+        "B"
+       ]
+      }
      }
     ]
    },
@@ -397,116 +1187,34 @@
    "status": "verificavel"
   },
   {
-   "code": "EMIR-VR-2036-02",
-   "item": "2.36",
+   "code": "EMIR-VR-2025-02",
+   "item": "2.25",
    "check": {
-    "year": true
-   },
-   "status": "verificavel"
-  },
-  {
-   "code": "EMIR-VR-2046-01",
-   "item": "2.46",
-   "when": {
-    "all": [
-     {
-      "populated": "2.10"
-     },
-     {
-      "ne": [
-       "2.10",
-       "CFDS"
-      ]
-     }
-    ]
-   },
-   "check": {
-    "all": [
-     {
-      "required": true
-     },
-     {
-      "date": true
-     }
-    ]
-   },
-   "status": "verificavel"
-  },
-  {
-   "code": "EMIR-VR-2046-02",
-   "item": "2.46",
-   "check": {
-    "compare": {
-     "op": ">=",
-     "ref": "2.42",
-     "as": "date"
+    "decimal": {
+     "digits": 25,
+     "decimals": 5,
+     "sign": "any"
     }
    },
    "status": "verificavel"
   },
   {
-   "code": "EMIR-VR-2046-03",
-   "item": "2.46",
-   "check": {
-    "compare": {
-     "op": ">=",
-     "value": "2014-02-12",
-     "as": "date"
-    }
-   },
-   "status": "verificavel"
-  },
-  {
-   "code": "EMIR-VR-2046-04",
-   "item": "2.46",
-   "status": "nao_verificavel",
-   "nota": "regra permissiva (campo opcional nesta situação): não gera violação"
-  },
-  {
-   "code": "EMIR-VR-2044-01",
-   "item": "2.44",
-   "when": {
-    "all": [
-     {
-      "populated": "2.10"
-     },
-     {
-      "ne": [
-       "2.10",
-       "CFDS"
-      ]
-     }
-    ]
-   },
-   "check": {
-    "all": [
-     {
-      "required": true
-     },
-     {
-      "date": true
-     }
-    ]
-   },
-   "status": "verificavel"
-  },
-  {
-   "code": "EMIR-VR-2044-02",
-   "item": "2.44",
+   "code": "EMIR-VR-2025-03",
+   "item": "2.25",
    "check": {
     "all": [
      {
       "compare": {
        "op": ">=",
-       "ref": "2.42",
-       "as": "date"
+       "value": "-1",
+       "as": "number"
       }
      },
      {
       "compare": {
-       "op": ">=",
-       "ref": "2.43",
-       "as": "date"
+       "op": "<=",
+       "value": "1",
+       "as": "number"
       }
      }
     ]
@@ -514,28 +1222,16 @@
    "status": "verificavel"
   },
   {
-   "code": "EMIR-VR-2044-03",
-   "item": "2.44",
-   "check": {
-    "compare": {
-     "op": ">=",
-     "value": "2014-02-12",
-     "as": "date"
-    }
-   },
-   "status": "verificavel"
+   "code": "EMIR-VR-2026-01",
+   "item": "2.26",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
   },
   {
-   "code": "EMIR-VR-2044-04",
-   "item": "2.44",
+   "code": "EMIR-VR-2027-01",
+   "item": "2.27",
    "status": "nao_verificavel",
-   "nota": "depende do action type REVI e do reporte anterior (ciclo de vida; campo 2.151 sem colunas DTCC)"
-  },
-  {
-   "code": "EMIR-VR-2044-05",
-   "item": "2.44",
-   "status": "nao_verificavel",
-   "nota": "regra permissiva (campo opcional nesta situação): não gera violação"
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
   },
   {
    "code": "EMIR-VR-2028-01",
@@ -617,6 +1313,373 @@
    "status": "verificavel"
   },
   {
+   "code": "EMIR-VR-2029-01",
+   "item": "2.29",
+   "check": {
+    "enum": [
+     "YCNF",
+     "NCNF",
+     "ECNF"
+    ]
+   },
+   "status": "parcial",
+   "nota": "verificados os valores permitidos; a obrigatoriedade depende do tipo de venue (RM), não verificada"
+  },
+  {
+   "code": "EMIR-VR-2030-01",
+   "item": "2.30",
+   "check": {
+    "enum": [
+     "TRUE",
+     "FLSE",
+     "UKWN"
+    ]
+   },
+   "status": "parcial",
+   "nota": "verificados os valores permitidos; a obrigatoriedade depende do tipo de venue (RM), não verificada"
+  },
+  {
+   "code": "EMIR-VR-2030-02",
+   "item": "2.30",
+   "when": {
+    "eq": [
+     "2.31",
+     "Y"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "UKWN"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2030-03",
+   "item": "2.30",
+   "status": "nao_verificavel",
+   "nota": "depende do tipo de venue do MIC (RM/MTF/OTF/SI/país terceiro): não há lista MIC (decisão 2026-10-20, só campos TP)"
+  },
+  {
+   "code": "EMIR-VR-2031-01",
+   "item": "2.31",
+   "check": {
+    "enum": [
+     "Y",
+     "N"
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2032-01",
+   "item": "2.32",
+   "when": {
+    "eq": [
+     "2.31",
+     "Y"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "timestamp": true
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2032-02",
+   "item": "2.32",
+   "check": {
+    "compare": {
+     "op": ">=",
+     "ref": "2.42",
+     "as": "timestamp"
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2032-03",
+   "item": "2.32",
+   "check": {
+    "compare": {
+     "op": "<=",
+     "ref": "1.1",
+     "as": "date"
+    }
+   },
+   "status": "parcial",
+   "nota": "comparado ao nível da data com o reporting timestamp (REFERENCE_DATE)"
+  },
+  {
+   "code": "EMIR-VR-2032-04",
+   "item": "2.32",
+   "when": {
+    "blank": "2.45"
+   },
+   "check": {
+    "compare": {
+     "op": "<=",
+     "ref": "2.44",
+     "as": "date"
+    }
+   },
+   "status": "parcial",
+   "nota": "verificado contra a expiration date quando não há early termination date"
+  },
+  {
+   "code": "EMIR-VR-2032-05",
+   "item": "2.32",
+   "when": {
+    "eq": [
+     "2.31",
+     "N"
+    ]
+   },
+   "check": {
+    "blank": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2033-01",
+   "item": "2.33",
+   "when": {
+    "eq": [
+     "2.31",
+     "Y"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "regex": "[A-Z0-9]{18}[0-9]{2}"
+     }
+    ]
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade e formato LEI; existência na GLEIF não verificada"
+  },
+  {
+   "code": "EMIR-VR-2033-02",
+   "item": "2.33",
+   "status": "nao_verificavel",
+   "nota": "depende da base GLEIF (existência/estado do LEI, sucursal): sem dados externos (decisão 2026-10-20, só campos TP)"
+  },
+  {
+   "code": "EMIR-VR-2033-03",
+   "item": "2.33",
+   "status": "nao_verificavel",
+   "nota": "depende da base GLEIF (existência/estado do LEI, sucursal): sem dados externos (decisão 2026-10-20, só campos TP)"
+  },
+  {
+   "code": "EMIR-VR-2033-04",
+   "item": "2.33",
+   "when": {
+    "eq": [
+     "2.31",
+     "N"
+    ]
+   },
+   "check": {
+    "blank": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2034-01",
+   "item": "2.34",
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "ISDA",
+       "CDEA",
+       "EUMA",
+       "FPCA",
+       "FMAT",
+       "DERV",
+       "CMOP",
+       "CHMA",
+       "IDMA",
+       "EFMA",
+       "GMRA",
+       "GMSL",
+       "BIAG",
+       "OTHR"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2035-01",
+   "item": "2.35",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2036-01",
+   "item": "2.36",
+   "when": {
+    "all": [
+     {
+      "populated": "2.34"
+     },
+     {
+      "not_in": [
+       "2.34",
+       [
+        "BIAG",
+        "OTHR"
+       ]
+      ]
+     }
+    ]
+   },
+   "check": {
+    "required": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2036-02",
+   "item": "2.36",
+   "check": {
+    "year": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2037-01",
+   "item": "2.37",
+   "check": {
+    "enum": [
+     "TRUE",
+     "FALSE"
+    ]
+   },
+   "status": "parcial",
+   "nota": "verificados os valores permitidos; depende do tipo de venue do MIC (RM/MTF/OTF/SI/país terceiro): não há lista MIC (decisão 2026-10-20, só campos TP)"
+  },
+  {
+   "code": "EMIR-VR-2038-01",
+   "item": "2.38",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2038-02",
+   "item": "2.38",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2039-01",
+   "item": "2.39",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2040-01",
+   "item": "2.40",
+   "check": {
+    "regex": "[A-Z0-9]{18}[0-9]{2}"
+   },
+   "status": "parcial",
+   "nota": "formato LEI quando preenchido; obrigatoriedade depende do campo 2.39 (Type of PTRR technique), que não está no ficheiro DTCC; GLEIF não verificada"
+  },
+  {
+   "code": "EMIR-VR-2040-02",
+   "item": "2.40",
+   "status": "nao_verificavel",
+   "nota": "depende da base GLEIF (existência/estado do LEI, sucursal): sem dados externos (decisão 2026-10-20, só campos TP)"
+  },
+  {
+   "code": "EMIR-VR-2040-03",
+   "item": "2.40",
+   "status": "nao_verificavel",
+   "nota": "depende da base GLEIF (existência/estado do LEI, sucursal): sem dados externos (decisão 2026-10-20, só campos TP)"
+  },
+  {
+   "code": "EMIR-VR-2040-04",
+   "item": "2.40",
+   "status": "nao_verificavel",
+   "nota": "depende do campo 2.39 (Type of PTRR technique), que não está no ficheiro DTCC"
+  },
+  {
+   "code": "EMIR-VR-2041-01",
+   "item": "2.41",
+   "check": {
+    "regex": "[A-Z0-9]{4}"
+   },
+   "status": "parcial",
+   "nota": "só 4 caracteres alfanuméricos; existência na lista ISO 10383 não verificada"
+  },
+  {
+   "code": "EMIR-VR-2041-02",
+   "item": "2.41",
+   "check": {
+    "not_in": [
+     "BILT"
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2042-01",
+   "item": "2.42",
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "timestamp": true
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2042-02",
+   "item": "2.42",
+   "check": {
+    "compare": {
+     "op": ">=",
+     "value": "1950-01-01",
+     "as": "date"
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2042-03",
+   "item": "2.42",
+   "status": "nao_verificavel",
+   "nota": "regra de ciclo de vida (action type, reportes anteriores do mesmo UTI): não verificável registo a registo"
+  },
+  {
    "code": "EMIR-VR-2043-01",
    "item": "2.43",
    "check": {
@@ -640,6 +1703,2155 @@
      "value": "1950-01-01",
      "as": "date"
     }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2044-01",
+   "item": "2.44",
+   "when": {
+    "all": [
+     {
+      "populated": "2.10"
+     },
+     {
+      "ne": [
+       "2.10",
+       "CFDS"
+      ]
+     }
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "date": true
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2044-02",
+   "item": "2.44",
+   "check": {
+    "all": [
+     {
+      "compare": {
+       "op": ">=",
+       "ref": "2.42",
+       "as": "date"
+      }
+     },
+     {
+      "compare": {
+       "op": ">=",
+       "ref": "2.43",
+       "as": "date"
+      }
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2044-03",
+   "item": "2.44",
+   "check": {
+    "compare": {
+     "op": ">=",
+     "value": "2014-02-12",
+     "as": "date"
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2044-04",
+   "item": "2.44",
+   "status": "nao_verificavel",
+   "nota": "depende do action type REVI e do reporte anterior (ciclo de vida; campo 2.151 sem colunas DTCC)"
+  },
+  {
+   "code": "EMIR-VR-2044-05",
+   "item": "2.44",
+   "status": "nao_verificavel",
+   "nota": "regra permissiva (campo opcional nesta situação): não gera violação"
+  },
+  {
+   "code": "EMIR-VR-2045-01",
+   "item": "2.45",
+   "check": {
+    "date": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2045-02",
+   "item": "2.45",
+   "check": {
+    "compare": {
+     "op": ">=",
+     "ref": "2.42",
+     "as": "date"
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2045-03",
+   "item": "2.45",
+   "check": {
+    "compare": {
+     "op": "<",
+     "ref": "2.44",
+     "as": "date"
+    }
+   },
+   "status": "parcial",
+   "nota": "comparado com a expiration date do mesmo reporte (a regra fala da reportada anteriormente para o UTI)"
+  },
+  {
+   "code": "EMIR-VR-2045-04",
+   "item": "2.45",
+   "check": {
+    "compare": {
+     "op": ">=",
+     "value": "2014-02-12",
+     "as": "date"
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2045-05",
+   "item": "2.45",
+   "check": {
+    "compare": {
+     "op": "<=",
+     "ref": "1.1",
+     "as": "date"
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2045-06",
+   "item": "2.45",
+   "status": "nao_verificavel",
+   "nota": "regra de ciclo de vida (action type, reportes anteriores do mesmo UTI): não verificável registo a registo"
+  },
+  {
+   "code": "EMIR-VR-2045-07",
+   "item": "2.45",
+   "status": "nao_verificavel",
+   "nota": "regra de ciclo de vida (action type, reportes anteriores do mesmo UTI): não verificável registo a registo"
+  },
+  {
+   "code": "EMIR-VR-2045-08",
+   "item": "2.45",
+   "status": "nao_verificavel",
+   "nota": "regra de ciclo de vida (action type, reportes anteriores do mesmo UTI): não verificável registo a registo"
+  },
+  {
+   "code": "EMIR-VR-2046-01",
+   "item": "2.46",
+   "when": {
+    "all": [
+     {
+      "populated": "2.10"
+     },
+     {
+      "ne": [
+       "2.10",
+       "CFDS"
+      ]
+     }
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "date": true
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2046-02",
+   "item": "2.46",
+   "check": {
+    "compare": {
+     "op": ">=",
+     "ref": "2.42",
+     "as": "date"
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2046-03",
+   "item": "2.46",
+   "check": {
+    "compare": {
+     "op": ">=",
+     "value": "2014-02-12",
+     "as": "date"
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2046-04",
+   "item": "2.46",
+   "status": "nao_verificavel",
+   "nota": "regra permissiva (campo opcional nesta situação): não gera violação"
+  },
+  {
+   "code": "EMIR-VR-2047-01",
+   "item": "2.47",
+   "check": {
+    "enum": [
+     "CASH",
+     "PHYS",
+     "OPTL"
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2048-01",
+   "item": "2.48",
+   "when": {
+    "any": [
+     {
+      "all": [
+       {
+        "in": [
+         "2.10",
+         [
+          "FORW",
+          "SWAP"
+         ]
+        ]
+       },
+       {
+        "in": [
+         "2.11",
+         [
+          "COMM",
+          "EQUI"
+         ]
+        ]
+       }
+      ]
+     },
+     {
+      "in": [
+       "2.10",
+       [
+        "CFDS",
+        "FUTR"
+       ]
+      ]
+     }
+    ]
+   },
+   "check": {
+    "required": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2048-02",
+   "item": "2.48",
+   "check": {
+    "decimal": {
+     "digits": 18,
+     "decimals": 13,
+     "sign": "any",
+     "allow": [
+      "999999999999999999",
+      "99999999999"
+     ]
+    }
+   },
+   "status": "parcial",
+   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC; verificado o limite mais largo (18 dígitos, 13 decimais)"
+  },
+  {
+   "code": "EMIR-VR-2048-03",
+   "item": "2.48",
+   "status": "nao_verificavel",
+   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC"
+  },
+  {
+   "code": "EMIR-VR-2049-01",
+   "item": "2.49",
+   "check": {
+    "regex": "[A-Z]{3}"
+   },
+   "status": "parcial",
+   "nota": "notação de 2.48 não identificável; verificado o formato quando preenchido; pertença à lista oficial ISO 4217 não verificada (só 3 letras)"
+  },
+  {
+   "code": "EMIR-VR-2049-02",
+   "item": "2.49",
+   "check": {
+    "not_in": [
+     "XAG",
+     "XAU",
+     "XBA",
+     "XBB",
+     "XBC",
+     "XBD",
+     "XDR",
+     "XEU",
+     "XFU",
+     "XPD",
+     "XPT",
+     "XXX"
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2049-03",
+   "item": "2.49",
+   "when": {
+    "blank": "2.48"
+   },
+   "check": {
+    "blank": true
+   },
+   "status": "parcial",
+   "nota": "verificado 'em branco se 2.48 vazio'; a parte 'percentagem' não é identificável"
+  },
+  {
+   "code": "EMIR-VR-2050-01",
+   "item": "2.50",
+   "check": {
+    "date": true
+   },
+   "status": "parcial",
+   "nota": "depende do campo 2.52 (Price in effect between the unadjusted effective and end date), que não está no ficheiro DTCC; verificado só o formato quando preenchido"
+  },
+  {
+   "code": "EMIR-VR-2050-02",
+   "item": "2.50",
+   "status": "nao_verificavel",
+   "nota": "compara com o período anterior do calendário (campo repetível): não verificável com um valor por transação"
+  },
+  {
+   "code": "EMIR-VR-2052-01",
+   "item": "2.52",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2052-02",
+   "item": "2.52",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2053-01",
+   "item": "2.53",
+   "status": "nao_verificavel",
+   "nota": "depende do campo 2.6 (Package identifier), que não está no ficheiro DTCC"
+  },
+  {
+   "code": "EMIR-VR-2053-02",
+   "item": "2.53",
+   "check": {
+    "decimal": {
+     "digits": 18,
+     "decimals": 13,
+     "sign": "any",
+     "allow": [
+      "999999999999999999",
+      "99999999999"
+     ]
+    }
+   },
+   "status": "parcial",
+   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC; verificado o limite mais largo (18 dígitos, 13 decimais)"
+  },
+  {
+   "code": "EMIR-VR-2053-03",
+   "item": "2.53",
+   "status": "nao_verificavel",
+   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC"
+  },
+  {
+   "code": "EMIR-VR-2053-04",
+   "item": "2.53",
+   "when": {
+    "populated": "2.111"
+   },
+   "check": {
+    "blank": true
+   },
+   "status": "parcial",
+   "nota": "verificado 'em branco se 2.111 preenchido'; a parte de 2.6 depende do campo 2.6 (Package identifier), que não está no ficheiro DTCC"
+  },
+  {
+   "code": "EMIR-VR-2054-01",
+   "item": "2.54",
+   "check": {
+    "regex": "[A-Z]{3}"
+   },
+   "status": "parcial",
+   "nota": "notação de 2.53 não identificável; verificado o formato quando preenchido; pertença à lista oficial ISO 4217 não verificada (só 3 letras)"
+  },
+  {
+   "code": "EMIR-VR-2054-02",
+   "item": "2.54",
+   "check": {
+    "not_in": [
+     "XAG",
+     "XAU",
+     "XBA",
+     "XBB",
+     "XBC",
+     "XBD",
+     "XDR",
+     "XEU",
+     "XFU",
+     "XPD",
+     "XPT",
+     "XXX"
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2054-03",
+   "item": "2.54",
+   "when": {
+    "blank": "2.53"
+   },
+   "check": {
+    "blank": true
+   },
+   "status": "parcial",
+   "nota": "verificado 'em branco se 2.53 vazio'; a parte 'percentagem' não é identificável"
+  },
+  {
+   "code": "EMIR-VR-2055-01",
+   "item": "2.55",
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "decimal": {
+       "digits": 25,
+       "decimals": 5,
+       "sign": "nonneg",
+       "allow": [
+        "9999999999999999999999999"
+       ]
+      }
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2056-01",
+   "item": "2.56",
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "regex": "[A-Z]{3}"
+     }
+    ]
+   },
+   "status": "parcial",
+   "nota": "pertença à lista oficial ISO 4217 não verificada (só 3 letras)"
+  },
+  {
+   "code": "EMIR-VR-2056-02",
+   "item": "2.56",
+   "check": {
+    "not_in": [
+     "XAG",
+     "XAU",
+     "XBA",
+     "XBB",
+     "XBC",
+     "XBD",
+     "XDR",
+     "XEU",
+     "XFU",
+     "XPD",
+     "XPT",
+     "XXX"
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2057-01",
+   "item": "2.57",
+   "check": {
+    "if": {
+     "when": {
+      "populated": "2.59"
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "date": true
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2057-02",
+   "item": "2.57",
+   "status": "nao_verificavel",
+   "nota": "compara com o período anterior do calendário (campo repetível): não verificável com um valor por transação"
+  },
+  {
+   "code": "EMIR-VR-2058-01",
+   "item": "2.58",
+   "check": {
+    "date": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2058-02",
+   "item": "2.58",
+   "when": {
+    "blank": "2.59"
+   },
+   "check": {
+    "blank": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2059-01",
+   "item": "2.59",
+   "check": {
+    "decimal": {
+     "digits": 25,
+     "decimals": 5,
+     "sign": "nonneg",
+     "allow": [
+      "9999999999999999999999999"
+     ]
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2060-01",
+   "item": "2.60",
+   "check": {
+    "if": {
+     "when": {
+      "in": [
+       "2.11",
+       [
+        "EQUI",
+        "COMM"
+       ]
+      ]
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "decimal": {
+         "digits": 25,
+         "decimals": 5,
+         "sign": "nonneg",
+         "allow": [
+          "9999999999999999999999999"
+         ]
+        }
+       }
+      ]
+     },
+     "else": {
+      "decimal": {
+       "digits": 25,
+       "decimals": 5,
+       "sign": "nonneg",
+       "allow": [
+        "9999999999999999999999999"
+       ]
+      }
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2061-01",
+   "item": "2.61",
+   "check": {
+    "if": {
+     "when": {
+      "populated": "2.63"
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "date": true
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2061-02",
+   "item": "2.61",
+   "status": "nao_verificavel",
+   "nota": "compara com o período anterior do calendário (campo repetível): não verificável com um valor por transação"
+  },
+  {
+   "code": "EMIR-VR-2062-01",
+   "item": "2.62",
+   "check": {
+    "date": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2062-02",
+   "item": "2.62",
+   "when": {
+    "blank": "2.63"
+   },
+   "check": {
+    "blank": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2063-01",
+   "item": "2.63",
+   "check": {
+    "decimal": {
+     "digits": 25,
+     "decimals": 5,
+     "sign": "nonneg",
+     "allow": [
+      "9999999999999999999999999"
+     ]
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2064-01",
+   "item": "2.64",
+   "check": {
+    "decimal": {
+     "digits": 25,
+     "decimals": 5,
+     "sign": "nonneg",
+     "allow": [
+      "9999999999999999999999999"
+     ]
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2065-01",
+   "item": "2.65",
+   "check": {
+    "if": {
+     "when": {
+      "populated": "2.64"
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "regex": "[A-Z]{3}"
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "parcial",
+   "nota": "pertença à lista oficial ISO 4217 não verificada (só 3 letras)"
+  },
+  {
+   "code": "EMIR-VR-2065-02",
+   "item": "2.65",
+   "check": {
+    "not_in": [
+     "XAG",
+     "XAU",
+     "XBA",
+     "XBB",
+     "XBC",
+     "XBD",
+     "XDR",
+     "XEU",
+     "XFU",
+     "XPD",
+     "XPT",
+     "XXX"
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2066-01",
+   "item": "2.66",
+   "check": {
+    "if": {
+     "when": {
+      "populated": "2.68"
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "date": true
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2066-02",
+   "item": "2.66",
+   "status": "nao_verificavel",
+   "nota": "compara com o período anterior do calendário (campo repetível): não verificável com um valor por transação"
+  },
+  {
+   "code": "EMIR-VR-2067-01",
+   "item": "2.67",
+   "check": {
+    "date": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2067-02",
+   "item": "2.67",
+   "when": {
+    "blank": "2.68"
+   },
+   "check": {
+    "blank": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2068-01",
+   "item": "2.68",
+   "check": {
+    "decimal": {
+     "digits": 25,
+     "decimals": 5,
+     "sign": "nonneg",
+     "allow": [
+      "9999999999999999999999999"
+     ]
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2069-01",
+   "item": "2.69",
+   "check": {
+    "decimal": {
+     "digits": 25,
+     "decimals": 5,
+     "sign": "nonneg",
+     "allow": [
+      "9999999999999999999999999"
+     ]
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2070-01",
+   "item": "2.70",
+   "check": {
+    "if": {
+     "when": {
+      "populated": "2.72"
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "date": true
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2070-02",
+   "item": "2.70",
+   "status": "nao_verificavel",
+   "nota": "compara com o período anterior do calendário (campo repetível): não verificável com um valor por transação"
+  },
+  {
+   "code": "EMIR-VR-2071-01",
+   "item": "2.71",
+   "check": {
+    "date": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2071-02",
+   "item": "2.71",
+   "when": {
+    "blank": "2.72"
+   },
+   "check": {
+    "blank": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2072-01",
+   "item": "2.72",
+   "check": {
+    "decimal": {
+     "digits": 25,
+     "decimals": 5,
+     "sign": "nonneg",
+     "allow": [
+      "9999999999999999999999999"
+     ]
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2073-01",
+   "item": "2.73",
+   "check": {
+    "enum": [
+     "UFRO",
+     "UWIN",
+     "PEXH"
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2074-01",
+   "item": "2.74",
+   "check": {
+    "if": {
+     "when": {
+      "populated": "2.73"
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "decimal": {
+         "digits": 25,
+         "decimals": 5,
+         "sign": "nonneg"
+        }
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2075-01",
+   "item": "2.75",
+   "check": {
+    "if": {
+     "when": {
+      "populated": "2.73"
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "regex": "[A-Z]{3}"
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "parcial",
+   "nota": "pertença à lista oficial ISO 4217 não verificada (só 3 letras)"
+  },
+  {
+   "code": "EMIR-VR-2075-02",
+   "item": "2.75",
+   "check": {
+    "not_in": [
+     "XAG",
+     "XAU",
+     "XBA",
+     "XBB",
+     "XBC",
+     "XBD",
+     "XDR",
+     "XEU",
+     "XFU",
+     "XPD",
+     "XPT",
+     "XXX"
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2076-01",
+   "item": "2.76",
+   "check": {
+    "if": {
+     "when": {
+      "populated": "2.73"
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "date": true
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2077-01",
+   "item": "2.77",
+   "check": {
+    "if": {
+     "when": {
+      "populated": "2.73"
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "regex": "[A-Za-z0-9]{1,72}"
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade e até 72 alfanuméricos; LEI na GLEIF não verificado"
+  },
+  {
+   "code": "EMIR-VR-2077-02",
+   "item": "2.77",
+   "status": "nao_verificavel",
+   "nota": "depende da base GLEIF (existência/estado do LEI, sucursal): sem dados externos (decisão 2026-10-20, só campos TP)"
+  },
+  {
+   "code": "EMIR-VR-2077-03",
+   "item": "2.77",
+   "status": "nao_verificavel",
+   "nota": "depende da base GLEIF (existência/estado do LEI, sucursal): sem dados externos (decisão 2026-10-20, só campos TP)"
+  },
+  {
+   "code": "EMIR-VR-2077-04",
+   "item": "2.77",
+   "check": {
+    "equals_any": [
+     "1.4",
+     "1.9"
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2077-05",
+   "item": "2.77",
+   "check": {
+    "not_equal": {
+     "ref": "2.78",
+     "unless": "2.33"
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2078-01",
+   "item": "2.78",
+   "check": {
+    "if": {
+     "when": {
+      "populated": "2.73"
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "regex": "[A-Za-z0-9]{1,72}"
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade e até 72 alfanuméricos; LEI na GLEIF não verificado"
+  },
+  {
+   "code": "EMIR-VR-2078-02",
+   "item": "2.78",
+   "status": "nao_verificavel",
+   "nota": "depende da base GLEIF (existência/estado do LEI, sucursal): sem dados externos (decisão 2026-10-20, só campos TP)"
+  },
+  {
+   "code": "EMIR-VR-2078-03",
+   "item": "2.78",
+   "status": "nao_verificavel",
+   "nota": "depende da base GLEIF (existência/estado do LEI, sucursal): sem dados externos (decisão 2026-10-20, só campos TP)"
+  },
+  {
+   "code": "EMIR-VR-2078-04",
+   "item": "2.78",
+   "check": {
+    "equals_any": [
+     "1.4",
+     "1.9"
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2078-05",
+   "item": "2.78",
+   "check": {
+    "not_equal": {
+     "ref": "2.77",
+     "unless": "2.33"
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2079-01",
+   "item": "2.79",
+   "status": "nao_verificavel",
+   "nota": "depende do campo 2.85 (Name of the floating rate of leg 1), que não está no ficheiro DTCC"
+  },
+  {
+   "code": "EMIR-VR-2079-02",
+   "item": "2.79",
+   "status": "nao_verificavel",
+   "nota": "depende do campo 2.85 (Name of the floating rate of leg 1), que não está no ficheiro DTCC"
+  },
+  {
+   "code": "EMIR-VR-2079-03",
+   "item": "2.79",
+   "check": {
+    "decimal": {
+     "digits": 11,
+     "decimals": 10,
+     "sign": "any"
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2080-01",
+   "item": "2.80",
+   "check": {
+    "if": {
+     "when": {
+      "populated": "2.79"
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "enum": [
+         "A001",
+         "A002",
+         "A003",
+         "A004",
+         "A005",
+         "A006",
+         "A007",
+         "A008",
+         "A009",
+         "A010",
+         "A011",
+         "A012",
+         "A013",
+         "A014",
+         "A015",
+         "A016",
+         "A017",
+         "A018",
+         "A019",
+         "A020",
+         "NARR"
+        ]
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2081-01",
+   "item": "2.81",
+   "check": {
+    "if": {
+     "when": {
+      "populated": "2.79"
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "enum": [
+         "YEAR",
+         "MNTH",
+         "WEEK",
+         "DAIL",
+         "ADHO",
+         "EXPI"
+        ]
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2082-01",
+   "item": "2.82",
+   "check": {
+    "if": {
+     "when": {
+      "in": [
+       "2.81",
+       [
+        "EXPI",
+        "YEAR",
+        "MNTH",
+        "WEEK",
+        "DAIL"
+       ]
+      ]
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "decimal": {
+         "digits": 3,
+         "decimals": 0,
+         "sign": "nonneg"
+        }
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2083-01",
+   "item": "2.83",
+   "check": {
+    "regex": "[A-Z0-9]{12}"
+   },
+   "status": "parcial",
+   "nota": "só 12 caracteres alfanuméricos; check digit não verificado"
+  },
+  {
+   "code": "EMIR-VR-2083-02",
+   "item": "2.83",
+   "when": {
+    "all": [
+     {
+      "eq": [
+       "2.11",
+       "INTR"
+      ]
+     },
+     {
+      "populated": "2.14"
+     }
+    ]
+   },
+   "check": {
+    "blank": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2084-01",
+   "item": "2.84",
+   "check": {
+    "enum": [
+     "ESTR",
+     "SONA",
+     "SOFR",
+     "EONA",
+     "EONS",
+     "EURI",
+     "EUUS",
+     "EUCH",
+     "GCFR",
+     "ISDA",
+     "LIBI",
+     "LIBO",
+     "MAAA",
+     "PFAN",
+     "TIBO",
+     "STBO",
+     "BBSW",
+     "JIBA",
+     "BUBO",
+     "CDOR",
+     "CIBO",
+     "MOSP",
+     "NIBO",
+     "PRBO",
+     "TLBO",
+     "WIBO",
+     "TREA",
+     "SWAP",
+     "FUSW",
+     "EFFR",
+     "OBFR",
+     "CZNA"
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2084-02",
+   "item": "2.84",
+   "status": "nao_verificavel",
+   "nota": "depende do campo 2.15 (Indicator of the underlying index), que não está no ficheiro DTCC"
+  },
+  {
+   "code": "EMIR-VR-2085-01",
+   "item": "2.85",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2085-02",
+   "item": "2.85",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2086-01",
+   "item": "2.86",
+   "check": {
+    "enum": [
+     "A001",
+     "A002",
+     "A003",
+     "A004",
+     "A005",
+     "A006",
+     "A007",
+     "A008",
+     "A009",
+     "A010",
+     "A011",
+     "A012",
+     "A013",
+     "A014",
+     "A015",
+     "A016",
+     "A017",
+     "A018",
+     "A019",
+     "A020",
+     "NARR"
+    ]
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade depende do campo 2.85 (Name of the floating rate of leg 1), que não está no ficheiro DTCC; verificados os valores permitidos"
+  },
+  {
+   "code": "EMIR-VR-2087-01",
+   "item": "2.87",
+   "check": {
+    "enum": [
+     "YEAR",
+     "MNTH",
+     "WEEK",
+     "DAIL",
+     "ADHO",
+     "EXPI"
+    ]
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade depende do campo 2.85 (Name of the floating rate of leg 1), que não está no ficheiro DTCC; verificados os valores permitidos"
+  },
+  {
+   "code": "EMIR-VR-2088-01",
+   "item": "2.88",
+   "check": {
+    "if": {
+     "when": {
+      "in": [
+       "2.87",
+       [
+        "EXPI",
+        "YEAR",
+        "MNTH",
+        "WEEK",
+        "DAIL"
+       ]
+      ]
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "decimal": {
+         "digits": 3,
+         "decimals": 0,
+         "sign": "nonneg"
+        }
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2089-01",
+   "item": "2.89",
+   "check": {
+    "enum": [
+     "YEAR",
+     "MNTH",
+     "WEEK",
+     "DAIL",
+     "ADHO",
+     "EXPI"
+    ]
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade depende do campo 2.85 (Name of the floating rate of leg 1), que não está no ficheiro DTCC; verificados os valores permitidos"
+  },
+  {
+   "code": "EMIR-VR-2090-01",
+   "item": "2.90",
+   "check": {
+    "if": {
+     "when": {
+      "in": [
+       "2.89",
+       [
+        "EXPI",
+        "YEAR",
+        "MNTH",
+        "WEEK",
+        "DAIL"
+       ]
+      ]
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "decimal": {
+         "digits": 3,
+         "decimals": 0,
+         "sign": "nonneg"
+        }
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2091-01",
+   "item": "2.91",
+   "check": {
+    "enum": [
+     "YEAR",
+     "MNTH",
+     "WEEK",
+     "DAIL",
+     "ADHO",
+     "EXPI"
+    ]
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade depende do campo 2.85 (Name of the floating rate of leg 1), que não está no ficheiro DTCC; verificados os valores permitidos"
+  },
+  {
+   "code": "EMIR-VR-2092-01",
+   "item": "2.92",
+   "check": {
+    "if": {
+     "when": {
+      "in": [
+       "2.91",
+       [
+        "EXPI",
+        "YEAR",
+        "MNTH",
+        "WEEK",
+        "DAIL"
+       ]
+      ]
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "decimal": {
+         "digits": 3,
+         "decimals": 0,
+         "sign": "nonneg"
+        }
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2093-01",
+   "item": "2.93",
+   "check": {
+    "decimal": {
+     "digits": 18,
+     "decimals": 13,
+     "sign": "any"
+    }
+   },
+   "status": "parcial",
+   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC; verificado o limite mais largo (18 dígitos, 13 decimais); obrigatoriedade depende de 2.15/2.85 (sem colunas DTCC)"
+  },
+  {
+   "code": "EMIR-VR-2093-02",
+   "item": "2.93",
+   "status": "nao_verificavel",
+   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC"
+  },
+  {
+   "code": "EMIR-VR-2093-03",
+   "item": "2.93",
+   "status": "nao_verificavel",
+   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC"
+  },
+  {
+   "code": "EMIR-VR-2094-01",
+   "item": "2.94",
+   "check": {
+    "regex": "[A-Z]{3}"
+   },
+   "status": "parcial",
+   "nota": "notação de 2.93 não identificável; verificado o formato quando preenchido; pertença à lista oficial ISO 4217 não verificada (só 3 letras)"
+  },
+  {
+   "code": "EMIR-VR-2094-02",
+   "item": "2.94",
+   "check": {
+    "not_in": [
+     "XAG",
+     "XAU",
+     "XBA",
+     "XBB",
+     "XBC",
+     "XBD",
+     "XDR",
+     "XEU",
+     "XFU",
+     "XPD",
+     "XPT",
+     "XXX"
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2095-01",
+   "item": "2.95",
+   "when": {
+    "not": {
+     "all": [
+      {
+       "eq": [
+        "2.11",
+        "INTR"
+       ]
+      },
+      {
+       "in": [
+        "2.10",
+        [
+         "FRAS",
+         "SWAP",
+         "SWPT"
+        ]
+       ]
+      }
+     ]
+    }
+   },
+   "check": {
+    "blank": true
+   },
+   "status": "parcial",
+   "nota": "verificado o 'senão em branco'; a alternativa 2.95/2.101 depende do campo 2.101 (Name of the floating rate of leg 2), que não está no ficheiro DTCC"
+  },
+  {
+   "code": "EMIR-VR-2095-02",
+   "item": "2.95",
+   "check": {
+    "decimal": {
+     "digits": 11,
+     "decimals": 10,
+     "sign": "any"
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2096-01",
+   "item": "2.96",
+   "check": {
+    "if": {
+     "when": {
+      "populated": "2.95"
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "enum": [
+         "A001",
+         "A002",
+         "A003",
+         "A004",
+         "A005",
+         "A006",
+         "A007",
+         "A008",
+         "A009",
+         "A010",
+         "A011",
+         "A012",
+         "A013",
+         "A014",
+         "A015",
+         "A016",
+         "A017",
+         "A018",
+         "A019",
+         "A020",
+         "NARR"
+        ]
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2097-01",
+   "item": "2.97",
+   "check": {
+    "if": {
+     "when": {
+      "populated": "2.95"
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "enum": [
+         "YEAR",
+         "MNTH",
+         "WEEK",
+         "DAIL",
+         "ADHO",
+         "EXPI"
+        ]
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2098-01",
+   "item": "2.98",
+   "check": {
+    "if": {
+     "when": {
+      "in": [
+       "2.97",
+       [
+        "EXPI",
+        "YEAR",
+        "MNTH",
+        "WEEK",
+        "DAIL"
+       ]
+      ]
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "decimal": {
+         "digits": 3,
+         "decimals": 0,
+         "sign": "nonneg"
+        }
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2099-01",
+   "item": "2.99",
+   "check": {
+    "regex": "[A-Z0-9]{12}"
+   },
+   "status": "parcial",
+   "nota": "só 12 caracteres alfanuméricos; check digit não verificado"
+  },
+  {
+   "code": "EMIR-VR-2099-02",
+   "item": "2.99",
+   "when": {
+    "all": [
+     {
+      "eq": [
+       "2.11",
+       "INTR"
+      ]
+     },
+     {
+      "populated": "2.14"
+     }
+    ]
+   },
+   "check": {
+    "blank": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2100-01",
+   "item": "2.100",
+   "check": {
+    "enum": [
+     "ESTR",
+     "SONA",
+     "SOFR",
+     "EONA",
+     "EONS",
+     "EURI",
+     "EUUS",
+     "EUCH",
+     "GCFR",
+     "ISDA",
+     "LIBI",
+     "LIBO",
+     "MAAA",
+     "PFAN",
+     "TIBO",
+     "STBO",
+     "BBSW",
+     "JIBA",
+     "BUBO",
+     "CDOR",
+     "CIBO",
+     "MOSP",
+     "NIBO",
+     "PRBO",
+     "TLBO",
+     "WIBO",
+     "TREA",
+     "SWAP",
+     "FUSW",
+     "EFFR",
+     "OBFR",
+     "CZNA"
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2100-02",
+   "item": "2.100",
+   "status": "nao_verificavel",
+   "nota": "depende do campo 2.15 (Indicator of the underlying index), que não está no ficheiro DTCC"
+  },
+  {
+   "code": "EMIR-VR-2101-01",
+   "item": "2.101",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2101-02",
+   "item": "2.101",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2102-01",
+   "item": "2.102",
+   "check": {
+    "enum": [
+     "A001",
+     "A002",
+     "A003",
+     "A004",
+     "A005",
+     "A006",
+     "A007",
+     "A008",
+     "A009",
+     "A010",
+     "A011",
+     "A012",
+     "A013",
+     "A014",
+     "A015",
+     "A016",
+     "A017",
+     "A018",
+     "A019",
+     "A020",
+     "NARR"
+    ]
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade depende do campo 2.101 (Name of the floating rate of leg 2), que não está no ficheiro DTCC; verificados os valores permitidos"
+  },
+  {
+   "code": "EMIR-VR-2103-01",
+   "item": "2.103",
+   "check": {
+    "enum": [
+     "YEAR",
+     "MNTH",
+     "WEEK",
+     "DAIL",
+     "ADHO",
+     "EXPI"
+    ]
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade depende do campo 2.101 (Name of the floating rate of leg 2), que não está no ficheiro DTCC; verificados os valores permitidos"
+  },
+  {
+   "code": "EMIR-VR-2104-01",
+   "item": "2.104",
+   "check": {
+    "if": {
+     "when": {
+      "in": [
+       "2.103",
+       [
+        "EXPI",
+        "YEAR",
+        "MNTH",
+        "WEEK",
+        "DAIL"
+       ]
+      ]
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "decimal": {
+         "digits": 3,
+         "decimals": 0,
+         "sign": "nonneg"
+        }
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2105-01",
+   "item": "2.105",
+   "check": {
+    "enum": [
+     "YEAR",
+     "MNTH",
+     "WEEK",
+     "DAIL",
+     "ADHO",
+     "EXPI"
+    ]
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade depende do campo 2.101 (Name of the floating rate of leg 2), que não está no ficheiro DTCC; verificados os valores permitidos"
+  },
+  {
+   "code": "EMIR-VR-2106-01",
+   "item": "2.106",
+   "check": {
+    "if": {
+     "when": {
+      "in": [
+       "2.105",
+       [
+        "EXPI",
+        "YEAR",
+        "MNTH",
+        "WEEK",
+        "DAIL"
+       ]
+      ]
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "decimal": {
+         "digits": 3,
+         "decimals": 0,
+         "sign": "nonneg"
+        }
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2107-01",
+   "item": "2.107",
+   "check": {
+    "enum": [
+     "YEAR",
+     "MNTH",
+     "WEEK",
+     "DAIL",
+     "ADHO",
+     "EXPI"
+    ]
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade depende do campo 2.101 (Name of the floating rate of leg 2), que não está no ficheiro DTCC; verificados os valores permitidos"
+  },
+  {
+   "code": "EMIR-VR-2108-01",
+   "item": "2.108",
+   "check": {
+    "if": {
+     "when": {
+      "in": [
+       "2.107",
+       [
+        "EXPI",
+        "YEAR",
+        "MNTH",
+        "WEEK",
+        "DAIL"
+       ]
+      ]
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "decimal": {
+         "digits": 3,
+         "decimals": 0,
+         "sign": "nonneg"
+        }
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2109-01",
+   "item": "2.109",
+   "column": "SPREAD_LEG2",
+   "status": "nao_verificavel",
+   "nota": "depende do campo 2.101 (Name of the floating rate of leg 2, sem colunas DTCC) e dos códigos de notação em SPREAD_LEG2_TYP (não documentados no Excel)"
+  },
+  {
+   "code": "EMIR-VR-2109-02",
+   "item": "2.109",
+   "column": "SPREAD_LEG2",
+   "status": "nao_verificavel",
+   "nota": "depende do campo 2.101 (Name of the floating rate of leg 2, sem colunas DTCC) e dos códigos de notação em SPREAD_LEG2_TYP (não documentados no Excel)"
+  },
+  {
+   "code": "EMIR-VR-2109-03",
+   "item": "2.109",
+   "column": "SPREAD_LEG2",
+   "status": "nao_verificavel",
+   "nota": "depende do campo 2.101 (Name of the floating rate of leg 2, sem colunas DTCC) e dos códigos de notação em SPREAD_LEG2_TYP (não documentados no Excel)"
+  },
+  {
+   "code": "EMIR-VR-2110-01",
+   "item": "2.110",
+   "check": {
+    "all": [
+     {
+      "regex": "[A-Z]{3}"
+     },
+     {
+      "not_in": [
+       "XAG",
+       "XAU",
+       "XBA",
+       "XBB",
+       "XBC",
+       "XBD",
+       "XDR",
+       "XEU",
+       "XFU",
+       "XPD",
+       "XPT",
+       "XXX"
+      ]
+     }
+    ]
+   },
+   "status": "parcial",
+   "nota": "notação de 2.109 não identificável; verificado o formato quando preenchido; pertença à lista oficial ISO 4217 não verificada (só 3 letras)"
+  },
+  {
+   "code": "EMIR-VR-2111-01",
+   "item": "2.111",
+   "check": {
+    "decimal": {
+     "digits": 18,
+     "decimals": 13,
+     "sign": "any"
+    }
+   },
+   "status": "parcial",
+   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC; verificado o limite mais largo (18 dígitos, 13 decimais); obrigatoriedade depende do campo 2.6 (Package identifier), que não está no ficheiro DTCC"
+  },
+  {
+   "code": "EMIR-VR-2111-02",
+   "item": "2.111",
+   "status": "nao_verificavel",
+   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC"
+  },
+  {
+   "code": "EMIR-VR-2111-03",
+   "item": "2.111",
+   "status": "nao_verificavel",
+   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC"
+  },
+  {
+   "code": "EMIR-VR-2111-04",
+   "item": "2.111",
+   "when": {
+    "populated": "2.53"
+   },
+   "check": {
+    "blank": true
+   },
+   "status": "parcial",
+   "nota": "verificado 'em branco se 2.53 preenchido'; a parte de 2.6 depende do campo 2.6 (Package identifier), que não está no ficheiro DTCC"
+  },
+  {
+   "code": "EMIR-VR-2112-01",
+   "item": "2.112",
+   "check": {
+    "regex": "[A-Z]{3}"
+   },
+   "status": "parcial",
+   "nota": "notação de 2.111 não identificável; verificado o formato quando preenchido; pertença à lista oficial ISO 4217 não verificada (só 3 letras)"
+  },
+  {
+   "code": "EMIR-VR-2112-02",
+   "item": "2.112",
+   "check": {
+    "not_in": [
+     "XAG",
+     "XAU",
+     "XBA",
+     "XBB",
+     "XBC",
+     "XBD",
+     "XDR",
+     "XEU",
+     "XFU",
+     "XPD",
+     "XPT",
+     "XXX"
+    ]
    },
    "status": "verificavel"
   },
@@ -706,32 +3918,1715 @@
    "status": "verificavel"
   },
   {
-   "code": "EMIR-VR-2029-01",
-   "item": "2.29",
-   "check": {
-    "enum": [
-     "YCNF",
-     "NCNF",
-     "ECNF"
+   "code": "EMIR-VR-2114-01",
+   "item": "2.114",
+   "when": {
+    "eq": [
+     "2.11",
+     "CURR"
     ]
    },
-   "status": "parcial",
-   "nota": "verificados os valores permitidos; a obrigatoriedade depende do tipo de venue (RM), não verificada"
-  },
-  {
-   "code": "EMIR-VR-2064-01",
-   "item": "2.64",
    "check": {
-    "decimal": {
-     "digits": 25,
-     "decimals": 5,
-     "sign": "nonneg",
-     "allow": [
-      "9999999999999999999999999"
-     ]
+    "count_populated": {
+     "refs": [
+      "2.113",
+      "2.114"
+     ],
+     "min": 1
     }
    },
    "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2114-02",
+   "item": "2.114",
+   "when": {
+    "all": [
+     {
+      "eq": [
+       "2.11",
+       "CURR"
+      ]
+     },
+     {
+      "eq": [
+       "2.10",
+       "FORW"
+      ]
+     }
+    ]
+   },
+   "check": {
+    "count_populated": {
+     "refs": [
+      "2.113",
+      "2.114"
+     ],
+     "max": 1
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2114-03",
+   "item": "2.114",
+   "check": {
+    "decimal": {
+     "digits": 18,
+     "decimals": 13,
+     "sign": "positive"
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2115-01",
+   "item": "2.115",
+   "when": {
+    "eq": [
+     "2.11",
+     "CURR"
+    ]
+   },
+   "check": {
+    "required": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2115-02",
+   "item": "2.115",
+   "check": {
+    "regex": "[A-Z]{3}/[A-Z]{3}"
+   },
+   "status": "parcial",
+   "nota": "pertença à lista oficial ISO 4217 não verificada (só 3 letras)"
+  },
+  {
+   "code": "EMIR-VR-2116-01",
+   "item": "2.116",
+   "check": {
+    "if": {
+     "when": {
+      "eq": [
+       "2.11",
+       "COMM"
+      ]
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "enum": [
+         "AGRI",
+         "NRGY",
+         "ENVR",
+         "FRGT",
+         "FRTL",
+         "INDP",
+         "METL",
+         "MCEX",
+         "PAPR",
+         "POLY",
+         "INFL",
+         "OEST",
+         "OTHC",
+         "OTHR"
+        ]
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "parcial",
+   "nota": "Excel tem gralhas nos códigos ('ENRVR', 'FRTL'/'FRLTL'): usados os códigos ISO 'ENVR' e 'FRTL'"
+  },
+  {
+   "code": "EMIR-VR-2117-01",
+   "item": "2.117",
+   "when": {
+    "eq": [
+     "2.116",
+     "AGRI"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "GROS",
+       "SOFT",
+       "POTA",
+       "OOLI",
+       "DIRY",
+       "FRST",
+       "SEAF",
+       "LSTK",
+       "GRIN",
+       "OTHR"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2117-02",
+   "item": "2.117",
+   "when": {
+    "eq": [
+     "2.116",
+     "NRGY"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "ELEC",
+       "NGAS",
+       "OILP",
+       "COAL",
+       "INRG",
+       "RNNG",
+       "LGHT",
+       "DIST",
+       "OTHR"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2117-03",
+   "item": "2.117",
+   "when": {
+    "eq": [
+     "2.116",
+     "ENVR"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "EMIS",
+       "WTHR",
+       "CRBR",
+       "OTHR"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2117-04",
+   "item": "2.117",
+   "when": {
+    "eq": [
+     "2.116",
+     "FRGT"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "WETF",
+       "DRYF",
+       "CSHP",
+       "OTHR"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2117-05",
+   "item": "2.117",
+   "when": {
+    "eq": [
+     "2.116",
+     "FRTL"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "AMMO",
+       "DAPH",
+       "PTSH",
+       "SLPH",
+       "UREA",
+       "UAAN",
+       "OTHR"
+      ]
+     }
+    ]
+   },
+   "status": "parcial",
+   "nota": "Excel diz 'FRLTL': usado o código 'FRTL'"
+  },
+  {
+   "code": "EMIR-VR-2117-06",
+   "item": "2.117",
+   "when": {
+    "eq": [
+     "2.116",
+     "INDP"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "CSTR",
+       "MFTG"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2117-07",
+   "item": "2.117",
+   "when": {
+    "eq": [
+     "2.116",
+     "METL"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "NPRM",
+       "PRME"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2117-08",
+   "item": "2.117",
+   "when": {
+    "eq": [
+     "2.116",
+     "PAPR"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "CBRD",
+       "NSPT",
+       "PULP",
+       "RCVP",
+       "OTHR"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2117-09",
+   "item": "2.117",
+   "when": {
+    "eq": [
+     "2.116",
+     "POLY"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "PLST",
+       "OTHR"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2117-10",
+   "item": "2.117",
+   "when": {
+    "any": [
+     {
+      "in": [
+       "2.116",
+       [
+        "MCEX",
+        "INFL",
+        "OEST",
+        "OTHC",
+        "OTHR"
+       ]
+      ]
+     },
+     {
+      "blank": "2.116"
+     }
+    ]
+   },
+   "check": {
+    "blank": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2118-01",
+   "item": "2.118",
+   "when": {
+    "eq": [
+     "2.117",
+     "GROS"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "FWHT",
+       "SOYB",
+       "CORN",
+       "RPSD",
+       "RICE",
+       "OTHR"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2118-02",
+   "item": "2.118",
+   "when": {
+    "eq": [
+     "2.117",
+     "SOFT"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "CCOA",
+       "ROBU",
+       "WHSG",
+       "BRWN",
+       "OTHR"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2118-03",
+   "item": "2.118",
+   "when": {
+    "eq": [
+     "2.117",
+     "OOLI"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "LAMP",
+       "OTHR"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2118-04",
+   "item": "2.118",
+   "when": {
+    "eq": [
+     "2.117",
+     "GRIN"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "MWHT",
+       "OTHR"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2118-05",
+   "item": "2.118",
+   "when": {
+    "eq": [
+     "2.117",
+     "ELEC"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "BSLD",
+       "FITR",
+       "PKLD",
+       "OFFP",
+       "OTHR"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2118-06",
+   "item": "2.118",
+   "when": {
+    "eq": [
+     "2.117",
+     "NGAS"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "GASP",
+       "LNGG",
+       "NBPG",
+       "NCGG",
+       "TTFG",
+       "OTHR"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2118-07",
+   "item": "2.118",
+   "when": {
+    "eq": [
+     "2.117",
+     "OILP"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "BAKK",
+       "BDSL",
+       "BRNT",
+       "BRNX",
+       "CNDA",
+       "COND",
+       "DSEL",
+       "DUBA",
+       "ESPO",
+       "ETHA",
+       "FUEL",
+       "FOIL",
+       "GOIL",
+       "GSLN",
+       "HEAT",
+       "JTFL",
+       "KERO",
+       "LLSO",
+       "MARS",
+       "NAPH",
+       "NGLO",
+       "TAPI",
+       "URAL",
+       "WTIO",
+       "OTHR"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2118-08",
+   "item": "2.118",
+   "when": {
+    "eq": [
+     "2.117",
+     "EMIS"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "CERE",
+       "ERUE",
+       "EUAE",
+       "EUAA",
+       "OTHR"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2118-09",
+   "item": "2.118",
+   "when": {
+    "eq": [
+     "2.117",
+     "WETF"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "TNKR",
+       "OTHR"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2118-10",
+   "item": "2.118",
+   "when": {
+    "eq": [
+     "2.117",
+     "DRYF"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "DBCR",
+       "OTHR"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2118-11",
+   "item": "2.118",
+   "when": {
+    "eq": [
+     "2.117",
+     "NPRM"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "ALUM",
+       "ALUA",
+       "CBLT",
+       "COPR",
+       "IRON",
+       "LEAD",
+       "MOLY",
+       "NASC",
+       "NICK",
+       "STEL",
+       "TINN",
+       "ZINC",
+       "OTHR"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2118-12",
+   "item": "2.118",
+   "when": {
+    "eq": [
+     "2.117",
+     "PRME"
+    ]
+   },
+   "check": {
+    "all": [
+     {
+      "required": true
+     },
+     {
+      "enum": [
+       "GOLD",
+       "SLVR",
+       "PTNM",
+       "PLDM",
+       "OTHR"
+      ]
+     }
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2118-13",
+   "item": "2.118",
+   "when": {
+    "any": [
+     {
+      "in": [
+       "2.117",
+       [
+        "POTA",
+        "DIRY",
+        "FRST",
+        "SEAF",
+        "LSTK",
+        "COAL",
+        "INRG",
+        "RNNG",
+        "LGHT",
+        "DIST",
+        "WTHR",
+        "CRBR",
+        "CSHP",
+        "AMMO",
+        "DAPH",
+        "PTSH",
+        "SLPH",
+        "UREA",
+        "UAAN",
+        "CSTR",
+        "MFTG",
+        "CBRD",
+        "NSPT",
+        "PULP",
+        "RCVP",
+        "PLST",
+        "OTHR"
+       ]
+      ]
+     },
+     {
+      "blank": "2.117"
+     }
+    ]
+   },
+   "check": {
+    "blank": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2119-01",
+   "item": "2.119",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2120-01",
+   "item": "2.120",
+   "check": {
+    "if": {
+     "when": {
+      "in": [
+       "2.117",
+       [
+        "NGAS",
+        "ELEC"
+       ]
+      ]
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "regex": "[A-Z0-9-]{16}"
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "parcial",
+   "nota": "16 caracteres alfanuméricos; pertença à lista de códigos EIC não verificada"
+  },
+  {
+   "code": "EMIR-VR-2121-01",
+   "item": "2.121",
+   "check": {
+    "enum": [
+     "BSLD",
+     "PKLD",
+     "OFFP",
+     "HABH",
+     "SHPD",
+     "GASD",
+     "OTHR"
+    ]
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade depende de 2.119 (Delivery point or zone, sem colunas DTCC) / código EIC em 2.120; verificado só o formato quando preenchido"
+  },
+  {
+   "code": "EMIR-VR-2122-01",
+   "item": "2.122",
+   "check": {
+    "regex": "([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]Z"
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade depende de 2.119 (Delivery point or zone, sem colunas DTCC) / código EIC em 2.120; verificado só o formato quando preenchido"
+  },
+  {
+   "code": "EMIR-VR-2123-01",
+   "item": "2.123",
+   "check": {
+    "regex": "([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]Z"
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade depende de 2.119 (Delivery point or zone, sem colunas DTCC) / código EIC em 2.120; verificado só o formato quando preenchido"
+  },
+  {
+   "code": "EMIR-VR-2124-01",
+   "item": "2.124",
+   "check": {
+    "date": true
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade depende de 2.119 (Delivery point or zone, sem colunas DTCC) / código EIC em 2.120; verificado só o formato quando preenchido"
+  },
+  {
+   "code": "EMIR-VR-2125-01",
+   "item": "2.125",
+   "check": {
+    "date": true
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade depende de 2.119 (Delivery point or zone, sem colunas DTCC) / código EIC em 2.120; verificado só o formato quando preenchido"
+  },
+  {
+   "code": "EMIR-VR-2126-01",
+   "item": "2.126",
+   "check": {
+    "enum": [
+     "MNUT",
+     "HOUR",
+     "DASD",
+     "WEEK",
+     "MNTH",
+     "QURT",
+     "SEAS",
+     "YEAR",
+     "OTHR"
+    ]
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade depende de 2.119 (Delivery point or zone, sem colunas DTCC) / código EIC em 2.120; verificado só o formato quando preenchido"
+  },
+  {
+   "code": "EMIR-VR-2127-01",
+   "item": "2.127",
+   "check": {
+    "regex": "(WDAY|WEND|MOND|TUED|WEDD|THUD|FRID|SATD|SUND|XBHL|IBHL)([,; ](WDAY|WEND|MOND|TUED|WEDD|THUD|FRID|SATD|SUND|XBHL|IBHL))*"
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade depende de 2.119 (Delivery point or zone, sem colunas DTCC) / código EIC em 2.120; verificado só o formato quando preenchido; vários valores aceites separados por vírgula/ponto e vírgula/espaço (separador do ficheiro DTCC por confirmar)"
+  },
+  {
+   "code": "EMIR-VR-2128-01",
+   "item": "2.128",
+   "check": {
+    "decimal": {
+     "digits": 20,
+     "decimals": 19,
+     "sign": "any"
+    }
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade depende de 2.119 (Delivery point or zone, sem colunas DTCC) / código EIC em 2.120; verificado só o formato quando preenchido"
+  },
+  {
+   "code": "EMIR-VR-2129-01",
+   "item": "2.129",
+   "check": {
+    "enum": [
+     "KWAT",
+     "KWHH",
+     "KWHD",
+     "MWAT",
+     "MWHH",
+     "MWHD",
+     "GWAT",
+     "GWHH",
+     "GWHD",
+     "THMD",
+     "KTMD",
+     "MTMD",
+     "CMPD",
+     "MCMD",
+     "BTUD",
+     "MBTD",
+     "MJDD",
+     "HMJD",
+     "MMJD",
+     "GJDD"
+    ]
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade depende de 2.119 (Delivery point or zone, sem colunas DTCC) / código EIC em 2.120; verificado só o formato quando preenchido"
+  },
+  {
+   "code": "EMIR-VR-2130-01",
+   "item": "2.130",
+   "check": {
+    "decimal": {
+     "digits": 20,
+     "decimals": 19,
+     "sign": "any"
+    }
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade depende de 2.119 (Delivery point or zone, sem colunas DTCC) / código EIC em 2.120; verificado só o formato quando preenchido"
+  },
+  {
+   "code": "EMIR-VR-2131-01",
+   "item": "2.131",
+   "check": {
+    "all": [
+     {
+      "regex": "[A-Z]{3}"
+     },
+     {
+      "not_in": [
+       "XAG",
+       "XAU",
+       "XBA",
+       "XBB",
+       "XBC",
+       "XBD",
+       "XDR",
+       "XEU",
+       "XFU",
+       "XPD",
+       "XPT",
+       "XXX"
+      ]
+     }
+    ]
+   },
+   "status": "parcial",
+   "nota": "obrigatoriedade depende de 2.119 (Delivery point or zone, sem colunas DTCC) / código EIC em 2.120; verificado só o formato quando preenchido"
+  },
+  {
+   "code": "EMIR-VR-2132-01",
+   "item": "2.132",
+   "check": {
+    "if": {
+     "when": {
+      "in": [
+       "2.10",
+       [
+        "OPTN",
+        "SWPT"
+       ]
+      ]
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "enum": [
+         "PUTO",
+         "CALL",
+         "OTHR"
+        ]
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2133-01",
+   "item": "2.133",
+   "check": {
+    "if": {
+     "when": {
+      "in": [
+       "2.10",
+       [
+        "OPTN",
+        "SWPT"
+       ]
+      ]
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "enum": [
+         "AMER",
+         "BERM",
+         "EURO"
+        ]
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2134-01",
+   "item": "2.134",
+   "when": {
+    "in": [
+     "2.10",
+     [
+      "OPTN",
+      "SWPT"
+     ]
+    ]
+   },
+   "check": {
+    "required": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2134-02",
+   "item": "2.134",
+   "status": "nao_verificavel",
+   "nota": "regra permissiva (campo opcional nesta situação): não gera violação"
+  },
+  {
+   "code": "EMIR-VR-2134-03",
+   "item": "2.134",
+   "check": {
+    "decimal": {
+     "digits": 18,
+     "decimals": 13,
+     "sign": "any"
+    }
+   },
+   "status": "parcial",
+   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC; verificado o limite mais largo (18 dígitos, 13 decimais)"
+  },
+  {
+   "code": "EMIR-VR-2134-04",
+   "item": "2.134",
+   "status": "nao_verificavel",
+   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC"
+  },
+  {
+   "code": "EMIR-VR-2135-01",
+   "item": "2.135",
+   "check": {
+    "date": true
+   },
+   "status": "parcial",
+   "nota": "depende do campo 2.137 (Strike price in effect on associated effective date), que não está no ficheiro DTCC; verificado só o formato quando preenchido"
+  },
+  {
+   "code": "EMIR-VR-2136-01",
+   "item": "2.136",
+   "check": {
+    "date": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2136-02",
+   "item": "2.136",
+   "status": "nao_verificavel",
+   "nota": "depende do campo 2.137 (Strike price in effect on associated effective date), que não está no ficheiro DTCC"
+  },
+  {
+   "code": "EMIR-VR-2137-01",
+   "item": "2.137",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2137-02",
+   "item": "2.137",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2138-01",
+   "item": "2.138",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2138-02",
+   "item": "2.138",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2138-03",
+   "item": "2.138",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2139-01",
+   "item": "2.139",
+   "check": {
+    "if": {
+     "when": {
+      "in": [
+       "2.10",
+       [
+        "OPTN",
+        "SWPT"
+       ]
+      ]
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "decimal": {
+         "digits": 25,
+         "decimals": 5,
+         "sign": "nonneg",
+         "allow": [
+          "9999999999999999999999999"
+         ]
+        }
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2140-01",
+   "item": "2.140",
+   "check": {
+    "if": {
+     "when": {
+      "in": [
+       "2.10",
+       [
+        "OPTN",
+        "SWPT"
+       ]
+      ]
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "regex": "[A-Z]{3}"
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "parcial",
+   "nota": "pertença à lista oficial ISO 4217 não verificada (só 3 letras)"
+  },
+  {
+   "code": "EMIR-VR-2140-02",
+   "item": "2.140",
+   "check": {
+    "not_in": [
+     "XAG",
+     "XAU",
+     "XBA",
+     "XBB",
+     "XBC",
+     "XBD",
+     "XDR",
+     "XEU",
+     "XFU",
+     "XPD",
+     "XPT",
+     "XXX"
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2141-01",
+   "item": "2.141",
+   "check": {
+    "if": {
+     "when": {
+      "in": [
+       "2.10",
+       [
+        "OPTN",
+        "SWPT"
+       ]
+      ]
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "date": true
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2142-01",
+   "item": "2.142",
+   "check": {
+    "if": {
+     "when": {
+      "eq": [
+       "2.10",
+       "SWPT"
+      ]
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "date": true
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2142-02",
+   "item": "2.142",
+   "check": {
+    "compare": {
+     "op": ">=",
+     "value": "2014-02-12",
+     "as": "date"
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2143-01",
+   "item": "2.143",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2144-01",
+   "item": "2.144",
+   "when": {
+    "eq": [
+     "2.11",
+     "CRDT"
+    ]
+   },
+   "check": {
+    "count_populated": {
+     "refs": [
+      "2.13",
+      "2.144"
+     ],
+     "min": 1
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2144-02",
+   "item": "2.144",
+   "check": {
+    "regex": "[A-Z]{2}|[A-Z]{2}-[A-Z0-9]{1,3}|[A-Z0-9]{18}[0-9]{2}"
+   },
+   "status": "parcial",
+   "nota": "formato país / subdivisão / LEI; validade ISO 3166 e GLEIF não verificadas"
+  },
+  {
+   "code": "EMIR-VR-2144-03",
+   "item": "2.144",
+   "status": "nao_verificavel",
+   "nota": "depende da base GLEIF (existência/estado do LEI, sucursal): sem dados externos (decisão 2026-10-20, só campos TP)"
+  },
+  {
+   "code": "EMIR-VR-2144-04",
+   "item": "2.144",
+   "when": {
+    "any": [
+     {
+      "not": {
+       "eq": [
+        "2.11",
+        "CRDT"
+       ]
+      }
+     },
+     {
+      "populated": "2.13"
+     }
+    ]
+   },
+   "check": {
+    "blank": true
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2145-01",
+   "item": "2.145",
+   "check": {
+    "if": {
+     "when": {
+      "all": [
+       {
+        "eq": [
+         "2.11",
+         "CRDT"
+        ]
+       },
+       {
+        "eq": [
+         "2.13",
+         "X"
+        ]
+       }
+      ]
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "decimal": {
+         "digits": 5,
+         "decimals": 0,
+         "sign": "positive"
+        }
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2146-01",
+   "item": "2.146",
+   "check": {
+    "if": {
+     "when": {
+      "all": [
+       {
+        "eq": [
+         "2.11",
+         "CRDT"
+        ]
+       },
+       {
+        "eq": [
+         "2.13",
+         "X"
+        ]
+       }
+      ]
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "decimal": {
+         "digits": 5,
+         "decimals": 0,
+         "sign": "positive"
+        }
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2147-01",
+   "item": "2.147",
+   "check": {
+    "if": {
+     "when": {
+      "all": [
+       {
+        "eq": [
+         "2.11",
+         "CRDT"
+        ]
+       },
+       {
+        "eq": [
+         "2.13",
+         "X"
+        ]
+       }
+      ]
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "decimal": {
+         "digits": 11,
+         "decimals": 10,
+         "sign": "nonneg"
+        }
+       },
+       {
+        "compare": {
+         "op": "<=",
+         "value": "1",
+         "as": "number"
+        }
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2148-01",
+   "item": "2.148",
+   "check": {
+    "if": {
+     "when": {
+      "eq": [
+       "2.11",
+       "CRDT"
+      ]
+     },
+     "then": {
+      "all": [
+       {
+        "required": true
+       },
+       {
+        "enum": [
+         "TRUE",
+         "FALSE"
+        ]
+       }
+      ]
+     },
+     "else": {
+      "blank": true
+     }
+    }
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2149-01",
+   "item": "2.149",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2149-02",
+   "item": "2.149",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2150-01",
+   "item": "2.150",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2150-02",
+   "item": "2.150",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2151-01",
+   "item": "2.151",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2151-02",
+   "item": "2.151",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2151-03",
+   "item": "2.151",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2151-04",
+   "item": "2.151",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2151-05",
+   "item": "2.151",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2151-06",
+   "item": "2.151",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2152-01",
+   "item": "2.152",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2152-02",
+   "item": "2.152",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2152-03",
+   "item": "2.152",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2152-04",
+   "item": "2.152",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2152-05",
+   "item": "2.152",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2153-01",
+   "item": "2.153",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2153-02",
+   "item": "2.153",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2153-03",
+   "item": "2.153",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2153-04",
+   "item": "2.153",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2153-05",
+   "item": "2.153",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2153-06",
+   "item": "2.153",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2153-07",
+   "item": "2.153",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2153-08",
+   "item": "2.153",
+   "status": "nao_verificavel",
+   "nota": "campo sem colunas no ficheiro DTCC (não reconciliado)"
+  },
+  {
+   "code": "EMIR-VR-2154-01",
+   "item": "2.154",
+   "check": {
+    "enum": [
+     "TCTN",
+     "PSTN"
+    ]
+   },
+   "status": "verificavel"
+  },
+  {
+   "code": "EMIR-VR-2154-02",
+   "item": "2.154",
+   "status": "nao_verificavel",
+   "nota": "regra de ciclo de vida (action type, reportes anteriores do mesmo UTI): não verificável registo a registo"
+  },
+  {
+   "code": "EMIR-VR-2154-03",
+   "item": "2.154",
+   "status": "nao_verificavel",
+   "nota": "regra de ciclo de vida (action type, reportes anteriores do mesmo UTI): não verificável registo a registo"
   }
  ]
 }

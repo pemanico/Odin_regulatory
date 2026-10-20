@@ -178,7 +178,7 @@ test('ruleInputSql: só colunas usadas e semi-join com os breaks', () => {
 
 test('config real: regras válidas, referências resolvidas e compiláveis com todas as colunas TP', () => {
   const { fieldMap, rulesDoc } = loadRules();
-  assert.ok(rulesDoc.rules.length >= 54);
+  assert.equal(rulesDoc.rules.length, 409, 'todos os códigos VR do Excel (passo 3)');
   for (const r of rulesDoc.rules) for (const i of referencedItems(r)) assert.ok(fieldMap.items[i], `${r.code}: ${i}`);
   const cols = new Map();
   for (const e of Object.values(fieldMap.items)) {
@@ -215,4 +215,26 @@ test('decimal em coluna DOUBLE: sinal e grandeza', { skip }, async () => {
   const rows = (await db.all(`SELECT k_uti FROM rule_input WHERE ${c.sql} ORDER BY k_uti`)).map((r) => r.k_uti);
   assert.deepEqual(rows, ['U1', 'U2']);
   await db.close();
+});
+
+test('if / equals_any / not_equal', { skip }, async () => {
+  const db = await inputDb([
+    { TP1_CONTRACT_TYPE: 'OPTN', TP1_DELIVERY_TYPE: null }, // U0: if OPTN então obrigatório -> viola
+    { TP1_CONTRACT_TYPE: 'SWAP', TP1_DELIVERY_TYPE: 'CASH' }, // U1: senão em branco -> viola
+    { TP1_CONTRACT_TYPE: 'SWAP', TP1_DELIVERY_TYPE: null }, // U2: ok
+    { TP1_CONTRACT_TYPE: 'OPTN', TP1_DELIVERY_TYPE: 'CASH' }, // U3: ok
+  ]);
+  const ifRule = R('EMIR-VR-2139-01', '2.47', { if: { when: { in: ['2.10', ['OPTN', 'SWPT']] }, then: { required: true }, else: { blank: true } } });
+  assert.deepEqual(await violating(db, ifRule), ['U0', 'U1']);
+  await db.close();
+
+  const db2 = await inputDb([
+    { TP1_SETTLEMENT_CCY_1: 'EUR', TP1_DELIVERY_TYPE: 'EUR', TP1_CONTRACT_TYPE: 'X' }, // U0: igual a 2.47 -> equals_any ok; not_equal viola
+    { TP1_SETTLEMENT_CCY_1: 'EUR', TP1_DELIVERY_TYPE: 'USD', TP1_CONTRACT_TYPE: 'EUR' }, // U1: igual a 2.10 -> ok; not_equal ok
+    { TP1_SETTLEMENT_CCY_1: 'EUR', TP1_DELIVERY_TYPE: 'USD', TP1_CONTRACT_TYPE: 'GBP' }, // U2: nenhum -> equals_any viola
+    { TP1_SETTLEMENT_CCY_1: 'EUR', TP1_DELIVERY_TYPE: 'EUR', TP1_CONTRACT_TYPE: 'EUR' }, // U3: igual a 2.47 mas também a unless -> ok
+  ]);
+  assert.deepEqual(await violating(db2, R('EMIR-VR-2077-04', '2.19', { equals_any: ['2.47', '2.10'] })), ['U2']);
+  assert.deepEqual(await violating(db2, R('EMIR-VR-2077-05', '2.19', { not_equal: { ref: '2.47', unless: '2.10' } })), ['U0']);
+  await db2.close();
 });

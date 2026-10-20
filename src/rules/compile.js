@@ -21,6 +21,9 @@
 //              {compare:{op, ref | value, as:"date"|"timestamp"|"number"}}  (só se os dois valores forem válidos)
 //              {count_populated:{refs:[...], min?, max?}}
 //              {all:[check, check, ...]}  (todos têm de ser cumpridos)
+//              {if:{when:predicado, then:check, else?:check}}  ("se X então Y, senão Z"; sem else = cumpre)
+//              {equals_any:[ref, ...]}  (valor igual a um dos campos referidos; só se preenchido)
+//              {not_equal:{ref, unless?:ref}}  (valor diferente do campo ref, exceto se igual a `unless`)
 //            Verificações de valor (enum, regex, decimal, ...) só se aplicam a valores preenchidos.
 //   status   "verificavel" | "parcial" (só parte da regra é verificável; nota diz qual) | "nao_verificavel"
 //
@@ -28,7 +31,7 @@
 import { ValidationError } from '../semantic/literals.js';
 
 export const SIDES = { BNPP: 'TP1', CPTY: 'TP2' };
-const CHECKS = ['all', 'required', 'blank', 'enum', 'not_in', 'regex', 'date', 'timestamp', 'year', 'decimal', 'compare', 'count_populated'];
+const CHECKS = ['all', 'if', 'equals_any', 'not_equal', 'required', 'blank', 'enum', 'not_in', 'regex', 'date', 'timestamp', 'year', 'decimal', 'compare', 'count_populated'];
 const STATUSES = ['verificavel', 'parcial', 'nao_verificavel'];
 
 export const DATE_RE = '[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])';
@@ -161,6 +164,18 @@ function compileCheck(check, ctx, dialect) {
   const ifPopulated = (expr) => `(${v} IS NULL OR ${expr})`;
   switch (kind) {
     case 'all': return `(${spec.map((c) => `COALESCE(${compileCheck(c, ctx, dialect)}, FALSE)`).join(' AND ')})`;
+    case 'if': {
+      const cond = compilePredicate(spec.when, ctx);
+      const then = `COALESCE(${compileCheck(spec.then, ctx, dialect)}, FALSE)`;
+      const other = spec.else ? `COALESCE(${compileCheck(spec.else, ctx, dialect)}, FALSE)` : 'TRUE';
+      return `(CASE WHEN ${cond} THEN ${then} ELSE ${other} END)`;
+    }
+    case 'equals_any': return ifPopulated(`(${spec.map((r) => `COALESCE(${v} = ${ctx.val(r)}, FALSE)`).join(' OR ')})`);
+    case 'not_equal': {
+      const other = ctx.val(spec.ref);
+      const unless = spec.unless ? ` OR COALESCE(${v} = ${ctx.val(spec.unless)}, FALSE)` : '';
+      return `(${v} IS NULL OR ${other} IS NULL OR ${v} <> ${other}${unless})`;
+    }
     case 'required': return `(${v} IS NOT NULL)`;
     case 'blank': return `(${v} IS NULL)`;
     case 'enum': return ifPopulated(`${v} IN (${spec.map(sqlString).join(', ')})`);
