@@ -14,6 +14,7 @@
     "profile": "node scripts/profile.js",
     "describe": "node scripts/describe.js",
     "map-fields": "node scripts/map-fields.js",
+    "rules": "node scripts/rules.js",
     "test": "node --test"
   },
   "dependencies": {

@@ -19,6 +19,13 @@ export const duckdb = {
   parquetSource(glob) {
     return `read_parquet('${glob.replace(/'/g, "''")}', union_by_name = true)`;
   },
+  /** true se o texto inteiro casa com a regex (sintaxe RE2). ClickHouse: match(expr, '^(?:...)$'). */
+  regexFull(expr, pattern) {
+    return `regexp_full_match(${expr}, '${pattern.replace(/'/g, "''")}')`;
+  },
+  castNumber(expr) {
+    return `CAST(${expr} AS DOUBLE)`;
+  },
 };
 
 // Só para testes automáticos (node:sqlite), sem dependências externas.
@@ -36,6 +43,13 @@ export const sqlite = {
   },
   parquetSource() {
     throw new Error('SQLite não lê Parquet; usado apenas em testes com tabelas em memória.');
+  },
+  /** Função regexp_full_match registada pelo adaptador (src/db/sqlite.js), com o mesmo nome do DuckDB. */
+  regexFull(expr, pattern) {
+    return `regexp_full_match(${expr}, '${pattern.replace(/'/g, "''")}')`;
+  },
+  castNumber(expr) {
+    return `CAST(${expr} AS REAL)`;
   },
 };
 

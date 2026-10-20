@@ -1,0 +1,962 @@
+{
+ "_doc": "Item ESMA (Table.Item do Excel de regras) -> colunas do ficheiro DTCC. tp = sufixos dos pares TP1_/TP2_ (BNPP = TP1, contraparte = TP2); common = coluna comum aos dois lados; tp vazio = campo sem colunas no ficheiro DTCC (regras que dependem dele não são verificáveis). Gerado a partir do Excel EMIR-Refit_Reconciliation status matching + ficheiro de mapeamento Field name -> DTCC; correções manuais assinaladas em origem.",
+ "version": "2026-10-20.1",
+ "items": {
+  "1.1": {
+   "field": "Reporting timestamp",
+   "common": "REFERENCE_DATE"
+  },
+  "1.2": {
+   "field": "Report submitting entity ID",
+   "common": "REPORT_SUBMITTING_ENTITY"
+  },
+  "1.3": {
+   "field": "Entity responsible for reporting",
+   "common": "ENTITY_RESP_FOR_REPORT"
+  },
+  "1.4": {
+   "field": "Counterparty 1 (Reporting counterparty)",
+   "common": "REPORTING_COUNTERPARTY_LEI"
+  },
+  "1.5": {
+   "field": "Nature of the counterparty 1",
+   "tp": []
+  },
+  "1.6": {
+   "field": "Corporate sector of the counterparty 1",
+   "tp": []
+  },
+  "1.7": {
+   "field": "Clearing threshold of counterparty 1",
+   "tp": []
+  },
+  "1.8": {
+   "field": "Counterparty 2 identifier type",
+   "tp": []
+  },
+  "1.9": {
+   "field": "Counterparty 2",
+   "common": "OTHER_COUNTERPARTY_LEGAL_LEI"
+  },
+  "1.10": {
+   "field": "Country of the counterparty 2",
+   "tp": []
+  },
+  "1.11": {
+   "field": "Nature of the counterparty 2",
+   "tp": []
+  },
+  "1.12": {
+   "field": "Corporate sector of the counterparty 2",
+   "tp": []
+  },
+  "1.13": {
+   "field": "Clearing threshold of counterparty 2",
+   "tp": []
+  },
+  "1.14": {
+   "field": "Reporting obligation of the counterparty 2",
+   "tp": []
+  },
+  "1.15": {
+   "field": "Broker ID",
+   "tp": []
+  },
+  "1.16": {
+   "field": "Clearing member",
+   "tp": []
+  },
+  "1.17": {
+   "field": "Direction",
+   "tp": []
+  },
+  "1.18": {
+   "field": "Direction of leg 1",
+   "tp": []
+  },
+  "1.19": {
+   "field": "Direction of leg 2",
+   "tp": []
+  },
+  "1.20": {
+   "field": "Directly linked to commercial activity or treasury financing",
+   "tp": []
+  },
+  "2.1": {
+   "field": "UTI",
+   "common": "UTI"
+  },
+  "2.2": {
+   "field": "Report tracking number",
+   "tp": [
+    "RPT_TRACKING_NUMBER"
+   ]
+  },
+  "2.3": {
+   "field": "Prior UTI (for one-to-one and one-to-many relations between transactions)",
+   "tp": [
+    "PRIOR_UTI"
+   ]
+  },
+  "2.4": {
+   "field": "Subsequent position UTI",
+   "tp": []
+  },
+  "2.5": {
+   "field": "PTRR ID",
+   "tp": []
+  },
+  "2.6": {
+   "field": "Package identifier",
+   "tp": []
+  },
+  "2.7": {
+   "field": "ISIN",
+   "tp": [
+    "ISIN"
+   ]
+  },
+  "2.8": {
+   "field": "Unique product identifier (UPI)",
+   "tp": [
+    "UNIQUE_PRODUCT_ID"
+   ]
+  },
+  "2.9": {
+   "field": "Product classification",
+   "tp": [
+    "PRODUCT_CLASSIFICATION"
+   ]
+  },
+  "2.10": {
+   "field": "Contract type",
+   "tp": [
+    "CONTRACT_TYPE"
+   ]
+  },
+  "2.11": {
+   "field": "Asset class",
+   "tp": [
+    "ASSET_CLASS"
+   ]
+  },
+  "2.12": {
+   "field": "Derivative based on crypto-assets",
+   "tp": [
+    "DRIV_CRYPTO_ASSETS"
+   ]
+  },
+  "2.13": {
+   "field": "Underlying identification type",
+   "tp": [
+    "UNDRLY_IDENTIFICATION_TYPE"
+   ]
+  },
+  "2.14": {
+   "field": "Underlying identification",
+   "tp": [
+    "UNDRLY_IDENTIFICATION"
+   ]
+  },
+  "2.15": {
+   "field": "Indicator of the underlying index",
+   "tp": []
+  },
+  "2.16": {
+   "field": "Name of the underlying index",
+   "tp": []
+  },
+  "2.17": {
+   "field": "Custom basket code",
+   "tp": []
+  },
+  "2.18": {
+   "field": "Identifier of the basket’s constituents",
+   "tp": []
+  },
+  "2.19": {
+   "field": "Settlement currency 1",
+   "tp": [
+    "SETTLEMENT_CCY_1"
+   ]
+  },
+  "2.20": {
+   "field": "Settlement currency 2",
+   "tp": [
+    "SETTLEMENT_CCY_2"
+   ]
+  },
+  "2.21": {
+   "field": "Valuation amount",
+   "tp": [
+    "VALUATION_AMT"
+   ]
+  },
+  "2.22": {
+   "field": "Valuation currency",
+   "tp": [
+    "VALUATION_CCY"
+   ]
+  },
+  "2.23": {
+   "field": "Valuation timestamp",
+   "tp": []
+  },
+  "2.24": {
+   "field": "Valuation method",
+   "tp": [
+    "VALUATION_METHOD"
+   ]
+  },
+  "2.25": {
+   "field": "Delta",
+   "tp": [
+    "DELTA"
+   ]
+  },
+  "2.26": {
+   "field": "Collateral portfolio indicator",
+   "tp": []
+  },
+  "2.27": {
+   "field": "Collateral portfolio code",
+   "tp": []
+  },
+  "2.28": {
+   "field": "Confirmation timestamp",
+   "tp": [
+    "CONFIRMATION_TIMESTAMP"
+   ]
+  },
+  "2.29": {
+   "field": "Confirmed",
+   "tp": [
+    "CONFIRMED"
+   ]
+  },
+  "2.30": {
+   "field": "Clearing obligation",
+   "tp": [
+    "CLEARING_OBLIGATION"
+   ]
+  },
+  "2.31": {
+   "field": "Cleared",
+   "tp": [
+    "CLEARED"
+   ]
+  },
+  "2.32": {
+   "field": "Clearing timestamp",
+   "tp": [
+    "CLEARING_TIMESTAMP"
+   ]
+  },
+  "2.33": {
+   "field": "Central counterparty",
+   "tp": [
+    "CCP"
+   ]
+  },
+  "2.34": {
+   "field": "Master Agreement type",
+   "tp": [
+    "MASTER_AGREEMENT_TYPE"
+   ]
+  },
+  "2.35": {
+   "field": "Other master agreement type",
+   "tp": []
+  },
+  "2.36": {
+   "field": "Master Agreement version",
+   "tp": [
+    "MASTER_AGREEMENT_VRSN_V"
+   ],
+   "origem": "manual (confirmado 2026-10-20)"
+  },
+  "2.37": {
+   "field": "Intragroup",
+   "tp": [
+    "INTRAGROUP"
+   ]
+  },
+  "2.38": {
+   "field": "PTRR",
+   "tp": []
+  },
+  "2.39": {
+   "field": "Type of PTRR technique",
+   "tp": []
+  },
+  "2.40": {
+   "field": "PTRR service provider",
+   "tp": [
+    "PTRR_SERVICE_PROVIDER"
+   ]
+  },
+  "2.41": {
+   "field": "Venue of execution",
+   "tp": [
+    "VENUE_OF_EXECUTION"
+   ]
+  },
+  "2.42": {
+   "field": "Execution timestamp",
+   "tp": [
+    "EXECUTION_TIMESTAMP"
+   ]
+  },
+  "2.43": {
+   "field": "Effective date",
+   "tp": [
+    "EFFECTIVE_DATE"
+   ]
+  },
+  "2.44": {
+   "field": "Expiration date",
+   "tp": [
+    "EXPIRATION_DATE"
+   ]
+  },
+  "2.45": {
+   "field": "Early termination date",
+   "tp": [
+    "EARLY_TERMINATION_DATE"
+   ]
+  },
+  "2.46": {
+   "field": "Final contractual settlement date",
+   "tp": [
+    "SETTLEMENT_DATE"
+   ],
+   "origem": "manual (confirmado 2026-10-20)"
+  },
+  "2.47": {
+   "field": "Delivery type",
+   "tp": [
+    "DELIVERY_TYPE"
+   ]
+  },
+  "2.48": {
+   "field": "Price",
+   "tp": [
+    "PRICE"
+   ]
+  },
+  "2.49": {
+   "field": "Price currency",
+   "tp": [
+    "PRICE_CCY"
+   ]
+  },
+  "2.50": {
+   "field": "Unadjusted effective date of the price",
+   "tp": [
+    "UNADJ_EFFECT_DATE_PRICE"
+   ]
+  },
+  "2.51": {
+   "field": "Unadjusted end date of the price",
+   "tp": [
+    "UNADJ_END_DATE_PRICE"
+   ]
+  },
+  "2.52": {
+   "field": "Price in effect between the unadjusted effective and end date",
+   "tp": []
+  },
+  "2.53": {
+   "field": "Package transaction price",
+   "tp": [
+    "PCKG_TRANS_PRICE"
+   ]
+  },
+  "2.54": {
+   "field": "Package transaction price currency",
+   "tp": [
+    "PCKG_TRANS_PRICE_CCY"
+   ]
+  },
+  "2.55": {
+   "field": "Notional amount of leg 1",
+   "tp": [
+    "NOTIONAL_AMT_LEG1"
+   ]
+  },
+  "2.56": {
+   "field": "Notional currency 1",
+   "tp": [
+    "NOTIONAL_AMT_LEG1_CCY"
+   ]
+  },
+  "2.57": {
+   "field": "Effective date of the notional amount of leg 1",
+   "tp": [
+    "NTNL_AMT_LEG1_EFFCT_DATE"
+   ]
+  },
+  "2.58": {
+   "field": "End date of the notional amount of leg 1",
+   "tp": [
+    "NTNL_AMT_LEG1_END_DATE"
+   ]
+  },
+  "2.59": {
+   "field": "Notional amount in effect on associated effective date of leg 1",
+   "tp": [
+    "NTNL_AMT_LEG1_SCHD_AMT"
+   ]
+  },
+  "2.60": {
+   "field": "Total notional quantity of leg 1",
+   "tp": [
+    "TOTAL_NOTIONAL_QTY_LEG1"
+   ]
+  },
+  "2.61": {
+   "field": "Effective date of the notional quantity of leg 1",
+   "tp": [
+    "NTNL_QTY_LEG1_EFFCT_DATE"
+   ]
+  },
+  "2.62": {
+   "field": "End date of the notional quantity of leg 1",
+   "tp": [
+    "NTNL_QTY_LEG1_END_DATE"
+   ]
+  },
+  "2.63": {
+   "field": "Notional quantity in effect on associated effective date of leg 1",
+   "tp": [
+    "NTNL_QTY_LEG1_SCHDL_QTY"
+   ]
+  },
+  "2.64": {
+   "field": "Notional amount of leg 2",
+   "tp": [
+    "NOTIONAL_AMT_LEG2"
+   ]
+  },
+  "2.65": {
+   "field": "Notional currency 2",
+   "tp": [
+    "NOTIONAL_AMT_LEG2_CCY"
+   ]
+  },
+  "2.66": {
+   "field": "Effective date of the notional amount of leg 2",
+   "tp": [
+    "NTNL_AMT_LEG2_EFFCT_DATE"
+   ]
+  },
+  "2.67": {
+   "field": "End date of the notional amount of leg 2",
+   "tp": [
+    "NTNL_AMT_LEG2_END_DATE"
+   ]
+  },
+  "2.68": {
+   "field": "Notional amount in effect on associated effective date of leg 2",
+   "tp": [
+    "NTNL_AMT_LEG2_SCHD_AMT"
+   ]
+  },
+  "2.69": {
+   "field": "Total notional quantity of leg 2",
+   "tp": [
+    "TOTAL_NOTIONAL_QTY_LEG2"
+   ]
+  },
+  "2.70": {
+   "field": "Effective date of the notional quantity of leg 2",
+   "tp": [
+    "NTNL_QTY_LEG2_EFFCT_DATE"
+   ]
+  },
+  "2.71": {
+   "field": "End date of the notional quantity of leg 2",
+   "tp": [
+    "NTNL_QTY_LEG2_END_DATE"
+   ]
+  },
+  "2.72": {
+   "field": "Notional quantity in effect on associated effective date of leg 2",
+   "tp": [
+    "NTNL_QTY_LEG2_SCHDL_QTY"
+   ]
+  },
+  "2.73": {
+   "field": "Other payment type",
+   "tp": [
+    "OTHER_PAYMENT_TYP"
+   ]
+  },
+  "2.74": {
+   "field": "Other payment amount",
+   "tp": [
+    "OTHER_PAYMENT_AMT"
+   ]
+  },
+  "2.75": {
+   "field": "Other payment currency",
+   "tp": [
+    "OTHER_PAYMENT_CCY"
+   ]
+  },
+  "2.76": {
+   "field": "Other payment date",
+   "tp": [
+    "OTHER_PAYMENT_DATE"
+   ]
+  },
+  "2.77": {
+   "field": "Other payment payer",
+   "tp": [
+    "OTHER_PAYMENT_PAYER"
+   ]
+  },
+  "2.78": {
+   "field": "Other payment receiver",
+   "tp": [
+    "OTHER_PAYMT_RECEIVER"
+   ]
+  },
+  "2.79": {
+   "field": "Fixed rate of leg 1 or coupon",
+   "tp": [
+    "FIXED_RATE_LEG1_COUPON"
+   ]
+  },
+  "2.80": {
+   "field": "Fixed rate or coupon day count convention leg 1",
+   "tp": [
+    "FIXED_RATE_LEG1_COUNT_CONV"
+   ]
+  },
+  "2.81": {
+   "field": "Fixed rate or coupon payment frequency period leg 1",
+   "tp": [
+    "FIX_RT_LEG1_FREQ_PERI"
+   ]
+  },
+  "2.82": {
+   "field": "Fixed rate or coupon payment frequency period multiplier leg 1",
+   "tp": [
+    "FIX_RT_LEG1_FREQ_PERI_MULT"
+   ]
+  },
+  "2.83": {
+   "field": "Identifier of the floating rate of leg 1",
+   "tp": [
+    "FLOAT_RATE_LEG1_IDENTIFIER"
+   ]
+  },
+  "2.84": {
+   "field": "Indicator of the floating rate of leg 1",
+   "tp": [
+    "FLOAT_RATE_LEG1_INDICATOR"
+   ]
+  },
+  "2.85": {
+   "field": "Name of the floating rate of leg 1",
+   "tp": []
+  },
+  "2.86": {
+   "field": "Floating rate day count convention of leg 1",
+   "tp": [
+    "FLOAT_RATE_LEG1_COUNT_CONV"
+   ]
+  },
+  "2.87": {
+   "field": "Floating rate payment frequency period of leg 1",
+   "tp": [
+    "FLO_RT_LEG1_FREQ_PERI"
+   ]
+  },
+  "2.88": {
+   "field": "Floating rate payment frequency period multiplier of leg 1",
+   "tp": [
+    "FLO_RT_LEG1_FREQ_PERI_MULT"
+   ]
+  },
+  "2.89": {
+   "field": "Floating rate reference period of leg 1 – time period",
+   "tp": [
+    "FLO_RT_LEG1_REF_PERI_PERI"
+   ]
+  },
+  "2.90": {
+   "field": "Floating rate reference period of leg 1 – multiplier",
+   "tp": [
+    "FLO_RT_LEG1_REF_PERI_MULT"
+   ]
+  },
+  "2.91": {
+   "field": "Floating rate reset frequency period of leg 1",
+   "tp": [
+    "FLO_RT_LEG1_RESET_FRQ_PERI"
+   ]
+  },
+  "2.92": {
+   "field": "Floating rate reset frequency multiplier of leg 1",
+   "tp": [
+    "FLO_RT_LEG1_RESET_FRQ_MULT"
+   ]
+  },
+  "2.93": {
+   "field": "Spread of leg 1",
+   "tp": [
+    "SPREAD_LEG1"
+   ]
+  },
+  "2.94": {
+   "field": "Spread currency of leg 1",
+   "tp": [
+    "SPREAD_CCY_LEG1"
+   ]
+  },
+  "2.95": {
+   "field": "Fixed rate of leg 2",
+   "tp": [
+    "FIXED_RATE_LEG2"
+   ]
+  },
+  "2.96": {
+   "field": "Fixed rate day count convention leg 2",
+   "tp": [
+    "FIXED_RATE_LEG2_COUNT_CONV"
+   ]
+  },
+  "2.97": {
+   "field": "Fixed rate payment frequency period leg 2",
+   "tp": [
+    "FIX_RT_LEG2_FREQ_PERI"
+   ]
+  },
+  "2.98": {
+   "field": "Fixed rate payment frequency period multiplier leg 2",
+   "tp": [
+    "FIX_RT_LEG2_FREQ_PERI_MULT"
+   ]
+  },
+  "2.99": {
+   "field": "Identifier of the floating rate of leg 2",
+   "tp": [
+    "FLOAT_RATE_LEG2_IDENTIFIER"
+   ]
+  },
+  "2.100": {
+   "field": "Indicator of the floating rate of leg 2",
+   "tp": [
+    "FLOAT_RATE_LEG2_INDICATOR"
+   ]
+  },
+  "2.101": {
+   "field": "Name of the floating rate of leg 2",
+   "tp": []
+  },
+  "2.102": {
+   "field": "Floating rate day count convention of leg 2",
+   "tp": [
+    "FLOAT_RATE_LEG2_COUNT_CONV"
+   ]
+  },
+  "2.103": {
+   "field": "Floating rate payment frequency period of leg 2",
+   "tp": [
+    "FLO_RT_LEG2_FREQ_PERI"
+   ]
+  },
+  "2.104": {
+   "field": "Floating rate payment frequency period multiplier of leg 2",
+   "tp": [
+    "FLO_RT_LEG2_FREQ_PERI_MULT"
+   ]
+  },
+  "2.105": {
+   "field": "Floating rate reference period of leg 2 – time period",
+   "tp": [
+    "FLO_RT_LEG2_REF_PERI_PERI"
+   ]
+  },
+  "2.106": {
+   "field": "Floating rate reference period of leg 2 – multiplier",
+   "tp": [
+    "FLO_RT_LEG2_REF_PERI_MULT"
+   ]
+  },
+  "2.107": {
+   "field": "Floating rate reset frequency period of leg 2",
+   "tp": [
+    "FLO_RT_LEG2_RESET_FRQ_PERI"
+   ]
+  },
+  "2.108": {
+   "field": "Floating rate reset frequency multiplier of leg 2",
+   "tp": [
+    "FLO_RT_LEG2_RESET_FRQ_MULT"
+   ]
+  },
+  "2.109": {
+   "field": "Spread of leg 2",
+   "tp": [
+    "SPREAD_LEG2",
+    "SPREAD_LEG2_TYP"
+   ],
+   "origem": "manual (confirmado 2026-10-20)"
+  },
+  "2.110": {
+   "field": "Spread currency of leg 2",
+   "tp": [
+    "SPREAD_CCY_LEG2"
+   ]
+  },
+  "2.111": {
+   "field": "Package transaction spread",
+   "tp": [
+    "PCKG_TRANS_SPREAD"
+   ]
+  },
+  "2.112": {
+   "field": "Package transaction spread currency",
+   "tp": [
+    "PCKG_TRANS_SPREAD_CCY"
+   ]
+  },
+  "2.113": {
+   "field": "Exchange rate 1",
+   "tp": [
+    "EXCHANGE_RATE1"
+   ]
+  },
+  "2.114": {
+   "field": "Forward exchange rate",
+   "tp": [
+    "FWD_EXCHANGE_RATE"
+   ]
+  },
+  "2.115": {
+   "field": "Exchange rate basis",
+   "tp": [
+    "EXCHANGE_RATE_BASIS"
+   ]
+  },
+  "2.116": {
+   "field": "Base product",
+   "tp": [
+    "BASE_PRODUCT"
+   ]
+  },
+  "2.117": {
+   "field": "Sub-product",
+   "tp": [
+    "SUB_PRODUCT"
+   ]
+  },
+  "2.118": {
+   "field": "Further sub-product",
+   "tp": [
+    "FURTHER_SUB_PRODUCT"
+   ]
+  },
+  "2.119": {
+   "field": "Delivery point or zone",
+   "tp": []
+  },
+  "2.120": {
+   "field": "Interconnection Point",
+   "tp": [
+    "INTERCONNECTION_POINT"
+   ]
+  },
+  "2.121": {
+   "field": "Load type",
+   "tp": [
+    "LOAD_TYP"
+   ]
+  },
+  "2.122": {
+   "field": "Delivery interval start time",
+   "tp": [
+    "DLVRY_INTV_START_TIME"
+   ]
+  },
+  "2.123": {
+   "field": "Delivery interval end time",
+   "tp": [
+    "DLVRY_INTV_END_TIME"
+   ]
+  },
+  "2.124": {
+   "field": "Delivery start date",
+   "tp": [
+    "DLVRY_START_DATE"
+   ]
+  },
+  "2.125": {
+   "field": "Delivery end date",
+   "tp": [
+    "DLVRY_END_DATE"
+   ]
+  },
+  "2.126": {
+   "field": "Duration",
+   "tp": [
+    "DURATION"
+   ]
+  },
+  "2.127": {
+   "field": "Days of the week",
+   "tp": [
+    "DAYS_WEEK"
+   ]
+  },
+  "2.128": {
+   "field": "Delivery capacity",
+   "tp": [
+    "DLVRY_CAPACITY"
+   ]
+  },
+  "2.129": {
+   "field": "Quantity Unit",
+   "tp": [
+    "QTY_UNIT"
+   ]
+  },
+  "2.130": {
+   "field": "Price/time interval quantity",
+   "tp": [
+    "PRICE_TIME_INTV_QTY"
+   ]
+  },
+  "2.131": {
+   "field": "Currency of the price/time interval quantity",
+   "tp": [
+    "CCY_PRICE_TIME_INTV_QTY"
+   ]
+  },
+  "2.132": {
+   "field": "Option type",
+   "tp": [
+    "OPTION_TYPE"
+   ]
+  },
+  "2.133": {
+   "field": "Option style",
+   "tp": [
+    "OPTION_STYLE"
+   ]
+  },
+  "2.134": {
+   "field": "Strike price",
+   "tp": [
+    "STRIKE_PRICE"
+   ]
+  },
+  "2.135": {
+   "field": "Effective date of the strike price",
+   "tp": [
+    "EFFECT_DATE_STRIKE_PRICE"
+   ]
+  },
+  "2.136": {
+   "field": "End date of the strike price",
+   "tp": [
+    "END_DATE_STRIKE_PRICE"
+   ]
+  },
+  "2.137": {
+   "field": "Strike price in effect on associated effective date",
+   "tp": []
+  },
+  "2.138": {
+   "field": "Strike price currency/currency pair",
+   "tp": []
+  },
+  "2.139": {
+   "field": "Option premium amount",
+   "tp": [
+    "OPTN_PREMIUM_AMT"
+   ]
+  },
+  "2.140": {
+   "field": "Option premium currency",
+   "tp": [
+    "OPTN_PREMIUM_CCY"
+   ]
+  },
+  "2.141": {
+   "field": "Option premium payment date",
+   "tp": [
+    "OPTN_PREMIUM_PAYMT_DATE"
+   ]
+  },
+  "2.142": {
+   "field": "Maturity date of the underlying",
+   "tp": [
+    "MATURITY_DATE_UNDRLY"
+   ]
+  },
+  "2.143": {
+   "field": "Seniority",
+   "tp": []
+  },
+  "2.144": {
+   "field": "Reference entity",
+   "tp": [
+    "REFERENCE_ENTITY"
+   ]
+  },
+  "2.145": {
+   "field": "Series",
+   "tp": [
+    "SERIES"
+   ]
+  },
+  "2.146": {
+   "field": "Version",
+   "tp": [
+    "VERSION"
+   ]
+  },
+  "2.147": {
+   "field": "Index factor",
+   "tp": [
+    "INDEX_FACTOR"
+   ]
+  },
+  "2.148": {
+   "field": "Tranche",
+   "tp": [
+    "TRANCHE"
+   ]
+  },
+  "2.149": {
+   "field": "CDS index attachment point",
+   "tp": []
+  },
+  "2.150": {
+   "field": "CDS index detachment point",
+   "tp": []
+  },
+  "2.151": {
+   "field": "Action type",
+   "tp": []
+  },
+  "2.152": {
+   "field": "Event type",
+   "tp": []
+  },
+  "2.153": {
+   "field": "Event date",
+   "tp": []
+  },
+  "2.154": {
+   "field": "Level",
+   "tp": [
+    "LEVEL"
+   ]
+  }
+ }
+}

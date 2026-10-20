@@ -5,6 +5,13 @@ import { dialects } from './dialects.js';
 export async function openSqlite() {
   const { DatabaseSync } = await import('node:sqlite');
   const db = new DatabaseSync(':memory:');
+  // Mesma semântica do regexp_full_match do DuckDB (o texto inteiro tem de casar). NULL -> NULL.
+  const cache = new Map();
+  db.function('regexp_full_match', { deterministic: true }, (s, p) => {
+    if (s == null || p == null) return null;
+    if (!cache.has(p)) cache.set(p, new RegExp(`^(?:${p})$`));
+    return cache.get(p).test(String(s)) ? 1 : 0;
+  });
   return {
     dialect: dialects.sqlite,
     raw: db,
