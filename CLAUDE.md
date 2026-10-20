@@ -102,7 +102,7 @@ Origem Oracle: `T_AF_EMIR_RF_MATCHING` (acesso read-only via dblink). Cópia em 
 Notas:
 - **Chave do break:** `UTI + LEI CP1 + LEI CP2 + BREAKING_FIELD` (+ `BUSINESS_DATE`). Os dois LEIs **podem ser iguais** (caso legítimo).
 - **O identificador do trade vem em `UTI` ou em `PROPRIETARY`**, nunca nos dois (confirmado em 12/10: 489.446 linhas só com `PROPRIETARY`, 0 com ambos, 0 sem nenhum). Desde 2026-10-20 são **duas colunas lógicas separadas** (`uti`, `proprietary`; texto vazio = NULL), ambas na chave, como em produção e no ficheiro DTCC. Para mostrar/agregar um identificador único usa-se `tradeIdExpr()` = `COALESCE(uti, proprietary)`.
-- Um break existe quando o valor TP1 ≠ TP2. **Sinais e casas decimais já são normalizados no Spark.** Não há tolerâncias a modelar.
+- Um break existe quando o valor TP1 ≠ TP2. **Os dois valores vêm do mesmo ficheiro DTCC → não há normalização a fazer do nosso lado** (Ordep, 2026-10-20; substitui a nota antiga "sinais e casas decimais normalizados no Spark"). A confirmar com `pct_nobreak_diff` ≈ 0 no `map-fields`: se não for, há tolerâncias no matching (DTCC ou Spark) que o motor tem de conhecer.
 - Uma position pode ter vários breaks (um por campo).
 - As colunas de enriquecimento (`BNPP_ACTIVITY_L1..L4`, business line, asset class, CRDS code) servem de dimensões para KPIs e clusters.
 
@@ -235,6 +235,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-20 | `profile`: saúde da chave deixa de mostrar `bnpp_null`/`cpty_null` (enganadores, ver 3.1.2); passa a mostrar `null_trade_id`, `both_uti_proprietary`, `proprietary_only`, `null_submitting_entity` |
 | 2026-10-20 | **Lado BNPP = TP1** (`REPORTING_COUNTERPARTY_LEI`), contraparte = TP2 (`OTHER_COUNTERPARTY_LEGAL_LEI`). O motor de regras avalia `TP1_<campo>` como valor BNPP e `TP2_<campo>` como valor da contraparte |
 | 2026-10-20 | Mapeamento `BREAKING_FIELD` → par `TP1_`/`TP2_` **validado com dados** (`npm run map-fields`): nome igual normalizado ou `--map` manual; nomes diferentes nunca são ligados automaticamente (só candidatos). Critério de mapeamento certo: `pct_break_diff` ≈ 100% e `pct_nobreak_diff` ≈ 0%. Se `pct_nobreak_diff` for alto, o Spark normaliza antes de comparar e o motor de regras tem de replicar essa normalização |
+| 2026-10-20 | Sem normalização de valores no motor: TP1 e TP2 vêm do mesmo ficheiro DTCC (Ordep). Validação: `pct_nobreak_diff` do `map-fields` |
 
 ---
 
