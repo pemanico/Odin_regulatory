@@ -112,6 +112,9 @@ test('não verificável: campo sem colunas DTCC, coluna em falta, coluna tipada'
   const ctx = { fieldMap: FIELD_MAP, columns: COLUMNS, dialect: dialects.duckdb };
   const dep = compileRule(R('EMIR-VR-2109-01', '2.21', { required: true }, { when: { populated: '2.101' } }), 'BNPP', ctx);
   assert.match(dep.notVerifiable, /2\.101/);
+  // Colunas comuns (REFERENCE_DATE, LEIs, UTI) não são usadas: só campos TP1_/TP2_.
+  const common = compileRule(R('EMIR-VR-2028-03', '2.44', { compare: { op: '<=', ref: '1.1', as: 'date' } }), 'BNPP', ctx);
+  assert.match(common.notVerifiable, /coluna comum/);
   const missing = new Map([...COLUMNS].filter(([k]) => k !== 'TP2_VALUATION_AMT'));
   const r = R('EMIR-VR-2021-01', '2.21', { decimal: { digits: 25, decimals: 5 } });
   assert.ok(compileRule(r, 'BNPP', { ...ctx, columns: missing }).sql);

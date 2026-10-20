@@ -1,6 +1,6 @@
 {
  "_doc": "Validation rules ESMA EMIR REFIT traduzidas para a DSL de src/rules/compile.js. Tradução de Claude a partir do Excel EMIR-Refit_Reconciliation status matching (texto original não copiado). Validação: npm run rules -- --stats (taxa de violação) + revisão do Ordep por amostra.",
- "version": "2026-10-20.3",
+ "version": "2026-10-20.4",
  "scope": "todos os 408 códigos VR do Excel (174 campos); campos sem colunas DTCC ou comuns = não verificáveis",
  "rules": [
   {
@@ -12,22 +12,8 @@
   {
    "code": "EMIR-VR-2002-02",
    "item": "2.2",
-   "check": {
-    "all": [
-     {
-      "not_equal": {
-       "ref": "2.1"
-      }
-     },
-     {
-      "not_equal": {
-       "ref": "2.3"
-      }
-     }
-    ]
-   },
-   "status": "parcial",
-   "nota": "comparado com UTI (2.1) e prior UTI (2.3); 2.4 sem colunas DTCC"
+   "status": "nao_verificavel",
+   "nota": "compara com 2.1 UTI, coluna comum sem TP1_/TP2_ (só se validam campos TP; decisão 2026-10-20)"
   },
   {
    "code": "EMIR-VR-2002-03",
@@ -90,22 +76,8 @@
   {
    "code": "EMIR-VR-2003-05",
    "item": "2.3",
-   "check": {
-    "all": [
-     {
-      "not_equal": {
-       "ref": "2.1"
-      }
-     },
-     {
-      "not_equal": {
-       "ref": "2.2"
-      }
-     }
-    ]
-   },
-   "status": "parcial",
-   "nota": "comparado com UTI (2.1) e report tracking number (2.2); 2.4 sem colunas DTCC"
+   "status": "nao_verificavel",
+   "nota": "compara com 2.1 UTI, coluna comum sem TP1_/TP2_ (só se validam campos TP; decisão 2026-10-20)"
   },
   {
    "code": "EMIR-VR-2007-01",
@@ -702,15 +674,8 @@
   {
    "code": "EMIR-VR-2028-03",
    "item": "2.28",
-   "check": {
-    "compare": {
-     "op": "<=",
-     "ref": "1.1",
-     "as": "date"
-    }
-   },
-   "status": "parcial",
-   "nota": "comparado ao nível da data com o reporting timestamp (REFERENCE_DATE, formato por confirmar)"
+   "status": "nao_verificavel",
+   "nota": "compara com 1.1 Reporting timestamp, coluna comum sem TP1_/TP2_ (só se validam campos TP; decisão 2026-10-20)"
   },
   {
    "code": "EMIR-VR-2028-04",
@@ -844,15 +809,8 @@
   {
    "code": "EMIR-VR-2032-03",
    "item": "2.32",
-   "check": {
-    "compare": {
-     "op": "<=",
-     "ref": "1.1",
-     "as": "date"
-    }
-   },
-   "status": "parcial",
-   "nota": "comparado ao nível da data com o reporting timestamp (REFERENCE_DATE)"
+   "status": "nao_verificavel",
+   "nota": "compara com 1.1 Reporting timestamp, coluna comum sem TP1_/TP2_ (só se validam campos TP; decisão 2026-10-20)"
   },
   {
    "code": "EMIR-VR-2032-04",
@@ -1235,14 +1193,8 @@
   {
    "code": "EMIR-VR-2045-05",
    "item": "2.45",
-   "check": {
-    "compare": {
-     "op": "<=",
-     "ref": "1.1",
-     "as": "date"
-    }
-   },
-   "status": "verificavel"
+   "status": "nao_verificavel",
+   "nota": "compara com 1.1 Reporting timestamp, coluna comum sem TP1_/TP2_ (só se validam campos TP; decisão 2026-10-20)"
   },
   {
    "code": "EMIR-VR-2045-06",
@@ -2133,13 +2085,8 @@
   {
    "code": "EMIR-VR-2077-04",
    "item": "2.77",
-   "check": {
-    "equals_any": [
-     "1.4",
-     "1.9"
-    ]
-   },
-   "status": "verificavel"
+   "status": "nao_verificavel",
+   "nota": "compara com 1.4 / 1.9 LEI das counterparties, coluna comum sem TP1_/TP2_ (só se validam campos TP; decisão 2026-10-20)"
   },
   {
    "code": "EMIR-VR-2077-05",
@@ -2193,13 +2140,8 @@
   {
    "code": "EMIR-VR-2078-04",
    "item": "2.78",
-   "check": {
-    "equals_any": [
-     "1.4",
-     "1.9"
-    ]
-   },
-   "status": "verificavel"
+   "status": "nao_verificavel",
+   "nota": "compara com 1.4 / 1.9 LEI das counterparties, coluna comum sem TP1_/TP2_ (só se validam campos TP; decisão 2026-10-20)"
   },
   {
    "code": "EMIR-VR-2078-05",

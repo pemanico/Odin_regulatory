@@ -101,17 +101,13 @@ function sideContext(rule, side, fieldMap, columns, dialect) {
       if (!s) throw new NotVerifiable(`item ${rule.item} sem colunas no ficheiro DTCC`);
       return colName(s);
     }
+    // Só campos TP1_/TP2_ (decisão 2026-10-20): referências a colunas comuns (UTI, LEIs, REFERENCE_DATE) não são usadas.
     if (String(ref).startsWith('common:')) {
-      const c = String(ref).slice(7).toUpperCase();
-      if (!columns.has(c)) throw new NotVerifiable(`coluna ${c} não existe no ficheiro DTCC`);
-      return c;
+      throw new NotVerifiable(`compara com a coluna comum ${String(ref).slice(7)} (sem TP1_/TP2_)`);
     }
     const e = fieldMap.items[ref];
     if (!e) throw new ValidationError(`${rule.code}: referência a item desconhecido ${ref}`);
-    if (e.common) {
-      if (!columns.has(e.common.toUpperCase())) throw new NotVerifiable(`coluna ${e.common} não existe no ficheiro DTCC`);
-      return e.common.toUpperCase();
-    }
+    if (e.common) throw new NotVerifiable(`compara com ${ref} (${e.field}), coluna comum sem TP1_/TP2_`);
     if (!e.tp?.length) throw new NotVerifiable(`depende do campo ${ref} (${e.field}), que não está no ficheiro DTCC`);
     return colName(e.tp[0]);
   };

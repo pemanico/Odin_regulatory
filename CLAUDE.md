@@ -308,6 +308,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-20 | **Classificação validada pelo Ordep na amostra de 15/10** ("a classificação está bem") |
 | 2026-10-20 | **Apresentação por break** (Ordep): campo = nome do documento de regras ("2.22 Valuation currency"); valor BNPP = `TP1_<campo>`; valor other cpty = `TP2_<campo>`; **sem código VR por agora**; o erro é a regra de format/condition violada, em texto (gerado da tradução, em inglês como o documento ESMA). Tabela `break_detail` + CSV local; `rules:sample` lê dela |
 | 2026-10-20 | **Só se validam os campos com `TP1_<campo>` e `TP2_<campo>` no ficheiro DTCC** (Ordep). Catálogo v2026-10-20.3: **274 códigos VR dos 128 campos com TP** (150 verificáveis, 73 parciais, 51 não verificáveis); os 135 códigos dos 46 campos sem colunas TP ou comuns saem do catálogo. `validateRules` recusa regras de campos sem TP |
+| 2026-10-20 | Regras que comparam com colunas comuns (REFERENCE_DATE, LEIs, UTI) = não verificáveis (Ordep). Catálogo v2026-10-20.4: 274 códigos — 147 verificáveis, 69 parciais, 58 não verificáveis |
 
 ---
 
@@ -377,7 +378,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 35. **Requisito futuro — data quality:** validar todas as transações do ficheiro DTCC (não só os breaks) com o mesmo motor de regras; inclui o alerta de qualidade por dia.
 36. **Códigos reais de CONFIRMED no ficheiro DTCC** (regra 2029-01 viola em 93% dos breaks nos dois lados): `npm run describe -- "data/dtcc/**/*.parquet" --values TP1_CONFIRMED,TP2_CONFIRMED`. Provavelmente o ficheiro usa outros códigos; o mesmo pode acontecer noutros enums.
 37. **Cobertura do critério "explicação pelas regras"**: na 1.ª execução só ~1,3% dos breaks têm um lado identificado. Rever com o Ordep o que a demo promete (ver 3.3.2).
-38. **Regras que comparam com colunas comuns** (não TP): 2028-03, 2032-03, 2045-05 (≤ reporting timestamp `REFERENCE_DATE`), 2077-04 / 2078-04 (= LEI da counterparty 1 ou 2), 2002-02 / 2003-05 (≠ UTI). O campo validado é TP; a referência não. Manter ou passar a não verificável?
+38. ~~Regras que comparam com colunas comuns.~~ **Fechado (2026-10-20, Ordep):** passam a não verificáveis (2002-02, 2003-05, 2028-03, 2032-03, 2045-05, 2077-04, 2078-04); o compilador também recusa referências a colunas comuns.
 
 ## 7. Estado atual
 - **Feito (2026-10-16):** esqueleto do projeto.
