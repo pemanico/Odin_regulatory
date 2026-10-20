@@ -17,6 +17,8 @@ export class MetricUnavailableError extends Error {
 }
 
 const MAX_DIMENSIONS = 4;
+/** Dimensões comparadas sem distinguir maiúsculas (os nomes de campo variam entre fontes). */
+const CASE_INSENSITIVE = ['breaking_field'];
 const MAX_IN_VALUES = 100;
 
 function getMetric(id) {
@@ -36,20 +38,23 @@ export function renderFilter(filter, allowed) {
     throw new ValidationError(`Filtro não permitido nesta métrica: ${JSON.stringify(dimension)}`);
   }
   if (!FILTER_OPS.includes(op)) throw new ValidationError(`Operador de filtro inválido: ${JSON.stringify(op)}`);
-  const lit = (v) => literalFor(dim.type, v);
+  // breaking_field vem em minúsculas no data mart e em maiúsculas em break_verdict: comparação sem maiúsculas.
+  const ci = CASE_INSENSITIVE.includes(dimension);
+  const col = ci ? `UPPER(${dimension})` : dimension;
+  const lit = (v) => (ci ? literalFor(dim.type, String(v).toUpperCase()) : literalFor(dim.type, v));
 
   switch (op) {
     case 'eq':
-      return `${dimension} = ${lit(value)}`;
+      return `${col} = ${lit(value)}`;
     case 'gte':
-      return `${dimension} >= ${lit(value)}`;
+      return `${col} >= ${lit(value)}`;
     case 'lte':
-      return `${dimension} <= ${lit(value)}`;
+      return `${col} <= ${lit(value)}`;
     case 'in': {
       if (!Array.isArray(value) || value.length === 0 || value.length > MAX_IN_VALUES) {
         throw new ValidationError(`"in" exige uma lista com 1 a ${MAX_IN_VALUES} valores`);
       }
-      return `${dimension} IN (${value.map(lit).join(', ')})`;
+      return `${col} IN (${value.map(lit).join(', ')})`;
     }
     case 'between': {
       if (!Array.isArray(value) || value.length !== 2) throw new ValidationError('"between" exige [início, fim]');
@@ -57,7 +62,7 @@ export function renderFilter(filter, allowed) {
       if (dim.type === 'date' && isValidDate(a) && isValidDate(b) && a > b) {
         throw new ValidationError(`Intervalo de datas invertido: ${a} > ${b}`);
       }
-      return `${dimension} BETWEEN ${lit(a)} AND ${lit(b)}`;
+      return `${col} BETWEEN ${lit(a)} AND ${lit(b)}`;
     }
     default:
       throw new ValidationError(`Operador não suportado: ${op}`);
@@ -304,7 +309,47 @@ LIMIT ${limit}`;
   };
 }
 
-const CUSTOM = { breaks_dod: compileDod, persistence: compilePersistence, data_quality: compileDataQuality };
+/** Nome de campo seguro para LIKE (só letras, dígitos e _; o _ é escapado). */
+function fieldLikeLiteral(value) {
+  const v = String(value ?? '').toUpperCase();
+  if (!/^[A-Z0-9_]{1,100}$/.test(v)) throw new ValidationError(`Nome de campo inválido: ${JSON.stringify(value)}`);
+  return `'%|${v.replace(/_/g, '\\_')}|%' ESCAPE '\\'`;
+}
+
+/** `|A|B|` -> ['A', 'B'] */
+export function comboFields(combo) {
+  return String(combo ?? '').split('|').filter(Boolean);
+}
+
+function compileFieldCombinations(metric, req) {
+  const filters = req.filters ?? [];
+  checkRequired(metric, filters);
+  const conditions = filters.map((f) => {
+    if (f?.dimension === 'breaking_field') return `combo LIKE ${fieldLikeLiteral(f.value)}`;
+    return renderFilter(f, metric.allowedFilterDimensions);
+  });
+  const limit = resolveLimit(metric, req.limit);
+  const n = (v) => `SUM(CASE WHEN key_verdict = '${v}' THEN 1 ELSE 0 END) AS ${v}`;
+  const sql = `SELECT combo, MAX(n_fields) AS n_fields, COUNT(*) AS n_keys,
+  ${['bnpp', 'contraparte', 'misto', 'sem_explicacao'].map(n).join(',\n  ')}
+FROM key_summary
+${whereClause(conditions)}
+GROUP BY combo
+ORDER BY n_keys DESC, combo
+LIMIT ${limit}`;
+  return {
+    sql,
+    postprocess: (rows) =>
+      rows.map((r) => ({ ...r, combo_key: r.combo, combo: comboFields(r.combo).join(' + ') })),
+  };
+}
+
+const CUSTOM = {
+  breaks_dod: compileDod,
+  persistence: compilePersistence,
+  data_quality: compileDataQuality,
+  field_combinations: compileFieldCombinations,
+};
 
 /**
  * Compila um pedido. Devolve { metric, title, sql, postprocess }.

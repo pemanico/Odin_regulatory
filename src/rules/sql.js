@@ -235,3 +235,62 @@ LEFT JOIN m mb ON mb.side = 'BNPP' AND mb.target = bv.breaking_field AND ${onMsg
 LEFT JOIN m mc ON mc.side = 'CPTY' AND mc.target = bv.breaking_field AND ${onMsg('mc')}
 WHERE bv.business_date = ${d}`;
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// Resumo por Key (transação) — ecrã 3 da demo (plano aprovado em 2026-10-20).
+// Key = chave de produção SEM o campo (POSITION_KEY). Uma linha por Key e por business date, com o nº de campos em
+// break, a combinação de campos, as contagens por veredicto e o veredicto da Key. Pré-calculado no `npm run rules`
+// para o servidor só ler (DuckDB READ_ONLY).
+
+/** Veredicto de uma Key (filtro e ordenação). Um campo "ambos" conta como erro dos dois lados → "misto". */
+export const KEY_VERDICTS = ['bnpp', 'contraparte', 'misto', 'sem_explicacao'];
+
+export const KEY_SUMMARY_DDL = `CREATE TABLE IF NOT EXISTS key_summary (
+  business_date DATE,
+  key_id INTEGER,
+  ${POSITION_KEY.map((k) => `${k} VARCHAR`).join(',\n  ')},
+  n_fields INTEGER,
+  combo VARCHAR,
+  n_so_bnpp INTEGER,
+  n_so_contraparte INTEGER,
+  n_ambos INTEGER,
+  n_divergencia INTEGER,
+  n_sem_regras INTEGER,
+  key_verdict VARCHAR,
+  rules_version VARCHAR
+)`;
+
+/**
+ * INSERT do resumo por Key a partir de break_verdict. `combo` = campos em break ordenados, no formato `|A|B|C|`
+ * (os delimitadores nas pontas permitem filtrar "combinações com o campo X" com LIKE '%|X|%').
+ * `key_id` = número sequencial por data (mais campos primeiro): identifica a Key no URL sem expor UTI/LEIs.
+ */
+export function insertKeySummarySql(date, dialect, version) {
+  const d = dateLiteral(date);
+  const keys = POSITION_KEY.join(', ');
+  const n = (v) => `SUM(CASE WHEN verdict = '${v}' THEN 1 ELSE 0 END)`;
+  const order = POSITION_KEY.map((k) => `COALESCE(${k}, '')`).join(', ');
+  return `INSERT INTO key_summary
+SELECT ${d},
+  ROW_NUMBER() OVER (ORDER BY n_fields DESC, ${order}),
+  ${keys}, n_fields, combo, n_so_bnpp, n_so_contraparte, n_ambos, n_divergencia, n_sem_regras,
+  CASE
+    WHEN n_so_bnpp + n_ambos > 0 AND n_so_contraparte + n_ambos > 0 THEN 'misto'
+    WHEN n_so_bnpp > 0 THEN 'bnpp'
+    WHEN n_so_contraparte > 0 THEN 'contraparte'
+    ELSE 'sem_explicacao'
+  END,
+  ${sqlString(version)}
+FROM (
+  SELECT ${keys},
+    COUNT(*) AS n_fields,
+    '|' || ${dialect.stringAgg('breaking_field', '|', 'breaking_field')} || '|' AS combo,
+    ${n('so_bnpp')} AS n_so_bnpp,
+    ${n('so_contraparte')} AS n_so_contraparte,
+    ${n('ambos')} AS n_ambos,
+    ${n('divergencia')} AS n_divergencia,
+    ${n('sem_regras_verificaveis')} AS n_sem_regras
+  FROM (SELECT * FROM break_verdict WHERE business_date = ${d} ORDER BY breaking_field) bv
+  GROUP BY ${keys}
+) g`;
+}

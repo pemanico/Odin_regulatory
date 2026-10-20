@@ -16,9 +16,19 @@
     "map-fields": "node scripts/map-fields.js",
     "rules": "node scripts/rules.js",
     "rules:sample": "node scripts/rules-sample.js",
-    "test": "node --test"
+    "test": "node --test",
+    "start": "node scripts/serve.js",
+    "dev": "node scripts/dev.js",
+    "build": "vite build --config web/vite.config.js"
   },
   "dependencies": {
-    "@duckdb/node-api": "latest"
+    "@duckdb/node-api": "latest",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "vite": "^7.0.0"
   }
 }

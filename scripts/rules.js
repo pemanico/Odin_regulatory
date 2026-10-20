@@ -2,7 +2,7 @@
 // Motor de regras EMIR: avalia as validation rules ESMA nos dois lados de cada break do data mart
 // e grava o veredicto. Âmbito: só os breaks do data mart (validar o ficheiro DTCC inteiro = "data quality", futuro).
 //
-//   npm run rules -- --date 2026-10-15            # rule_results + break_verdict; resumo + regras suspeitas
+//   npm run rules -- --date 2026-10-15            # rule_results, break_verdict, break_detail, key_summary; resumo + regras suspeitas
 //   npm run rules -- --date 2026-10-15 --stats    # mostra também a tabela completa por regra
 //
 // Taxa por regra = violações / breaks do campo da regra. Regra suspeita (tradução a rever): viola nos DOIS
@@ -22,6 +22,7 @@ import { compileAll } from '../src/rules/compile.js';
 import {
   ruleInputSql, usedColumns, RESULTS_DDL, VERDICT_DDL, insertViolationsSql, insertVerdictSql, fieldRulesSql,
   violationCountsSql, breaksByFieldSql, isSuspect, DIVERGENCE_MESSAGE, catalogTablesSql, DETAIL_DDL, insertDetailSql,
+  KEY_SUMMARY_DDL, insertKeySummarySql,
 } from '../src/rules/sql.js';
 import { describeRule, fieldLabel } from '../src/rules/describe.js';
 import { toCsv } from '../src/synthetic/generate.js';
@@ -132,6 +133,14 @@ GROUP BY breaking_field ORDER BY breaks DESC LIMIT 20`);
   await db.exec(DETAIL_DDL);
   await db.exec(`DELETE FROM break_detail WHERE business_date = '${D}'`);
   await db.exec(insertDetailSql(D, db.dialect, valueFields, version));
+  // Resumo por Key (transação) para o drill-down da UI: nº de campos, combinação, veredicto da Key.
+  await db.exec(KEY_SUMMARY_DDL);
+  await db.exec(`DELETE FROM key_summary WHERE business_date = '${D}'`);
+  await db.exec(insertKeySummarySql(D, db.dialect, version));
+  const byKey = await db.all(`SELECT key_verdict, COUNT(*) AS keys FROM key_summary
+WHERE business_date = '${D}' GROUP BY key_verdict ORDER BY keys DESC`);
+  console.log('\n== Veredicto por Key (transação) ==');
+  console.table(byKey);
   const detail = resolve(outDir, `break-verdict-${D}.csv`);
   await db.exec(`COPY (
   SELECT * EXCLUDE (rules_version) FROM break_detail WHERE business_date = '${D}'

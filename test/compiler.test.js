@@ -6,11 +6,12 @@ import { describeCatalog } from '../src/semantic/catalog.js';
 
 const onDate = (value = '2026-10-15') => [{ dimension: 'business_date', op: 'eq', value }];
 
-test('catálogo tem as 6 métricas do plano + persistence, com reference_id_distribution pendente', () => {
+test('catálogo tem as 6 métricas do plano + persistence, rule_verdict, key_verdict e field_combinations, com reference_id_distribution pendente', () => {
   const cat = describeCatalog();
   assert.deepEqual(
     cat.metrics.map((m) => m.id).sort(),
-    ['breaks_by_counterparty', 'breaks_by_field', 'breaks_dod', 'data_quality', 'persistence', 'reference_id_distribution', 'rule_verdict', 'top_fields'],
+    ['breaks_by_counterparty', 'breaks_by_field', 'breaks_dod', 'data_quality', 'field_combinations', 'key_verdict', 'persistence',
+      'reference_id_distribution', 'rule_verdict', 'top_fields'],
   );
   assert.equal(cat.metrics.find((m) => m.id === 'reference_id_distribution').available, false);
 });
@@ -80,9 +81,10 @@ test('filtro "in" valida a lista', () => {
   );
   const { sql } = compileMetric({
     metric: 'breaks_by_field',
-    filters: [...onDate(), { dimension: 'breaking_field', op: 'in', value: ['ISIN', 'VALUATION_AMT'] }],
+    filters: [...onDate(), { dimension: 'breaking_field', op: 'in', value: ['isin', 'VALUATION_AMT'] }],
   });
-  assert.match(sql, /breaking_field IN \('ISIN', 'VALUATION_AMT'\)/);
+  // breaking_field compara sem distinguir maiúsculas (minúsculas no data mart, maiúsculas em break_verdict).
+  assert.match(sql, /UPPER\(breaking_field\) IN \('ISIN', 'VALUATION_AMT'\)/);
 });
 
 test('profile: redactIds remove UTI e LEIs e mantém os agregados', async () => {

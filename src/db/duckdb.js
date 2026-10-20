@@ -17,10 +17,10 @@ function normalizeRows(rows) {
 }
 
 /**
- * Abre uma base DuckDB. `path` = ficheiro .duckdb ou ':memory:'.
+ * Abre uma base DuckDB. `path` = ficheiro .duckdb ou ':memory:'. `readOnly` = só leitura (servidor da UI).
  * Devolve uma interface mínima { dialect, exec, all, close } partilhada com o adaptador SQLite de testes.
  */
-export async function openDuckDb(path = ':memory:') {
+export async function openDuckDb(path = ':memory:', { readOnly = false } = {}) {
   let api;
   try {
     api = await import('@duckdb/node-api');
@@ -29,7 +29,8 @@ export async function openDuckDb(path = ':memory:') {
       'Não foi possível carregar @duckdb/node-api. Corre `npm install` primeiro.\n' + `Detalhe: ${err.message}`,
     );
   }
-  const instance = await api.DuckDBInstance.create(path);
+  // READ_ONLY: vários processos podem ler ao mesmo tempo (servidor da UI + consultas), mas nenhum pode escrever.
+  const instance = await api.DuckDBInstance.create(path, readOnly ? { access_mode: 'READ_ONLY' } : undefined);
   const connection = await instance.connect();
 
   return {

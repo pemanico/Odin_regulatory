@@ -22,13 +22,15 @@ export const DIMENSIONS = {
   reconciliation: { type: 'string', label: 'Estado de reconciliação' },
   valuation_reconciliation: { type: 'string', label: 'Estado de reconciliação de valuation' },
   verdict: { type: 'string', label: 'Veredicto das regras ESMA (so_bnpp, so_contraparte, ambos, divergencia, sem_regras_verificaveis)' },
+  key_verdict: { type: 'string', label: 'Veredicto da transação/Key (bnpp, contraparte, misto, sem_explicacao)' },
 };
 
 /** Operadores de filtro permitidos. */
 export const FILTER_OPS = ['eq', 'in', 'between', 'gte', 'lte'];
 
 /**
- * Métricas certificadas (as 6 do plano aprovado + persistence, 2026-10-19 + rule_verdict, 2026-10-20).
+ * Métricas certificadas (as 6 do plano aprovado + persistence, 2026-10-19 + rule_verdict, key_verdict e
+ * field_combinations, 2026-10-20).
  * kind:
  *  - 'aggregate': SELECT dims, medida FROM tabela GROUP BY dims (compilador genérico)
  *  - 'custom':    SQL próprio, construído em compiler.js
@@ -87,6 +89,32 @@ export const METRICS = {
     allowedFilterDimensions: ['business_date', 'verdict', 'breaking_field', 'asset_class', 'cp2_lei'],
     requiredFilters: ['business_date'],
     defaultLimit: 100,
+  },
+  key_verdict: {
+    kind: 'aggregate',
+    title: 'Transações (Keys) por veredicto',
+    description:
+      'Transações distintas (Key = chave de produção sem o campo) por veredicto da Key: bnpp (só há campos com erro ' +
+      'do lado BNPP), contraparte (só do lado da contraparte), misto (erros dos dois lados, em campos diferentes ou no ' +
+      'mesmo campo) e sem_explicacao (nenhum campo com o lado identificado pelas regras ESMA). Requer npm run rules.',
+    from: 'key_summary',
+    measure: { name: 'n_keys', sql: 'COUNT(*)' },
+    defaultDimensions: ['key_verdict'],
+    allowedDimensions: ['key_verdict', 'business_date', 'asset_class', 'cp2_lei'],
+    allowedFilterDimensions: ['business_date', 'key_verdict', 'asset_class', 'cp2_lei'],
+    requiredFilters: ['business_date'],
+    defaultLimit: 100,
+  },
+  field_combinations: {
+    kind: 'custom',
+    title: 'Combinações de campos em break por transação',
+    description:
+      'Conjuntos de campos em break que aparecem juntos na mesma transação (Key), com o nº de transações e o ' +
+      'veredicto das Keys. O filtro breaking_field devolve as combinações que CONTÊM esse campo. Requer npm run rules.',
+    requiredFilters: ['business_date'],
+    requiredOps: { business_date: ['eq'], breaking_field: ['eq'] },
+    allowedFilterDimensions: ['business_date', 'breaking_field', 'asset_class', 'key_verdict', 'cp2_lei'],
+    defaultLimit: 20,
   },
   top_fields: {
     kind: 'aggregate',
