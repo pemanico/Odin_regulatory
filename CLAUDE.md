@@ -276,6 +276,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-20 | Sem normalização de valores no motor: TP1 e TP2 vêm do mesmo ficheiro DTCC (Ordep). Validação: `pct_nobreak_diff` do `map-fields` |
 | 2026-10-20 | **Mapeamento BREAKING_FIELD → `TP1_`/`TP2_` = nome igual** para os top 20 (validado: 100% breaks com TP1 ≠ TP2). Sem tabela de mapeamento manual por agora; `--map` só para campos fora do top 20 que não batam |
 | 2026-10-20 | Mapeamento dos top 20 campos → itens ESMA confirmado (3.3.1). Regras internas = regras ESMA (fonte única: o Excel) |
+| 2026-10-20 | **Motor de regras — resultado por break:** só BNPP viola / só contraparte viola / ambos violam (com códigos VR) / **ambos válidos → mensagem fixa "divergência: os dois valores cumprem as regras ESMA; as regras não determinam o lado errado"** com os dois valores lado a lado (opção a). Desempate com o booking interno TSR (opção b) fica para o futuro |
 
 ---
 
