@@ -4,6 +4,8 @@
 //
 //   npm run map-fields -- --date 2026-10-15 [--top 20] [--dtcc "data/dtcc/**/*.parquet"]
 //   npm run map-fields -- --date 2026-10-15 --map SPREAD_LEG2_TYP=SPRD_LEG2_TYP --map ...   # mapeamento manual
+//   npm run map-fields -- --date 2026-10-15 --explain VALUATION_AMT [--by VALUATION_RECONCILIATION,PAIRING]
+//       # TP1 ≠ TP2 sem break: distribuição pelas colunas de estado do relatório (só códigos e contagens)
 //
 // Leitura de cada campo mapeado (sufixo certo e comparação bruta igual à do Spark):
 //   pct_found ≈ 100        os breaks do data mart existem no ficheiro DTCC com a mesma chave
@@ -16,7 +18,9 @@ import { loadConfig } from '../src/config.js';
 import { parseArgs } from '../src/cli.js';
 import { openDuckDb } from '../src/db/duckdb.js';
 import { isValidDate } from '../src/semantic/literals.js';
-import { tpPairs, matchFields, dtccSelectSql, confusionSql, confusionRow } from '../src/analysis/fieldmap.js';
+import { tpPairs, matchFields, dtccSelectSql, confusionSql, confusionRow, explainSql } from '../src/analysis/fieldmap.js';
+
+const DEFAULT_BY = ['VALUATION_RECONCILIATION', 'PAIRING', 'RECONCILIATION', 'REC_CATEGORY', 'REPORTING_TYPE'];
 
 const args = parseArgs(process.argv.slice(2));
 if (!isValidDate(args.date)) {
@@ -51,11 +55,15 @@ FROM breaks WHERE business_date = '${args.date}'
 GROUP BY UPPER(breaking_field) ORDER BY n DESC, 1 LIMIT ${top}`);
   if (fields.length === 0) throw new Error(`Sem breaks em ${args.date} na base ${config.source.dbPath}`);
 
-  const matches = matchFields(fields.map((f) => f.breaking_field), pairs, overrides);
+  const explain = args.explain ? String(args.explain).toUpperCase() : null;
+  const fieldNames = fields.map((f) => f.breaking_field);
+  if (explain && !fieldNames.includes(explain)) fieldNames.push(explain);
+  const matches = matchFields(fieldNames, pairs, overrides);
   const mapped = matches.filter((m) => m.pair);
+  const by = explain ? (args.by ? String(args.by).split(',').map((c) => c.trim()) : DEFAULT_BY).filter((c) => names.includes(c)) : [];
 
   // Tabela temporária só com a chave e os pares necessários (não as 380 colunas).
-  await db.exec(`CREATE OR REPLACE TEMP TABLE dtcc AS\n${dtccSelectSql(config, db.dialect, src, args.date, mapped.map((m) => m.pair))}`);
+  await db.exec(`CREATE OR REPLACE TEMP TABLE dtcc AS\n${dtccSelectSql(config, db.dialect, src, args.date, mapped.map((m) => m.pair), by)}`);
   const [{ n: dtccRows }] = await db.all('SELECT COUNT(*) AS n FROM dtcc');
   console.log(`Ficheiro DTCC ${args.date}: ${dtccRows} transações, ${pairs.length} pares TP. Campos analisados: ${fields.length}.`);
   if (Number(dtccRows) === 0) throw new Error(`O ficheiro DTCC não tem linhas com BUSINESS_DATE = ${args.date}`);
@@ -67,6 +75,21 @@ GROUP BY UPPER(breaking_field) ORDER BY n DESC, 1 LIMIT ${top}`);
   }
   console.log('\n== Campos mapeados: breaks do data mart vs. TP1 ≠ TP2 no ficheiro DTCC ==');
   console.table(out);
+
+  if (explain) {
+    const idx = mapped.findIndex((m) => m.field === explain);
+    if (idx < 0) throw new Error(`--explain ${explain}: campo sem par TP (usar --map)`);
+    if (by.length === 0) throw new Error('--by: nenhuma das colunas existe no ficheiro DTCC');
+    const rows = await db.all(explainSql(args.date, explain, idx, by.length));
+    console.log(`\n== ${explain}: break / sem break × TP1 ≠ TP2, por ${by.join(' × ')} ==`);
+    console.table(
+      rows.map((r) => ({
+        ...Object.fromEntries(by.map((c, k) => [c, r[`st_${k}`]])),
+        break_diff: Number(r.break_diff), break_equal: Number(r.break_equal),
+        nobreak_diff: Number(r.nobreak_diff), nobreak_equal: Number(r.nobreak_equal),
+      })),
+    );
+  }
 
   const unmatched = matches.filter((m) => !m.pair);
   if (unmatched.length) {

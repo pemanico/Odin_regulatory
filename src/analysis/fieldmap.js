@@ -68,7 +68,7 @@ const quoteIdent = (name) => {
  * SELECT do ficheiro DTCC para UMA business date, só com a chave (nomes lógicos, normalizada como no data mart)
  * e os pares TP pedidos (tp1_0, tp2_0, tp1_1, ...). As colunas físicas da chave são as mesmas do data mart.
  */
-export function dtccSelectSql(config, dialect, fromSql, date, pairs) {
+export function dtccSelectSql(config, dialect, fromSql, date, pairs, extraCols = []) {
   const d = dateLiteral(date);
   const cols = config.columns;
   const key = POSITION_KEY.map((logical) => {
@@ -80,8 +80,10 @@ export function dtccSelectSql(config, dialect, fromSql, date, pairs) {
     `${dialect.castText(quoteIdent(p.tp1))} AS tp1_${i}`,
     `${dialect.castText(quoteIdent(p.tp2))} AS tp2_${i}`,
   ]);
+  // Colunas de estado do relatório (ex.: VALUATION_RECONCILIATION) para explicar diferenças sem break: st_0, st_1...
+  const extra = extraCols.map((c, i) => `${dialect.castText(quoteIdent(c))} AS st_${i}`);
   const dateCol = dialect.castDate(quoteIdent(cols.business_date), null);
-  return `SELECT\n  ${[...key, ...tps].join(',\n  ')}\nFROM ${fromSql}\nWHERE ${dateCol} = ${d}`;
+  return `SELECT\n  ${[...key, ...tps, ...extra].join(',\n  ')}\nFROM ${fromSql}\nWHERE ${dateCol} = ${d}`;
 }
 
 /**
@@ -117,6 +119,20 @@ SELECT
   SUM(CASE WHEN present IS NULL AND is_diff = 1 THEN 1 ELSE 0 END) AS nobreak_diff,
   SUM(CASE WHEN present IS NULL AND is_diff = 0 THEN 1 ELSE 0 END) AS nobreak_equal
 FROM j`;
+}
+
+/**
+ * Para um campo, conta break / sem break × TP1 ≠ TP2 por valores das colunas de estado st_0..st_{n-1}.
+ * Serve para perceber porque há TP1 ≠ TP2 sem break (ex.: valuation não reconciliada nessa transação).
+ * As colunas de estado são códigos de estado do relatório (não identificadores).
+ */
+export function explainSql(date, field, i, nStatus, dtccTable = 'dtcc') {
+  const base = confusionSql(date, field, i, dtccTable);
+  const st = Array.from({ length: nStatus }, (_, k) => `st_${k}`);
+  const withStatus = base
+    .replace('    b.present,', `    b.present,\n    ${st.map((s) => `t.${s}`).join(', ')},`)
+    .replace(/\nSELECT\n  \(SELECT COUNT\(\*\) FROM b\) AS n_breaks,\n/, `\nSELECT\n  ${st.join(', ')},\n`);
+  return `${withStatus}\nGROUP BY ${st.join(', ')}\nORDER BY nobreak_diff DESC, break_diff DESC, ${st.join(', ')}`;
 }
 
 const pct = (n, d) => (d > 0 ? Math.round((n / d) * 1000) / 10 : null);

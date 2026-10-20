@@ -135,6 +135,13 @@ Uma linha por transação, com pares de colunas `TP1_<campo>` / `TP2_<campo>` (T
 
 **Regra do break (Ordep, 2026-10-20):** para cada campo, o break existe quando `TP1_<campo>` ≠ `TP2_<campo>` no ficheiro DTCC; o data mart só regista qual campo. **A chave de produção é única no ficheiro DTCC** (chaves distintas = linhas, 15/10) → join 1:1 break ↔ transação DTCC.
 
+**Mapeamento validado com dados (`map-fields`, 15/10, top 20 campos):**
+- Os 20 campos têm par `TP1_`/`TP2_` com o **mesmo nome** (inclui os 10 das regras).
+- **100% dos breaks encontrados no DTCC pela chave e 100% com TP1 ≠ TP2; 0 breaks com TP1 = TP2.** A comparação exata reproduz todos os breaks.
+- **18 dos 20 campos: 0 transações com TP1 ≠ TP2 sem break.** Comparação exata = regra do break; sem normalização (Ordep tinha razão).
+- **Exceções: `VALUATION_AMT` (21.956 transações com TP1 ≠ TP2 sem break, 0,4%) e `VALUATION_CCY` (47.432, 0,8%).** Uma moeda não tem tolerância → hipótese principal: a valuation não é reconciliada nessas transações (ver `VALUATION_RECONCILIATION`), não tolerância de valor. A medir com `map-fields --explain`.
+- Total do ficheiro DTCC de 15/10 pelas somas do `map-fields`: 6.277.763 transações (o `describe` foi colado como 6.271.763: provável gralha, confirmar).
+
 **Medido em 2026-10-19 (`npm run describe`, ficheiro de 12/10, 5 ficheiros, um por asset class):**
   - **6.271.763 linhas** num dia (EQUITY 2,32M; FX 2,32M; COMMODITY 344k; CREDIT 126k; IR 109k). Contém todas as transações reportadas, não só as que têm break (o data mart de 12/10 tem ~300 mil positions).
   - **200 colunas:** 179 pares `TP1_`/`TP2_` e 22 colunas de contexto. **Todos os 179 pares são simétricos** (mesmo sufixo nos dois lados): o aviso acima sobre `LEG1`/`LEG2` não se confirma neste ficheiro.
@@ -236,6 +243,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-20 | **Lado BNPP = TP1** (`REPORTING_COUNTERPARTY_LEI`), contraparte = TP2 (`OTHER_COUNTERPARTY_LEGAL_LEI`). O motor de regras avalia `TP1_<campo>` como valor BNPP e `TP2_<campo>` como valor da contraparte |
 | 2026-10-20 | Mapeamento `BREAKING_FIELD` → par `TP1_`/`TP2_` **validado com dados** (`npm run map-fields`): nome igual normalizado ou `--map` manual; nomes diferentes nunca são ligados automaticamente (só candidatos). Critério de mapeamento certo: `pct_break_diff` ≈ 100% e `pct_nobreak_diff` ≈ 0%. Se `pct_nobreak_diff` for alto, o Spark normaliza antes de comparar e o motor de regras tem de replicar essa normalização |
 | 2026-10-20 | Sem normalização de valores no motor: TP1 e TP2 vêm do mesmo ficheiro DTCC (Ordep). Validação: `pct_nobreak_diff` do `map-fields` |
+| 2026-10-20 | **Mapeamento BREAKING_FIELD → `TP1_`/`TP2_` = nome igual** para os top 20 (validado: 100% breaks com TP1 ≠ TP2). Sem tabela de mapeamento manual por agora; `--map` só para campos fora do top 20 que não batam |
 
 ---
 
@@ -292,7 +300,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 22. ⚠️ **Corrigido em 2026-10-19 (ver 3.1.2):** premissa errada; mantido como registo. **`cpty_null` — 13/10 é que destoa:** 14/10 = 527.447 de 2.307.763 (22,9%; `bnpp_null` 481.265, 20,9%); 15/10 = 535.736 de 2.335.182 (22,9%; `bnpp_null` 21%). Registado antes para 13/10: 138.644 (5,9%). Hipóteses: 13/10 tem a CPTY mais preenchida (dia atípico) ou o valor de 13/10 foi medido com outra versão dos dados. Repetir o profile de 13/10 e ver `persistence --date 2026-10-14` (se 13/10 for real, ~390 mil breaks "alterado" CPTY preenchido → nulo).
 23. **Totais diferentes dos registados:** 15/10 = 2.335.182 (antes 2.336.183, −1.001); 14/10 = 2.307.763 (antes 2.305.762, +2.001). Diferenças "redondas" em dois dias: ou a cópia dos ficheiros mudou depois das primeiras medições, ou os valores foram mal transcritos. Confirmar com `Get-ChildItem` + `data_quality --from 2026-10-13 --to 2026-10-15` e corrigir a tabela da questão 14.
 24. **O que contêm `BNPP_REPORTED` / `CPTY_REPORTED`?** (flag, valor parcial, outra coisa?) Decide se servem para alguma coisa na demo.
-25. **Ficheiro DTCC:** Parquet em `data/dtcc/{asset_class}/{data}/` (`ODIN_DTCC_GLOB`); chave de produção única (join 1:1); BNPP = TP1. **Falta:** correr `npm run map-fields -- --date 2026-10-15` (mapeamento + validação TP1 ≠ TP2 por campo) e confirmar os campos sem par pelo nome; caminho no S3 e `_SUCCESS`; `REFERENCE_DATE` vs `BUSINESS_DATE`.
+25. **Ficheiro DTCC:** mapeamento dos top 20 campos **validado** (ver 3.2). **Falta:** `map-fields --explain VALUATION_AMT` e `--explain VALUATION_CCY` (diferenças sem break por estado do relatório); caminho no S3 e `_SUCCESS`; `REFERENCE_DATE` vs `BUSINESS_DATE`; confirmar 6.277.763 vs 6.271.763 linhas.
 26. ~~**Alinhar a chave do break com a de produção.**~~ **Feito (2026-10-20).** Falta confirmar com dados reais: `build:db` + `data_quality` 13–15/10 com os mesmos totais e 0 conflitos.
 27. ~~**Lado BNPP em cada break.**~~ **Fechado (2026-10-20, Ordep):** BNPP = party 1 = `REPORTING_COUNTERPARTY_LEI` = `TP1_`; contraparte = party 2 = `TP2_`.
 
@@ -320,6 +328,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 - **Correção (2026-10-19, fim da tarde):** os valores BNPP/CPTY não estão no data mart, estão no ficheiro DTCC (3.1.2). `persistence` só é fiável na parte de chave (novo / resolvido / continua); "igual" vs "alterado" suspenso. Questões 24–26.
 - **Feito (2026-10-20):** chave do break = chave de produção (UTI e PROPRIETARY separados, + REPORT_SUBMITTING_ENTITY e asset class); 26 testes. **Precisa de `build:db` no PC do escritório.**
 - **Feito (2026-10-20):** `npm run map-fields` (mapeamento BREAKING_FIELD → TP1_/TP2_ + matriz de confusão por campo, só contagens); `ODIN_DTCC_GLOB`; 30 testes.
+- **Feito (2026-10-20):** mapeamento validado com dados reais (top 20 = nome igual, comparação exata reproduz 100% dos breaks); `map-fields --explain` para as exceções de valuation.
 - **Plano mantido** (decisão 2026-10-19): backend Node primeiro (dias 3–8), React só nos dias 9–11.
 - **Próximos passos:**
   1. **Desbloqueio (Ordep), caminho crítico:** partilhar o Excel de regras (`EMIR-Refit_Reconciliation status matching.xlsx`) para o mapeamento `BREAKING_FIELD` → regra dos 10 campos (questão 1). O schema do histórico (questão 2) fica em espera com a categorização.

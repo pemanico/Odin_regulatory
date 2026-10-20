@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { tpPairs, matchFields, confusionSql, confusionRow, dtccSelectSql } from '../src/analysis/fieldmap.js';
+import { tpPairs, matchFields, confusionSql, confusionRow, dtccSelectSql, explainSql } from '../src/analysis/fieldmap.js';
 import { openSqlite, sqliteAvailable } from '../src/db/sqlite.js';
 import { loadConfig } from '../src/config.js';
 
@@ -37,7 +37,7 @@ test('confusionSql: matriz de confusão por campo (NULL vs valor conta como dife
   const db = await openSqlite();
   const key = 'report_submitting_entity TEXT, cp1_lei TEXT, cp2_lei TEXT, uti TEXT, proprietary TEXT, asset_class TEXT';
   await db.exec(`CREATE TABLE breaks (business_date TEXT, ${key}, breaking_field TEXT)`);
-  await db.exec(`CREATE TABLE dtcc (${key}, tp1_0 TEXT, tp2_0 TEXT)`);
+  await db.exec(`CREATE TABLE dtcc (${key}, tp1_0 TEXT, tp2_0 TEXT, st_0 TEXT)`);
   const k = (id, prop = null) => `'E','A','B',${id ? `'${id}'` : 'NULL'},${prop ? `'${prop}'` : 'NULL'},'CREDIT'`;
   // 3 breaks no campo: 2 com TP1 ≠ TP2 (um deles NULL vs valor), 1 com TP1 = TP2; 1 break que não existe no DTCC.
   for (const [id, prop] of [['U1'], ['U2'], [null, 'P3'], ['U9']]) {
@@ -53,7 +53,7 @@ test('confusionSql: matriz de confusão por campo (NULL vs valor conta como dife
     [k('U5'), "'7'", "'7'"],
     [k('U6'), 'NULL', 'NULL'], // NULL = NULL → igual
   ];
-  for (const [kk, a, b] of dt) await db.exec(`INSERT INTO dtcc VALUES (${kk}, ${a}, ${b})`);
+  for (const [kk, a, b] of dt) await db.exec(`INSERT INTO dtcc VALUES (${kk}, ${a}, ${b}, ${kk.includes('U4') ? "'NOAP'" : "'RECO'"})`);
 
   const [r] = await db.all(confusionSql('2026-10-15', 'VALUATION_AMT', 0));
   const row = confusionRow(r);
@@ -64,5 +64,12 @@ test('confusionSql: matriz de confusão por campo (NULL vs valor conta como dife
   assert.equal(row.pct_found, 75);
   assert.equal(row.pct_break_diff, 66.7);
   assert.equal(row.pct_nobreak_diff, 33.3);
+
+  // explain: a diferença sem break (U4) aparece isolada no estado NOAP.
+  const ex = await db.all(explainSql('2026-10-15', 'VALUATION_AMT', 0, 1));
+  const byStatus = Object.fromEntries(ex.map((r) => [r.st_0, r]));
+  assert.equal(Number(byStatus.NOAP.nobreak_diff), 1);
+  assert.equal(Number(byStatus.RECO.nobreak_diff), 0);
+  assert.equal(Number(byStatus.RECO.break_diff), 2);
   await db.close();
 });
