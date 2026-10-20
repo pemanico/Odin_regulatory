@@ -42,6 +42,9 @@ const quoteIdent = (name) => {
 
 class NotVerifiable extends Error {}
 
+/** Tipos numéricos do Parquet/DuckDB (verificação de decimal passa a sinal + grandeza). */
+const NUMERIC_TYPE = /^(DOUBLE|FLOAT|REAL|DECIMAL|NUMERIC|BIGINT|INTEGER|INT|SMALLINT|TINYINT|HUGEINT|UBIGINT|UINTEGER)/;
+
 /** Valida a estrutura do ficheiro de regras (falha cedo, com o código da regra). */
 export function validateRules(rulesDoc, fieldMap) {
   const seen = new Set();
@@ -108,7 +111,9 @@ function sideContext(rule, side, fieldMap, columns, dialect) {
   /** Valor normalizado (texto aparado; vazio = NULL). */
   const val = (ref) => `NULLIF(TRIM(${dialect.castText(quoteIdent(column(ref)))}), '')`;
   const typeOf = (ref) => columns.get(column(ref)) ?? 'VARCHAR';
-  return { val, typeOf };
+  /** Coluna física sem conversão para texto (para verificações numéricas em colunas tipadas). */
+  const raw = (ref) => quoteIdent(column(ref));
+  return { val, typeOf, raw };
 }
 
 function compilePredicate(p, ctx) {
@@ -164,7 +169,22 @@ function compileCheck(check, ctx, dialect) {
     case 'date': textual(); return ifPopulated(dialect.regexFull(v, DATE_RE));
     case 'timestamp': textual(); return ifPopulated(dialect.regexFull(v, TIMESTAMP_RE));
     case 'year': textual(); return ifPopulated(dialect.regexFull(v, '(19|20)[0-9]{2}'));
-    case 'decimal': textual(); return ifPopulated(decimalOk(v, spec, dialect));
+    case 'decimal': {
+      const t = String(ctx.typeOf('self')).toUpperCase();
+      if (NUMERIC_TYPE.test(t)) {
+        // Coluna numérica no Parquet: o formato (casas decimais, ponto) perdeu-se, mas o sinal e a grandeza
+        // continuam verificáveis. Parte inteira com mais de `digits` dígitos viola qualquer formato permitido.
+        const x = ctx.raw('self');
+        const parts = [`ABS(${x}) < 1e${Number(spec.digits)}`];
+        if (spec.sign === 'nonneg') parts.push(`${x} >= 0`);
+        if (spec.sign === 'positive') parts.push(`${x} > 0`);
+        const allow = (spec.allow ?? []).map((a) => `${x} = ${Number(a)}`);
+        const ok = `(${parts.join(' AND ')})`;
+        return `(${x} IS NULL OR ${allow.length ? `(${ok} OR ${allow.join(' OR ')})` : ok})`;
+      }
+      textual();
+      return ifPopulated(decimalOk(v, spec, dialect));
+    }
     case 'compare': {
       const ops = ['>=', '<=', '>', '<', '='];
       if (!ops.includes(spec.op)) throw new ValidationError(`compare: operador inválido ${spec.op}`);

@@ -115,8 +115,11 @@ test('não verificável: campo sem colunas DTCC, coluna em falta, coluna tipada'
   const r = R('EMIR-VR-2021-01', '2.21', { decimal: { digits: 25, decimals: 5 } });
   assert.ok(compileRule(r, 'BNPP', { ...ctx, columns: missing }).sql);
   assert.match(compileRule(r, 'CPTY', { ...ctx, columns: missing }).notVerifiable, /TP2_VALUATION_AMT/);
-  const typed = new Map([...COLUMNS, ['TP1_VALUATION_AMT', 'DECIMAL(38,10)']]);
+  const typed = new Map([...COLUMNS, ['TP1_VALUATION_AMT', 'DATE']]);
   assert.match(compileRule(r, 'BNPP', { ...ctx, columns: typed }).notVerifiable, /tipada/);
+  // decimal numa coluna numérica: verifica sinal e grandeza (não o formato)
+  const dbl = compileRule(r, 'BNPP', { ...ctx, columns: new Map([...COLUMNS, ['TP1_VALUATION_AMT', 'DOUBLE']]) });
+  assert.match(dbl.sql, /ABS\("TP1_VALUATION_AMT"\) < 1e25/);
   // enum numa coluna tipada continua verificável (compara o valor, não o formato)
   assert.ok(compileRule(R('EMIR-VR-2047-01', '2.47', { enum: ['CASH'] }), 'BNPP', { ...ctx, columns: new Map([...COLUMNS, ['TP1_DELIVERY_TYPE', 'ENUM']]) }).sql);
 });
@@ -198,4 +201,18 @@ test('isSuspect: só quando os dois lados violam acima do limiar', () => {
   assert.equal(isSuspect(40, 38), true);
   assert.equal(isSuspect(40, 0.2), false, 'erro de um só lado é um resultado real, não tradução errada');
   assert.equal(isSuspect(null, 50), false);
+});
+
+test('decimal em coluna DOUBLE: sinal e grandeza', { skip }, async () => {
+  const db = await openSqlite();
+  await db.exec('CREATE TABLE rule_input (k_uti TEXT, "TP1_NOTIONAL" REAL)');
+  for (const [u, v] of [['U0', 10.5], ['U1', -1], ['U2', 1e30], ['U3', null], ['U4', 0]]) {
+    await db.exec(`INSERT INTO rule_input VALUES ('${u}', ${v == null ? 'NULL' : v})`);
+  }
+  const fm = { items: { '2.64': { field: 'Notional amount of leg 2', tp: ['NOTIONAL'] } } };
+  const c = compileRule(R('EMIR-VR-2064-01', '2.64', { decimal: { digits: 25, decimals: 5, sign: 'nonneg' } }), 'BNPP',
+    { fieldMap: fm, columns: new Map([['TP1_NOTIONAL', 'DOUBLE']]), dialect: dialects.sqlite });
+  const rows = (await db.all(`SELECT k_uti FROM rule_input WHERE ${c.sql} ORDER BY k_uti`)).map((r) => r.k_uti);
+  assert.deepEqual(rows, ['U1', 'U2']);
+  await db.close();
 });

@@ -7,6 +7,8 @@
 //   npm run describe -- "data/dtcc/**/*.parquet" --key UTI,PROPRIETARY  # unicidade de uma chave candidata
 //   npm run describe -- "<glob>" --distinct COL1,COL2                    # nº de valores distintos e nulos por coluna
 //   npm run describe -- "<glob>" --overlap COL_A,COL_B                   # nº de valores que aparecem nas duas colunas
+//   npm run describe -- "<glob>" --values TP1_CONFIRMED,TP2_CONFIRMED     # contagem por valor de colunas de códigos
+//       (recusa colunas com mais de 50 valores distintos: podem ser identificadores)
 //
 // O output pode ser colado em chats: não contém valores, só estrutura e agregados.
 import fs from 'node:fs';
@@ -85,6 +87,20 @@ try {
     }
     console.log('\n== Valores distintos por coluna ==');
     console.table(rows);
+  }
+
+  if (args.values) {
+    const MAX = 50;
+    for (const c of String(args.values).split(',').map((k) => k.trim())) {
+      if (!names.includes(c)) throw new Error(`Coluna não existe: ${c}`);
+      const [{ n }] = await db.all(`SELECT COUNT(DISTINCT ${ident(c)}) AS n FROM ${src}`);
+      if (Number(n) > MAX) {
+        console.log(`\n== ${c}: ${n} valores distintos (> ${MAX}) — não mostrado (pode conter identificadores) ==`);
+        continue;
+      }
+      console.log(`\n== Valores de ${c} ==`);
+      console.table(await db.all(`SELECT ${ident(c)} AS valor, COUNT(*) AS linhas FROM ${src} GROUP BY 1 ORDER BY 2 DESC`));
+    }
   }
 
   if (args.overlap) {

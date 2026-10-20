@@ -7,6 +7,8 @@
 //
 // Taxa por regra = violações / breaks do campo da regra. Regra suspeita (tradução a rever): viola nos DOIS
 // lados em mais de 5% dos breaks do seu campo. CSV completo em data/reports/rules-<data>.csv (só contagens).
+// Detalhe por break COM a chave (para os operacionais encontrarem o break): data/reports/break-verdict-<data>.csv.
+// Esse ficheiro tem identificadores (UTI, LEIs): fica só no PC, nunca colar em chats nem commitar.
 // Pré-requisitos: build:db feito (tabela breaks) e o ficheiro DTCC dessa data em ODIN_DTCC_GLOB.
 import fs from 'node:fs';
 import { resolve } from 'node:path';
@@ -119,7 +121,17 @@ GROUP BY breaking_field ORDER BY breaks DESC LIMIT 20`);
     console.log('\n== Todas as regras ==');
     console.table(rows);
   }
+  // Detalhe por break com a chave de produção (ficheiro local, gitignored: data/).
+  const detail = resolve(outDir, `break-verdict-${D}.csv`);
+  await db.exec(`COPY (
+  SELECT business_date, report_submitting_entity, cp1_lei, cp2_lei, uti, proprietary, asset_class,
+         breaking_field, verdict, bnpp_codes, cpty_codes, verifiable_rules, rules_version
+  FROM break_verdict WHERE business_date = '${D}'
+  ORDER BY breaking_field, verdict, cp2_lei, uti, proprietary
+) TO '${detail.replace(/'/g, "''")}' (HEADER, DELIMITER ',')`);
+
   console.log(`\nResultado completo por regra (só contagens): ${csv}`);
+  console.log(`Detalhe por break com a chave (UTI/PROPRIETARY, LEIs) — só local, não colar: ${detail}`);
   console.log(`${((Date.now() - t0) / 1000).toFixed(1)} s`);
 } catch (err) {
   console.error(`${err.name}: ${err.message}`);
