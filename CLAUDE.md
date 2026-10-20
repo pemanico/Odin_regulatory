@@ -4,7 +4,7 @@
 > - Qualquer assistente (Claude do banco, Claude Code, ou outro) deve **ler este ficheiro antes de qualquer trabalho**.
 > - No fim de cada sessão de trabalho, **atualizar** as secções "Estado atual", "Registo de decisões" e "Questões em aberto".
 > - **Nunca colocar dados reais neste ficheiro** (UTIs, valores, nomes de contrapartes). Só estrutura, decisões e métricas agregadas.
-> - Última atualização: 2026-10-20 (motor de regras: plano aprovado, passos 1–2 implementados)
+> - Última atualização: 2026-10-20 (fim da sessão: motor de regras fechado; próximo: backend + frontend, agente depois)
 
 ---
 
@@ -310,6 +310,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-20 | **Só se validam os campos com `TP1_<campo>` e `TP2_<campo>` no ficheiro DTCC** (Ordep). Catálogo v2026-10-20.3: **274 códigos VR dos 128 campos com TP** (150 verificáveis, 73 parciais, 51 não verificáveis); os 135 códigos dos 46 campos sem colunas TP ou comuns saem do catálogo. `validateRules` recusa regras de campos sem TP |
 | 2026-10-20 | Regras que comparam com colunas comuns (REFERENCE_DATE, LEIs, UTI) = não verificáveis (Ordep). Catálogo v2026-10-20.4: 274 códigos — 147 verificáveis, 69 parciais, 58 não verificáveis |
 | 2026-10-20 | **Motor de regras fechado** (Ordep); teste com dados de produção fica do lado do Ordep. Passo 4 do plano: métrica certificada `rule_verdict` (sobre `break_verdict`; dimensões veredicto, campo, data, asset class, contraparte) |
+| 2026-10-20 | **Ordem revista: backend + frontend antes do agente** (Ordep). A próxima sessão começa num chat novo com o prompt da secção 7 |
 
 ---
 
@@ -412,18 +413,40 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 - **Feito (2026-10-20, tarde):** passo 3 (409 códigos VR), `rules:sample` para validar 10 breaks de 15/10; 43 testes. **A correr no PC:** `rules`, `rules:sample`, `describe --values TP1_CONFIRMED,TP2_CONFIRMED`.
 - **Feito (2026-10-20, fim da tarde):** classificação validada pelo Ordep na amostra; `break_detail` com campo ESMA, valores TP1/TP2 e erro em texto (`src/rules/describe.js`); 44 testes.
 - **Feito (2026-10-20):** motor de regras fechado (passos 1–4); métrica `rule_verdict` na semantic layer. Validação com dados de produção: Ordep.
-- **Plano mantido** (decisão 2026-10-19): backend Node primeiro (dias 3–8), React só nos dias 9–11.
+- **Ordem revista (Ordep, 2026-10-20):** **backend + frontend primeiro, agente depois.** A próxima sessão continua num chat novo (prompt de arranque abaixo).
 - **Próximos passos:**
-  1. **Desbloqueio (Ordep), caminho crítico:** partilhar o Excel de regras (`EMIR-Refit_Reconciliation status matching.xlsx`) para o mapeamento `BREAKING_FIELD` → regra dos 10 campos (questão 1). O schema do histórico (questão 2) fica em espera com a categorização.
-  2. **Reunião com operacionais:** volume ~2,3M/dia é o universo deles? (q. 9); `PROPRIETARY` é o identificador que a contraparte vê?; porque recategorizam do zero se o stock é estável dia a dia?; 3–5 casos difíceis (q. 5).
-  3. **Avisos:** cancelar o pedido de correção da duplicação (não existe); avisar o dono do feed DTCC sobre 12/10; fixar a versão do `@duckdb/node-api` (questão 20).
-  4. **Correr a persistência com dados reais** (questões 16 e 17) e colar só os agregados.
+  1. **Backend + frontend (próxima sessão, modo grill-me, plano aprovado antes de código).** Base já pronta: semantic layer (8 métricas, incl. `rule_verdict`), `break_detail` (chave + campo ESMA + valores TP1/TP2 + veredicto + erro em texto), auditoria. Ecrãs do plano: (1) prompt → tabela/gráfico (sem agente, a 1.ª versão pode ser seletor de métrica + filtros), (2) top 10 de breaking fields por business date, (3) drill-down campo → breaks com BNPP vs other cpty, veredicto e erro. Seletor de jurisdição só com EMIR.
+  2. **Agente (depois):** pergunta em aberto — formato do gateway interno de LLM (Anthropic Messages / OpenAI / próprio) e suporte de tool calling.
+  3. **Validação com dados de produção (Ordep):** `npm run rules` + `rules:sample`; corrigir a regra CONFIRMED (q. 36) com `describe --values`.
+  4. **Reunião com operacionais:** universo ~2,3M/dia (q. 9); `PROPRIETARY` é o identificador que a contraparte vê?; 3–5 casos difíceis (q. 5).
+  5. **Avisos:** cancelar o pedido de correção da duplicação (não existe); avisar o dono do feed DTCC sobre 12/10; fixar a versão do `@duckdb/node-api` (q. 20).
+  6. **A desenhar depois (grill-me):** agrupamento das divergências por par de valores BNPP × contraparte (fator de redução breaks → decisões); persistência "igual/alterado" com valores TP1/TP2; data quality sobre o ficheiro DTCC inteiro (q. 35); desempate com booking TSR.
   - **Em espera (categorização adiada):** schema do histórico, fase 2 da persistência, backtest.
-  5. **Funcionalidades novas a desenhar (modo grill-me, plano aprovado antes de código):**
-     - ~~**Persistência**~~ fase 1 feita; fase 2 depende da questão 2.
-     - **Alerta de qualidade:** % cpty_null / bnpp_null por dia com limiar (teria detetado 12/10).
-     - **Assinatura parcial do break:** campo + padrão de preenchimento + contraparte (primeiro "breaks → clusters" sem regras). Deve aplicar-se só aos breaks `novo` e `alterado`: os `igual` já têm caminho próprio (herança).
-  6. Dias 3–5: regras ESMA por família de campos para os 10 campos de 13–15/10, assinaturas completas, backtest (excluindo 12/10).
+
+### Prompt de arranque para a próxima sessão (backend + frontend)
+```
+Contexto: projeto "Odin Regulatory — EMIR Breaks", demo Node.js + DuckDB sobre breaks de reconciliação EMIR (relatório DTCC).
+Repo: github.com/pemanico/Odin_regulatory (branch main).
+
+Antes de qualquer coisa, clona o repo e lê o CLAUDE.md e o README.md na raiz (plano aprovado, decisões, descobertas,
+motor de regras ESMA fechado em 2026-10-20, questões em aberto e próximos passos na secção 7).
+
+Onde estamos: motor de regras fechado (274 códigos VR dos 128 campos com TP1_/TP2_; tabelas rule_results,
+break_verdict e break_detail; métrica rule_verdict). Dados reais de 13–15/10 no meu PC (Windows x64, Node v24,
+PowerShell) em data/breaks/ e data/dtcc/; 12/10 é anómalo e fica fora.
+
+Objetivo desta sessão: backend + frontend da demo (o agente/LLM fica para depois). Ecrãs do plano: prompt/consulta
+de métricas, top 10 de breaking fields por business date, drill-down campo → breaks (chave, campo ESMA, valor BNPP =
+TP1_<campo>, valor other cpty = TP2_<campo>, veredicto, erro de format/condition). Seletor de jurisdição só com EMIR.
+
+Regras:
+- Eu corro os comandos no PC do escritório e colo-te os resultados. Tu não tens acesso aos dados.
+- Nunca colar nem registar dados linha a linha (UTIs, LEIs, valores). Só agregados. Se eu colar identificadores
+  por engano, avisa-me e não os uses.
+- Funcionalidades novas: modo grill-me, uma pergunta de cada vez, plano aprovado antes de código.
+- Sempre que alterares ficheiros do repo, faz commit e push para o main.
+- No fim da sessão, atualiza no CLAUDE.md as secções "Estado atual", "Registo de decisões" e "Questões em aberto".
+```
 
 ## 8. Estrutura do repositório
 ```
