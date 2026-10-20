@@ -277,6 +277,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-20 | **Mapeamento BREAKING_FIELD → `TP1_`/`TP2_` = nome igual** para os top 20 (validado: 100% breaks com TP1 ≠ TP2). Sem tabela de mapeamento manual por agora; `--map` só para campos fora do top 20 que não batam |
 | 2026-10-20 | Mapeamento dos top 20 campos → itens ESMA confirmado (3.3.1). Regras internas = regras ESMA (fonte única: o Excel) |
 | 2026-10-20 | **Motor de regras — resultado por break:** só BNPP viola / só contraparte viola / ambos violam (com códigos VR) / **ambos válidos → mensagem fixa "divergência: os dois valores cumprem as regras ESMA; as regras não determinam o lado errado"** com os dois valores lado a lado (opção a). Desempate com o booking interno TSR (opção b) fica para o futuro |
+| 2026-10-20 | **O motor só usa os campos TP1_/TP2_ do ficheiro DTCC** (Ordep): sem listas externas (MIC, ISO 4217, ANNA DSB). Sub-regras que precisam de lista → "não verificável" com o texto da regra. Regras condicionais avaliam cada lado com os **seus** outros campos (BNPP com TP1_*, contraparte com TP2_*) |
 
 ---
 
@@ -337,7 +338,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 26. ~~**Alinhar a chave do break com a de produção.**~~ **Feito (2026-10-20).** Falta confirmar com dados reais: `build:db` + `data_quality` 13–15/10 com os mesmos totais e 0 conflitos.
 27. ~~**Lado BNPP em cada break.**~~ **Fechado (2026-10-20, Ordep):** BNPP = party 1 = `REPORTING_COUNTERPARTY_LEI` = `TP1_`; contraparte = party 2 = `TP2_`.
 28. ~~Mapeamento dos 3 campos sem linha.~~ **Fechado (2026-10-20):** SPREAD_LEG2_TYP → 2.109, MASTER_AGREEMENT_VRSN_V → 2.36, SETTLEMENT_DATE → 2.46; tabela 3.3.1 confirmada.
-29. **Listas de referência (tipo C):** **não existe lista de MIC no banco** (Ordep, 2026-10-20). Afeta VENUE_OF_EXECUTION (2041-01), UPI, ISIN, CLEARING_OBLIGATION, CONFIRMED. Em discussão (grill-me): obter a lista pública ISO 10383 ou deixar essas regras fora da verificação automática. ISO 4217 (pequena) pode ir para `config/`; ANNA DSB UPI fora da demo.
+29. ~~Listas de referência.~~ **Fechado (2026-10-20):** não se usam; só campos TP1_/TP2_. Sub-regras dependentes de lista = "não verificável".
 30. ~~Regras internas.~~ **Fechado (2026-10-20):** são as mesmas regras ESMA; não há catálogo interno à parte.
 31. **Ficheiro de mapeamento vs colunas reais:** 134 linhas vs 179 pares no ficheiro DTCC; pelo menos um nome difere (`MASTER_AGREEMENT_VRSN` vs `_V`). Verificar com `map-fields --all-pairs`.
 
