@@ -129,9 +129,9 @@ Notas:
   5. A observação "12/10 tem o dobro dos breaks" continua válida (é contagem, não depende destas colunas).
 
 ### 3.2 Relatório de reconciliação da DTCC (ficheiro recebido, formato LARGO)
-Uma linha por transação, com pares de colunas `TP1_<campo>` / `TP2_<campo>` (TP1 = reporting counterparty, TP2 = other counterparty; ver nota abaixo) para centenas de campos EMIR REFIT, mais as colunas de estado (`RCNCLTNRPT_ID`, `TXDTLS_ID`, `REC_CATEGORY`, `PAIRING_RECONCILIATION`, `VALUATION_RECONCILIATION`, LEIs, `FILENAME`, `C_PRIMARY_ASSET_CLASS`, `BUSINESS_DATE`).
+Uma linha por transação, com pares de colunas `TP1_<campo>` / `TP2_<campo>` (TP1 = reporting counterparty = BNPP, TP2 = other counterparty = contraparte) para centenas de campos EMIR REFIT, mais as colunas de estado (`RCNCLTNRPT_ID`, `TXDTLS_ID`, `REC_CATEGORY`, `PAIRING_RECONCILIATION`, `VALUATION_RECONCILIATION`, LEIs, `FILENAME`, `C_PRIMARY_ASSET_CLASS`, `BUSINESS_DATE`).
 - O nome dos sufixos nem sempre é simétrico (ex.: `TP1_..._LEG1` vs `TP2_..._LEG2`). ⚠️ **Corrigido em 2026-10-19 (ver 3.1.2):** é a **única fonte dos valores** de cada lado; a tabela longa só identifica o break. Texto original: **Não usar diretamente**: a tabela longa da 3.1 é a fonte da demo.
-- **TP1 = sempre `REPORTING_COUNTERPARTY_LEI`; TP2 = sempre `OTHER_COUNTERPARTY_LEGAL_LEI`** (Ordep, 2026-10-19). **TP1 não é necessariamente o BNPP:** o lado BNPP de cada linha tem de ser determinado (o BNPP pode estar em CP1 ou CP2, e tem várias entidades/LEIs). Sem isto, o motor de regras atribui o erro ao lado errado. Ver questão 27.
+- **TP1 = `REPORTING_COUNTERPARTY_LEI` = BNPP; TP2 = `OTHER_COUNTERPARTY_LEGAL_LEI` = contraparte** (Ordep, 2026-10-20). Nos dados da BNPP, a party 1 é sempre o BNPP: lado BNPP = `TP1_<campo>`, lado contraparte = `TP2_<campo>`. Não é preciso lista de LEIs BNPP. Verificação barata opcional: `describe --overlap` dos dois LEIs no data mart deve dar `em_ambas` = 0.
 
 **Medido em 2026-10-19 (`npm run describe`, ficheiro de 12/10, 5 ficheiros, um por asset class):**
   - **6.271.763 linhas** num dia (EQUITY 2,32M; FX 2,32M; COMMODITY 344k; CREDIT 126k; IR 109k). Contém todas as transações reportadas, não só as que têm break (o data mart de 12/10 tem ~300 mil positions).
@@ -231,6 +231,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-19 | **Correção do Ordep:** `BNPP_REPORTED`/`CPTY_REPORTED` não são os valores do campo; os valores estão no ficheiro DTCC. Chave real de produção inclui `REPORT_SUBMITTING_ENTITY` e `C_PRIMARY_ASSET_CLASS` (ver 3.1.2). Persistência "igual/alterado", leitura de `cpty_null` e padrão de preenchimento ficam suspensos até redesenho |
 | 2026-10-20 | **Chave do break = chave de produção** (Ordep): `REPORT_SUBMITTING_ENTITY, REPORTING_COUNTERPARTY_LEI, OTHER_COUNTERPARTY_LEGAL_LEI, UTI, PROPRIETARY, C_PRIMARY_ASSET_CLASS, BREAKING_FIELD` (+ business date). UTI e PROPRIETARY como colunas separadas (não COALESCE). `columns.uti_alt` → `columns.proprietary` (o nome antigo continua aceite). Também é a chave natural do join com o ficheiro DTCC, que tem as mesmas colunas. Contagens esperadas iguais (já não havia duplicados); obriga a `build:db` |
 | 2026-10-20 | `profile`: saúde da chave deixa de mostrar `bnpp_null`/`cpty_null` (enganadores, ver 3.1.2); passa a mostrar `null_trade_id`, `both_uti_proprietary`, `proprietary_only`, `null_submitting_entity` |
+| 2026-10-20 | **Lado BNPP = TP1** (`REPORTING_COUNTERPARTY_LEI`), contraparte = TP2 (`OTHER_COUNTERPARTY_LEGAL_LEI`). O motor de regras avalia `TP1_<campo>` como valor BNPP e `TP2_<campo>` como valor da contraparte |
 
 ---
 
@@ -289,7 +290,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 24. **O que contêm `BNPP_REPORTED` / `CPTY_REPORTED`?** (flag, valor parcial, outra coisa?) Decide se servem para alguma coisa na demo.
 25. **Ficheiro DTCC para a demo:** está em **Parquet**; cópia local em `data/dtcc/{asset_class}/{data}/`. Estrutura medida (ver 3.2): 179 pares simétricos, ~6,3M linhas/dia. **A cópia atual é de 12/10 (dia excluído)**: copiar 13–15/10. Falta: caminho no S3 e `_SUCCESS`, um por dia e por asset class?, e como se liga ao break (`RCNCLTNRPT_ID` / `TXDTLS_ID` / UTI?). Sem ele não há regras nem persistência por valor.
 26. ~~**Alinhar a chave do break com a de produção.**~~ **Feito (2026-10-20).** Falta confirmar com dados reais: `build:db` + `data_quality` 13–15/10 com os mesmos totais e 0 conflitos.
-27. **Lado BNPP em cada break:** o BNPP está sempre em `REPORTING_COUNTERPARTY_LEI` neste data mart, ou também aparece como `OTHER_COUNTERPARTY_LEGAL_LEI`? Medir com `describe --distinct` / `--overlap` sobre os dois LEIs. Se aparecer dos dois lados, é preciso a lista de LEIs das entidades BNPP (config, sem dados de clientes) para dizer "lado BNPP" vs "lado contraparte".
+27. ~~**Lado BNPP em cada break.**~~ **Fechado (2026-10-20, Ordep):** BNPP = party 1 = `REPORTING_COUNTERPARTY_LEI` = `TP1_`; contraparte = party 2 = `TP2_`.
 
 ## 7. Estado atual
 - **Feito (2026-10-16):** esqueleto do projeto.
