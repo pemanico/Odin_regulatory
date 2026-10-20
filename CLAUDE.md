@@ -4,7 +4,7 @@
 > - Qualquer assistente (Claude do banco, Claude Code, ou outro) deve **ler este ficheiro antes de qualquer trabalho**.
 > - No fim de cada sessão de trabalho, **atualizar** as secções "Estado atual", "Registo de decisões" e "Questões em aberto".
 > - **Nunca colocar dados reais neste ficheiro** (UTIs, valores, nomes de contrapartes). Só estrutura, decisões e métricas agregadas.
-> - Última atualização: 2026-10-20 (chave do break alinhada com a de produção)
+> - Última atualização: 2026-10-20 (Excel de regras: mapeamento dos top 20 campos → VR ESMA)
 
 ---
 
@@ -168,6 +168,37 @@ Ficheiro: `EMIR-Refit_Reconciliation status matching.xlsx`. Colunas: `Table`, `I
   4. regras de estado/ciclo de vida por UTI (sequência de action types). **Estas não se verificam registo a registo.**
 - **Na demo:** só os níveis 1 e 2 dos 10 campos com mais volume.
 
+
+### 3.3.1 Mapeamento dos top 20 campos → regras ESMA (2026-10-20, a validar pelo Ordep)
+Fontes: folha `Validations_Cpty_derivative` do Excel (174 campos, só validation rules ESMA; **não contém regras internas**) + ficheiro de mapeamento "Field name → DTCC Mapping" (134 linhas). Cadeia: `BREAKING_FIELD` = sufixo TP → "Field name" → linha do Excel.
+Tipos de verificação: **A** = só o valor desse lado (formato, enum, check digit); **B** = outro campo TP do mesmo lado (condicional; disponível no ficheiro DTCC); **C** = lista externa (MIC ISO 10383 com tipo de venue, ISO 4217, ANNA DSB UPI); **L** = ciclo de vida (fora da demo).
+
+| BREAKING_FIELD | Item | Códigos VR | Tipos |
+|---|---|---|---|
+| VALUATION_AMT | 2.21 | 2021-01 | A |
+| UNIQUE_PRODUCT_ID | 2.8 | 2008-01..04 | B (2.7, 2.41), C (MIC, ANNA DSB) |
+| VENUE_OF_EXECUTION | 2.41 | 2041-01..02 | C (MIC), A ('BILT') |
+| ISIN | 2.7 | 2007-01..02 | B+C (tipo de venue), A (check digit) |
+| VALUATION_CCY | 2.22 | 2022-01..03 | B (2.21), C (ISO 4217), A (códigos especiais) |
+| SETTLEMENT_CCY_1 | 2.19 | 2019-01..05 | B (2.47), C (ISO 4217), A |
+| DELIVERY_TYPE | 2.47 | 2047-01 | A |
+| PRODUCT_CLASSIFICATION | 2.9 | 2009-01..02 | A (estrutura CFI), C (ISO 10962 completo) |
+| FLOAT_RATE_LEG2_IDENTIFIER | 2.99 | 2099-01..02 | A (check digit), B (2.11, 2.14) |
+| SPREAD_LEG2_TYP | **?** (candidato 2.109 Spread of leg 2) | — | sem linha no ficheiro de mapeamento |
+| CLEARING_OBLIGATION | 2.30 | 2030-01..03 | B (2.31), B+C (tipo de venue) |
+| MASTER_AGREEMENT_VRSN_V | **?** (candidato 2.36 Master Agreement version) | 2036-01..02 | mapeamento diz `MASTER_AGREEMENT_VRSN`, ficheiro tem `_V` |
+| SETTLEMENT_DATE | **?** (candidato 2.46 Final contractual settlement date) | 2046-01..04 | sem linha no ficheiro de mapeamento |
+| EXPIRATION_DATE | 2.44 | 2044-01..05 | B (2.10, 2.42, 2.43), A (≥ 2014-02-12), L (-04 REVI) |
+| CONFIRMATION_TIMESTAMP | 2.28 | 2028-01..05 | B (2.29, execution ts, reporting ts = `REFERENCE_DATE`, expiration) |
+| SETTLEMENT_CCY_2 | 2.20 | 2020-01..03 | B (2.47), C (ISO 4217), A |
+| EFFECTIVE_DATE | 2.43 | 2043-01..02 | A |
+| EXCHANGE_RATE1 | 2.113 | 2113-01..03 | B (2.10, 2.11, 2.114), A |
+| CONFIRMED | 2.29 | 2029-01 | B (2.31), B+C (tipo de venue) |
+| NOTIONAL_AMT_LEG2 | 2.64 | 2064-01 | A (aceita default 9999999999999999999999999) |
+
+**Limite fundamental:** as VR verificam se **cada lado é válido**. Num break em que os dois lados são válidos mas diferentes (provavelmente a maioria em `VALUATION_AMT`, `NOTIONAL_AMT_LEG2`, datas), as regras **não dizem quem está errado**. Resultado possível por break: só BNPP inválido / só CPTY inválido / ambos inválidos / **ambos válidos (divergência)**. A cobertura real do critério "explicação pelas regras" tem de ser medida, não assumida.
+**Oportunidade:** o data mart tem o booking interno (`TSR_EXECUTION_TIMESTAMP`, `TSR_NOTIONAL_AMOUNT_LEG1/2`, `TSR_NOTIONAL_CURRENCY_1/2`, `TSR_EXCHANGE_RATE_1`, `TSR_FORWARD_EXCHANGE_RATE`, `TSR_CONTRACT_TYPE`, `TSR_MATURITY_DATE_UNDERLYING`): para esses campos, TP1 ≠ booking interno → o lado BNPP está errado, mesmo quando os dois lados são válidos.
+
 ### 3.4 Histórico de categorizações
 Existe em Parquet e em Exadata, ligado à chave do break **com os valores reportados** (permite reconstruir o contexto de cada decisão). Taxonomia fechada de reference IDs. **Colunas ainda por receber.**
 
@@ -303,6 +334,10 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 25. **Ficheiro DTCC:** mapeamento dos top 20 validado (ver 3.2). **A seguir (Ordep, 2026-10-20): validar os 179 pares** com `map-fields --all-pairs` (estados: ok / sem diferenças / diferenças sem break / breaks com valores iguais / breaks não encontrados; `BREAKING_FIELD` sem par). Depois `--explain` dos pares com diferenças sem break. Também: caminho no S3 e `_SUCCESS`; `REFERENCE_DATE` vs `BUSINESS_DATE`; 6.277.763 vs 6.271.763 linhas.
 26. ~~**Alinhar a chave do break com a de produção.**~~ **Feito (2026-10-20).** Falta confirmar com dados reais: `build:db` + `data_quality` 13–15/10 com os mesmos totais e 0 conflitos.
 27. ~~**Lado BNPP em cada break.**~~ **Fechado (2026-10-20, Ordep):** BNPP = party 1 = `REPORTING_COUNTERPARTY_LEI` = `TP1_`; contraparte = party 2 = `TP2_`.
+28. **Confirmar o mapeamento dos 3 campos sem linha**: SPREAD_LEG2_TYP (2.109?), MASTER_AGREEMENT_VRSN_V (2.36?), SETTLEMENT_DATE (2.46?). E validar a tabela 3.3.1.
+29. **Listas de referência para as regras tipo C:** MIC ISO 10383 **com o tipo de venue** (RM / MTF / OTF / SI / third-country) — necessária para UPI, ISIN, CLEARING_OBLIGATION, CONFIRMED; ISO 4217 (pequena, pode ir para `config/`); ANNA DSB UPI (provavelmente fora da demo). Disponíveis no banco?
+30. **Regras internas:** o Excel só tem VR ESMA. Onde estão as regras internas referidas na secção 1?
+31. **Ficheiro de mapeamento vs colunas reais:** 134 linhas vs 179 pares no ficheiro DTCC; pelo menos um nome difere (`MASTER_AGREEMENT_VRSN` vs `_V`). Verificar com `map-fields --all-pairs`.
 
 ## 7. Estado atual
 - **Feito (2026-10-16):** esqueleto do projeto.
@@ -330,6 +365,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 - **Feito (2026-10-20):** `npm run map-fields` (mapeamento BREAKING_FIELD → TP1_/TP2_ + matriz de confusão por campo, só contagens); `ODIN_DTCC_GLOB`; 30 testes.
 - **Feito (2026-10-20):** mapeamento validado com dados reais (top 20 = nome igual, comparação exata reproduz 100% dos breaks); `map-fields --explain` para as exceções de valuation.
 - **Feito (2026-10-20):** `map-fields --all-pairs` (validação dos 179 pares por lotes de 20; CSV de contagens em `data/reports/`); 31 testes.
+- **Feito (2026-10-20):** Excel de regras lido; mapeamento dos top 20 → itens ESMA (3.3.1), 17 diretos e 3 por confirmar; tipos de verificação A/B/C/L.
 - **Plano mantido** (decisão 2026-10-19): backend Node primeiro (dias 3–8), React só nos dias 9–11.
 - **Próximos passos:**
   1. **Desbloqueio (Ordep), caminho crítico:** partilhar o Excel de regras (`EMIR-Refit_Reconciliation status matching.xlsx`) para o mapeamento `BREAKING_FIELD` → regra dos 10 campos (questão 1). O schema do histórico (questão 2) fica em espera com a categorização.
