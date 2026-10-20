@@ -20,15 +20,16 @@ export function keySelect(config, dialect) {
 }
 
 /**
- * Transações do ficheiro DTCC de uma business date (por omissão só as que têm break no data mart),
- * com a chave normalizada e só as colunas que as regras usam (`columns`; vazio = todas).
+ * Transações do ficheiro DTCC de uma business date que têm break no data mart, com a chave normalizada
+ * e só as colunas que as regras usam (`columns`; vazio = todas).
+ * Âmbito (Ordep, 2026-10-20): as regras só correm sobre os breaks do data mart. Validar o ficheiro DTCC inteiro
+ * é "data quality", requisito futuro.
  */
-export function ruleInputSql(config, dialect, fromSql, date, { onlyBreaks = true, columns = [] } = {}) {
+export function ruleInputSql(config, dialect, fromSql, date, { columns = [] } = {}) {
   const d = dateLiteral(date);
   const dateCol = dialect.castDate(quoteIdent(config.columns.business_date), null);
   const cols = columns.length ? columns.map((c) => `s.${quoteIdent(c)}`).join(', ') : 's.*';
   const base = `SELECT\n  ${keySelect(config, dialect)},\n  ${cols}\nFROM ${fromSql} s\nWHERE ${dateCol} = ${d}`;
-  if (!onlyBreaks) return base;
   const on = POSITION_KEY.map((k) => `COALESCE(t.k_${k}, '') = COALESCE(p.${k}, '')`).join('\n  AND ');
   return `SELECT t.*
 FROM (
@@ -48,13 +49,42 @@ export const RESULTS_DDL = `CREATE TABLE IF NOT EXISTS rule_results (
   rules_version VARCHAR
 )`;
 
-/** INSERT das violações de uma regra num lado. `violates` = expressão de compileRule. */
+/**
+ * INSERT das violações de uma regra num lado, só nas transações em que o campo da regra está em break
+ * (a regra de VALUATION_CCY só corre nos breaks de VALUATION_CCY). `violates` = expressão de compileRule.
+ */
 export function insertViolationsSql(date, c, side, violates, version, input = 'rule_input') {
+  const d = dateLiteral(date);
+  const target = String(c.suffix ?? '').toUpperCase();
+  const on = POSITION_KEY.map((k) => `COALESCE(b.${k}, '') = COALESCE(i.k_${k}, '')`).join('\n    AND ');
   return `INSERT INTO rule_results
-SELECT ${dateLiteral(date)}, ${K.join(', ')}, ${sqlString(c.rule.item)}, ${sqlString(String(c.suffix ?? '').toUpperCase())},
+SELECT ${d}, ${K.map((k) => `i.${k}`).join(', ')}, ${sqlString(c.rule.item)}, ${sqlString(target)},
   ${sqlString(side)}, ${sqlString(c.rule.code)}, ${sqlString(version)}
-FROM ${input}
-WHERE ${violates}`;
+FROM ${input} i
+WHERE ${violates}
+  AND EXISTS (
+    SELECT 1 FROM breaks b
+    WHERE b.business_date = ${d} AND UPPER(b.breaking_field) = ${sqlString(target)}
+    AND ${on}
+  )`;
+}
+
+/** Violações por regra e lado numa business date (para a taxa por regra). */
+export function violationCountsSql(date) {
+  return `SELECT code, side, COUNT(*) AS n FROM rule_results WHERE business_date = ${dateLiteral(date)} GROUP BY code, side`;
+}
+
+/** Breaks por campo (maiúsculas) numa business date. */
+export function breaksByFieldSql(date) {
+  return `SELECT UPPER(breaking_field) AS target, COUNT(*) AS n FROM breaks WHERE business_date = ${dateLiteral(date)} GROUP BY UPPER(breaking_field)`;
+}
+
+/**
+ * Regra suspeita de tradução errada: viola nos DOIS lados em mais de `pct`% dos breaks do seu campo.
+ * Um erro real costuma estar num lado; uma tradução errada falha nos dois (o formato é o mesmo dos dois lados).
+ */
+export function isSuspect(pctBnpp, pctCpty, pct = 5) {
+  return pctBnpp != null && pctCpty != null && pctBnpp > pct && pctCpty > pct;
 }
 
 export const VERDICT_DDL = `CREATE TABLE IF NOT EXISTS break_verdict (

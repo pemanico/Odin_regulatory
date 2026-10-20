@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { compileRule, compileAll, validateRules } from '../src/rules/compile.js';
 import { loadRules, referencedItems } from '../src/rules/catalog.js';
-import { insertViolationsSql, fieldRulesSql, insertVerdictSql, RESULTS_DDL, VERDICT_DDL, usedColumns, ruleInputSql } from '../src/rules/sql.js';
+import { insertViolationsSql, fieldRulesSql, insertVerdictSql, RESULTS_DDL, VERDICT_DDL, usedColumns, ruleInputSql, isSuspect, violationCountsSql } from '../src/rules/sql.js';
 import { openSqlite, sqliteAvailable } from '../src/db/sqlite.js';
 import { dialects } from '../src/db/dialects.js';
 import { loadConfig } from '../src/config.js';
@@ -137,7 +137,7 @@ test('fluxo completo: violações por lado -> veredicto por break', { skip }, as
     { TP1_DELIVERY_TYPE: 'CASH', TP2_DELIVERY_TYPE: 'YYYY' }, // U1: só contraparte
     { TP1_DELIVERY_TYPE: 'XXXX', TP2_DELIVERY_TYPE: 'YYYY' }, // U2: ambos
     { TP1_DELIVERY_TYPE: 'CASH', TP2_DELIVERY_TYPE: 'PHYS' }, // U3: divergência
-    { TP1_VALUATION_AMT: '1', TP2_VALUATION_AMT: '2' }, // U4: campo sem regras no ficheiro
+    { TP1_VALUATION_AMT: '1', TP2_VALUATION_AMT: '2', TP1_DELIVERY_TYPE: 'ZZZZ' }, // U4: campo sem regras; DELIVERY_TYPE inválido mas sem break nesse campo
   ]);
   await db.exec(`CREATE TABLE breaks (business_date TEXT, ${KEY.map((k) => `${k} TEXT`).join(', ')}, breaking_field TEXT)`);
   for (const [u, f] of [['U0', 'delivery_type'], ['U1', 'DELIVERY_TYPE'], ['U2', 'DELIVERY_TYPE'], ['U3', 'DELIVERY_TYPE'], ['U4', 'VALUATION_AMT']]) {
@@ -158,6 +158,11 @@ test('fluxo completo: violações por lado -> veredicto por break', { skip }, as
   assert.equal(rows[0].bnpp_codes, 'EMIR-VR-2047-01');
   assert.equal(rows[0].cpty_codes, null);
   assert.deepEqual(usedColumns(compiled), ['TP1_DELIVERY_TYPE', 'TP2_DELIVERY_TYPE']);
+  // Âmbito: só os breaks do data mart. U4 tem DELIVERY_TYPE inválido mas não tem break nesse campo: não é registado.
+  const counts = Object.fromEntries((await db.all(violationCountsSql('2026-10-15'))).map((r) => [r.side, Number(r.n)]));
+  assert.deepEqual(counts, { BNPP: 2, CPTY: 2 });
+  const [u4] = await db.all("SELECT COUNT(*) AS n FROM rule_results WHERE uti = 'U4'");
+  assert.equal(Number(u4.n), 0);
   await db.close();
 });
 
@@ -166,7 +171,6 @@ test('ruleInputSql: só colunas usadas e semi-join com os breaks', () => {
   assert.match(sql, /s\."TP1_DELIVERY_TYPE"/);
   assert.doesNotMatch(sql, /s\.\*/);
   assert.match(sql, /JOIN \(SELECT DISTINCT report_submitting_entity/);
-  assert.doesNotMatch(ruleInputSql(loadConfig(), dialects.duckdb, 'src', '2026-10-15', { onlyBreaks: false }), /JOIN/);
 });
 
 test('config real: regras válidas, referências resolvidas e compiláveis com todas as colunas TP', () => {
@@ -188,4 +192,10 @@ test('config real: regras válidas, referências resolvidas e compiláveis com t
     'EXPIRATION_DATE', 'CONFIRMATION_TIMESTAMP', 'SETTLEMENT_CCY_2', 'EFFECTIVE_DATE', 'EXCHANGE_RATE1', 'CONFIRMED', 'NOTIONAL_AMT_LEG2']) {
     assert.ok(targets.has(f), f);
   }
+});
+
+test('isSuspect: só quando os dois lados violam acima do limiar', () => {
+  assert.equal(isSuspect(40, 38), true);
+  assert.equal(isSuspect(40, 0.2), false, 'erro de um só lado é um resultado real, não tradução errada');
+  assert.equal(isSuspect(null, 50), false);
 });

@@ -50,9 +50,10 @@ Para cada campo: `pct_found` (breaks encontrados no DTCC pela chave), `pct_break
 ## Motor de regras (validation rules ESMA por lado)
 Configuração em `config/rules/`: `field-map.json` (item ESMA → colunas `TP1_`/`TP2_`) e `emir-vr.json` (uma entrada por código VR, DSL descrita em `src/rules/compile.js`).
 ```bash
-npm run rules -- --date 2026-10-15 --stats   # taxa de violação por regra em todas as transações DTCC (> 5% = tradução suspeita)
-npm run rules -- --date 2026-10-15           # grava rule_results e break_verdict; mostra o veredicto por break e por campo
+npm run rules -- --date 2026-10-15           # grava rule_results e break_verdict; veredicto por break/campo e regras suspeitas
+npm run rules -- --date 2026-10-15 --stats   # idem + tabela completa por regra (CSV sempre em data/reports/)
 ```
+Âmbito: as regras só correm sobre os breaks do data mart, e cada regra só nos breaks do seu campo. Validar o ficheiro DTCC inteiro é "data quality" (requisito futuro). Regra suspeita = viola nos dois lados em > 5% dos breaks do seu campo.
 Veredictos: `so_bnpp`, `so_contraparte`, `ambos`, `divergencia` (os dois lados cumprem as regras verificáveis) e `sem_regras_verificaveis`. O motor é SQL determinístico (DuckDB); não usa o LLM. Só mostra contagens.
 
 ## Métricas (semantic layer)

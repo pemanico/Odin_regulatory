@@ -285,6 +285,8 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-20 | **Quem corre as regras: SQL determinístico (`npm run rules`), não um agente/LLM.** Mesmas razões da decisão de 2026-10-16 (volume, auditoria, o LLM não vê linhas). O agente só lê `break_verdict`/`rule_results` agregados para responder a prompts. Em produção: corrido pelo pipeline diário (Airflow) depois de chegar o ficheiro DTCC |
 | 2026-10-20 | 5.º veredicto `sem_regras_verificaveis` (campo sem regras verificáveis ou fora do ficheiro de regras), separado de `divergencia`, para a cobertura não ficar escondida |
 | 2026-10-20 | Regras de formato em colunas tipadas no Parquet (DECIMAL, DATE, TIMESTAMP) → não verificáveis (o formato original do reporte perde-se); enum/compare continuam |
+| 2026-10-20 | **Âmbito do motor: só os breaks do data mart** (Ordep). Cada regra só corre nos breaks do seu campo (a regra de VALUATION_CCY só nos breaks de VALUATION_CCY). Validar todas as transações do ficheiro DTCC = **"data quality", requisito futuro** |
+| 2026-10-20 | Filtro de tradução (substitui o ponto 5 do plano, que media em todas as transações): regra **suspeita se violar nos dois lados em > 5% dos breaks do seu campo** — um erro real costuma ser de um lado; uma tradução errada falha nos dois |
 
 ---
 
@@ -348,9 +350,10 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 29. ~~Listas de referência.~~ **Fechado (2026-10-20):** não se usam; só campos TP1_/TP2_. Sub-regras dependentes de lista = "não verificável".
 30. ~~Regras internas.~~ **Fechado (2026-10-20):** são as mesmas regras ESMA; não há catálogo interno à parte.
 31. **Ficheiro de mapeamento vs colunas reais:** 134 linhas vs 179 pares no ficheiro DTCC; pelo menos um nome difere (`MASTER_AGREEMENT_VRSN` vs `_V`). Verificar com `map-fields --all-pairs`.
-32. **Correr o motor com dados reais:** `npm run rules -- --date 2026-10-15 --stats` (regras suspeitas) e `npm run rules -- --date 2026-10-15` (veredictos). Primeira execução em DuckDB (só testado em SQLite).
+32. **Correr o motor com dados reais:** `npm run rules -- --date 2026-10-15` (veredictos + regras suspeitas). Primeira execução em DuckDB (só testado em SQLite).
 33. **Códigos de notação do spread** (`SPREAD_LEG2_TYP`: valores possíveis) — sem eles as regras 2109 ficam não verificáveis e os ~62 mil breaks desse campo saem `sem_regras_verificaveis`.
 34. **Passo 3 do plano:** traduzir os restantes ~111 campos (hoje 54 códigos VR dos top 20).
+35. **Requisito futuro — data quality:** validar todas as transações do ficheiro DTCC (não só os breaks) com o mesmo motor de regras; inclui o alerta de qualidade por dia.
 
 ## 7. Estado atual
 - **Feito (2026-10-16):** esqueleto do projeto.
@@ -379,7 +382,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 - **Feito (2026-10-20):** mapeamento validado com dados reais (top 20 = nome igual, comparação exata reproduz 100% dos breaks); `map-fields --explain` para as exceções de valuation.
 - **Feito (2026-10-20):** `map-fields --all-pairs` (validação dos 179 pares por lotes de 20; CSV de contagens em `data/reports/`); 31 testes.
 - **Feito (2026-10-20):** Excel de regras lido; mapeamento dos top 20 → itens ESMA (3.3.1), 17 diretos e 3 por confirmar; tipos de verificação A/B/C/L.
-- **Feito (2026-10-20):** motor de regras, passos 1–2 do plano: `config/rules/field-map.json` (174 itens: 128 com TP, 6 comuns, 40 sem colunas), `config/rules/emir-vr.json` (54 códigos VR dos top 20: 30 verificáveis, 14 parciais, 10 não verificáveis), compilador DSL → SQL (`src/rules/`), `npm run rules` (`--stats`), tabelas `rule_results` e `break_verdict`; 40 testes. **Ainda não corrido com dados reais.**
+- **Feito (2026-10-20):** motor de regras, passos 1–2 do plano: `config/rules/field-map.json` (174 itens: 128 com TP, 6 comuns, 40 sem colunas), `config/rules/emir-vr.json` (54 códigos VR dos top 20: 30 verificáveis, 14 parciais, 10 não verificáveis), compilador DSL → SQL (`src/rules/`), `npm run rules` (`--stats`), tabelas `rule_results` e `break_verdict`; só breaks do data mart, cada regra nos breaks do seu campo; 41 testes. **Ainda não corrido com dados reais.**
 - **Plano mantido** (decisão 2026-10-19): backend Node primeiro (dias 3–8), React só nos dias 9–11.
 - **Próximos passos:**
   1. **Desbloqueio (Ordep), caminho crítico:** partilhar o Excel de regras (`EMIR-Refit_Reconciliation status matching.xlsx`) para o mapeamento `BREAKING_FIELD` → regra dos 10 campos (questão 1). O schema do histórico (questão 2) fica em espera com a categorização.
