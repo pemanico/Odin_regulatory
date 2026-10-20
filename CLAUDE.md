@@ -4,7 +4,7 @@
 > - Qualquer assistente (Claude do banco, Claude Code, ou outro) deve **ler este ficheiro antes de qualquer trabalho**.
 > - No fim de cada sessão de trabalho, **atualizar** as secções "Estado atual", "Registo de decisões" e "Questões em aberto".
 > - **Nunca colocar dados reais neste ficheiro** (UTIs, valores, nomes de contrapartes). Só estrutura, decisões e métricas agregadas.
-> - Última atualização: 2026-10-19 (fim da tarde: correção — valores BNPP/CPTY estão no ficheiro DTCC, não no data mart; chave real de produção)
+> - Última atualização: 2026-10-20 (chave do break alinhada com a de produção)
 
 ---
 
@@ -37,7 +37,7 @@ Os operacionais tratam ~1–2M linhas de breaks por dia, todas categorizadas em 
 
 ### Arquitetura da demo
 - **Motor:** DuckDB local a ler Parquet copiado para a máquina. Futuro: ClickHouse sobre S3 / tabelas nativas. O SQL deve usar um subconjunto standard (ex.: `COUNT(DISTINCT)`, não `uniq()`) para a migração mudar só a ligação.
-- **Vista deduplicada:** grão = break distinto = `COALESCE(UTI, PROPRIETARY) + LEI CP1 + LEI CP2 + BREAKING_FIELD` (por business date).
+- **Vista deduplicada:** grão = break distinto = **chave de produção** `REPORT_SUBMITTING_ENTITY + LEI CP1 + LEI CP2 + UTI + PROPRIETARY + C_PRIMARY_ASSET_CLASS + BREAKING_FIELD` (por business date; UTI e PROPRIETARY como colunas separadas, desde 2026-10-20).
 - **Semantic layer, 6 métricas certificadas** (grão = break distinto):
   1. Breaks por `BREAKING_FIELD` e business date
   2. Variação face ao dia anterior
@@ -101,7 +101,7 @@ Origem Oracle: `T_AF_EMIR_RF_MATCHING` (acesso read-only via dblink). Cópia em 
 
 Notas:
 - **Chave do break:** `UTI + LEI CP1 + LEI CP2 + BREAKING_FIELD` (+ `BUSINESS_DATE`). Os dois LEIs **podem ser iguais** (caso legítimo).
-- **O identificador do trade vem em `UTI` ou em `PROPRIETARY`**, nunca nos dois (confirmado em 12/10: 489.446 linhas só com `PROPRIETARY`, 0 com ambos, 0 sem nenhum). A coluna lógica `uti` é `COALESCE(NULLIF(TRIM(UTI),''), NULLIF(TRIM(PROPRIETARY),''))` (config `columns.uti_alt`).
+- **O identificador do trade vem em `UTI` ou em `PROPRIETARY`**, nunca nos dois (confirmado em 12/10: 489.446 linhas só com `PROPRIETARY`, 0 com ambos, 0 sem nenhum). Desde 2026-10-20 são **duas colunas lógicas separadas** (`uti`, `proprietary`; texto vazio = NULL), ambas na chave, como em produção e no ficheiro DTCC. Para mostrar/agregar um identificador único usa-se `tradeIdExpr()` = `COALESCE(uti, proprietary)`.
 - Um break existe quando o valor TP1 ≠ TP2. **Sinais e casas decimais já são normalizados no Spark.** Não há tolerâncias a modelar.
 - Uma position pode ter vários breaks (um por campo).
 - As colunas de enriquecimento (`BNPP_ACTIVITY_L1..L4`, business line, asset class, CRDS code) servem de dimensões para KPIs e clusters.
@@ -214,7 +214,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-16 | UI da demo: visual médio e funcional (tabelas densas, filtros claros); polimento visual fica para depois. Cores num ficheiro de tema (tokens) com um verde provisório, a substituir pelos hexadecimais oficiais; logo como ficheiro local fora do Git |
 | 2026-10-16 | `build:db` materializa `breaks_raw` e `breaks` como tabelas numa base DuckDB local (consultas repetidas rápidas) |
 | 2026-10-19 | `config/local.json` com `business_line` → `BNPP_GLOBAL_BUSINESS_LINE` (o nível mais agregado da hierarquia Global > Sub > Métier). Provisório até confirmar a semântica com a equipa do data mart. Nenhuma alteração de código |
-| 2026-10-19 | **Chave do break usa `COALESCE(UTI, PROPRIETARY)`** (`columns.uti_alt` em `config/default.json`, resolvido em `logicalSelect` de `src/db/model.js`). Antes, os trades sem UTI do mesmo par de LEIs colapsavam num só break por campo. Aprovado pelo Ordep |
+| 2026-10-19 | ⚠️ **Substituída em 2026-10-20 (chave de produção).** **Chave do break usa `COALESCE(UTI, PROPRIETARY)`** (`columns.uti_alt` em `config/default.json`, resolvido em `logicalSelect` de `src/db/model.js`). Antes, os trades sem UTI do mesmo par de LEIs colapsavam num só break por campo. Aprovado pelo Ordep |
 | 2026-10-19 | `npm run profile` esconde UTIs e LEIs por omissão (`--show-ids` para consulta local). Motivo: o output é colado em chats e documentos, e a regra "só agregados" falhava por mecânica |
 | 2026-10-19 | Fixar a versão do `@duckdb/node-api` (`--save-exact`) em vez de `latest`. **Ainda não aplicado** (o `package.json` continua em `latest`): falta a versão instalada no PC do escritório. O `package-lock.json` **não** vai para o Git: os `resolved` apontariam para o Artifactory interno |
 
@@ -229,6 +229,8 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-19 | **Critérios de sucesso revistos** (aprovado pelo Ordep): o backtest sai e é substituído por "explicação pelas regras" (% de breaks dos 10 campos em que se identifica o lado que viola a regra ESMA, numa amostra validada pelos operacionais); mantém-se o fator de redução (persistência + clusters) e os casos reais. A sugestão de reference ID sai da demo. **O Excel de regras passa a ser o bloqueio do caminho crítico** |
 | 2026-10-19 | Glob por omissão `data/breaks/**/*.parquet` (estrutura `{asset_class}/{AAAA-MM-DD}/` do S3) |
 | 2026-10-19 | **Correção do Ordep:** `BNPP_REPORTED`/`CPTY_REPORTED` não são os valores do campo; os valores estão no ficheiro DTCC. Chave real de produção inclui `REPORT_SUBMITTING_ENTITY` e `C_PRIMARY_ASSET_CLASS` (ver 3.1.2). Persistência "igual/alterado", leitura de `cpty_null` e padrão de preenchimento ficam suspensos até redesenho |
+| 2026-10-20 | **Chave do break = chave de produção** (Ordep): `REPORT_SUBMITTING_ENTITY, REPORTING_COUNTERPARTY_LEI, OTHER_COUNTERPARTY_LEGAL_LEI, UTI, PROPRIETARY, C_PRIMARY_ASSET_CLASS, BREAKING_FIELD` (+ business date). UTI e PROPRIETARY como colunas separadas (não COALESCE). `columns.uti_alt` → `columns.proprietary` (o nome antigo continua aceite). Também é a chave natural do join com o ficheiro DTCC, que tem as mesmas colunas. Contagens esperadas iguais (já não havia duplicados); obriga a `build:db` |
+| 2026-10-20 | `profile`: saúde da chave deixa de mostrar `bnpp_null`/`cpty_null` (enganadores, ver 3.1.2); passa a mostrar `null_trade_id`, `both_uti_proprietary`, `proprietary_only`, `null_submitting_entity` |
 
 ---
 
@@ -286,7 +288,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 23. **Totais diferentes dos registados:** 15/10 = 2.335.182 (antes 2.336.183, −1.001); 14/10 = 2.307.763 (antes 2.305.762, +2.001). Diferenças "redondas" em dois dias: ou a cópia dos ficheiros mudou depois das primeiras medições, ou os valores foram mal transcritos. Confirmar com `Get-ChildItem` + `data_quality --from 2026-10-13 --to 2026-10-15` e corrigir a tabela da questão 14.
 24. **O que contêm `BNPP_REPORTED` / `CPTY_REPORTED`?** (flag, valor parcial, outra coisa?) Decide se servem para alguma coisa na demo.
 25. **Ficheiro DTCC para a demo:** está em **Parquet**; cópia local em `data/dtcc/{asset_class}/{data}/`. Estrutura medida (ver 3.2): 179 pares simétricos, ~6,3M linhas/dia. **A cópia atual é de 12/10 (dia excluído)**: copiar 13–15/10. Falta: caminho no S3 e `_SUCCESS`, um por dia e por asset class?, e como se liga ao break (`RCNCLTNRPT_ID` / `TXDTLS_ID` / UTI?). Sem ele não há regras nem persistência por valor.
-26. **Alinhar a chave do break com a de produção** (acrescentar `REPORT_SUBMITTING_ENTITY` e `C_PRIMARY_ASSET_CLASS`). Contagens não mudam (0 duplicados); muda a persistência se algum destes campos mudar entre dias.
+26. ~~**Alinhar a chave do break com a de produção.**~~ **Feito (2026-10-20).** Falta confirmar com dados reais: `build:db` + `data_quality` 13–15/10 com os mesmos totais e 0 conflitos.
 27. **Lado BNPP em cada break:** o BNPP está sempre em `REPORTING_COUNTERPARTY_LEI` neste data mart, ou também aparece como `OTHER_COUNTERPARTY_LEGAL_LEI`? Medir com `describe --distinct` / `--overlap` sobre os dois LEIs. Se aparecer dos dois lados, é preciso a lista de LEIs das entidades BNPP (config, sem dados de clientes) para dizer "lado BNPP" vs "lado contraparte".
 
 ## 7. Estado atual
@@ -311,6 +313,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
   - Gerador sintético com breaks alterados, campos resolvidos e trades PROPRIETARY → UTI.
   - 24 testes (SQLite). Profile de 15/10 corre no DuckDB (diagnóstico de identificador: 0 mudanças). **Falta o output da métrica `persistence`.**
 - **Correção (2026-10-19, fim da tarde):** os valores BNPP/CPTY não estão no data mart, estão no ficheiro DTCC (3.1.2). `persistence` só é fiável na parte de chave (novo / resolvido / continua); "igual" vs "alterado" suspenso. Questões 24–26.
+- **Feito (2026-10-20):** chave do break = chave de produção (UTI e PROPRIETARY separados, + REPORT_SUBMITTING_ENTITY e asset class); 26 testes. **Precisa de `build:db` no PC do escritório.**
 - **Plano mantido** (decisão 2026-10-19): backend Node primeiro (dias 3–8), React só nos dias 9–11.
 - **Próximos passos:**
   1. **Desbloqueio (Ordep), caminho crítico:** partilhar o Excel de regras (`EMIR-Refit_Reconciliation status matching.xlsx`) para o mapeamento `BREAKING_FIELD` → regra dos 10 campos (questão 1). O schema do histórico (questão 2) fica em espera com a categorização.

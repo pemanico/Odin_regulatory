@@ -55,6 +55,11 @@ export function loadConfig(overrides = {}) {
     config.excludedDates = env.ODIN_EXCLUDED_DATES.split(',').map((s) => s.trim()).filter(Boolean);
   }
   config = deepMerge(config, overrides);
+  // Compatibilidade: `uti_alt` (antes de 2026-10-20) passou a chamar-se `proprietary`.
+  if (config.columns?.uti_alt !== undefined) {
+    if (config.columns.uti_alt) config.columns.proprietary = config.columns.uti_alt;
+    delete config.columns.uti_alt;
+  }
   config.excludedDates = normalizeExcludedDates(config.excludedDates);
 
   config.source.breaksGlob = absolute(config.source.breaksGlob);
@@ -64,7 +69,7 @@ export function loadConfig(overrides = {}) {
 }
 
 const REQUIRED_COLUMNS = [
-  'rec_stat_id', 'business_date', 'uti', 'cp1_lei', 'cp2_lei',
+  'rec_stat_id', 'business_date', 'report_submitting_entity', 'uti', 'proprietary', 'cp1_lei', 'cp2_lei',
   'breaking_field', 'bnpp_value', 'cpty_value',
 ];
 
@@ -73,7 +78,7 @@ export function validateConfig(config) {
     if (!config.columns?.[key]) throw new Error(`Configuração inválida: falta o mapeamento da coluna "${key}"`);
   }
   for (const [logical, physical] of Object.entries(config.columns)) {
-    if (physical == null) continue; // mapeamento opcional desligado (ex.: uti_alt: null)
+    if (physical == null) continue; // mapeamento opcional desligado (ex.: business_line: null)
     if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(physical)) {
       throw new Error(`Nome de coluna inválido para "${logical}": ${physical}`);
     }

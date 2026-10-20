@@ -133,6 +133,7 @@ function newPosition(h, n, cptyPool) {
   return {
     uti: proprietary ? null : `SYNTHUTI${String(n).padStart(10, '0')}${code(6)}`,
     proprietary: proprietary ? `SYNTHPRP${String(n).padStart(10, '0')}${code(6)}` : null,
+    rse: SYNTH_BNPP_LEI,
     cp1: SYNTH_BNPP_LEI,
     cp2: sameLei ? SYNTH_BNPP_LEI : cptyPool[idx],
     asset_class: pick(ASSET_CLASSES),
@@ -178,8 +179,9 @@ export function generateBreakRows({
     const row = {
       [col('rec_stat_id')]: recStatId++,
       [col('business_date')]: date,
+      [col('report_submitting_entity')]: p.rse,
       [col('uti')]: p.uti,
-      [col('uti_alt')]: p.proprietary,
+      [col('proprietary')]: p.proprietary,
       [col('cp1_lei')]: p.cp1,
       [col('cp2_lei')]: p.cp2,
       [col('breaking_field')]: b.field,

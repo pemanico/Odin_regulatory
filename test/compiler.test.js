@@ -120,3 +120,18 @@ test('persistence: só eq na data, dimensões na whitelist, SQL sem IS NOT DISTI
   assert.match(sql, /asset_class = 'CREDIT'/);
   assert.match(sql, /GROUP BY breaking_field/);
 });
+
+test('chave do break = chave de produção (UTI e PROPRIETARY separados)', async () => {
+  const { BREAK_KEY, dedupSelect } = await import('../src/db/model.js');
+  assert.deepEqual(BREAK_KEY, [
+    'business_date', 'report_submitting_entity', 'cp1_lei', 'cp2_lei', 'uti', 'proprietary', 'asset_class', 'breaking_field',
+  ]);
+  assert.match(dedupSelect(), /PARTITION BY business_date, report_submitting_entity, cp1_lei, cp2_lei, uti, proprietary, asset_class, breaking_field/);
+});
+
+test('config: uti_alt antigo em config/local.json é aceite como proprietary', async () => {
+  const { loadConfig } = await import('../src/config.js');
+  const c = loadConfig({ columns: { uti_alt: 'PROPRIETARY_X' } });
+  assert.equal(c.columns.proprietary, 'PROPRIETARY_X');
+  assert.equal(c.columns.uti_alt, undefined);
+});

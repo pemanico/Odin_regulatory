@@ -2,7 +2,8 @@
 // Cada métrica tem grão, medida, dimensões e filtros FIXOS e documentados.
 // O LLM (fase 6–8) só escolhe métrica + dimensões + filtros deste catálogo; nunca escreve SQL.
 //
-// Grão base: 1 break distinto = BUSINESS_DATE + UTI + LEI CP1 + LEI CP2 + BREAKING_FIELD (vista `breaks`).
+// Grão base: 1 break distinto = BUSINESS_DATE + chave de produção (REPORT_SUBMITTING_ENTITY, LEI CP1, LEI CP2,
+// UTI, PROPRIETARY, ASSET_CLASS, BREAKING_FIELD) — vista `breaks`.
 
 /** Dimensões permitidas (whitelist). A chave é o nome lógico da coluna. */
 export const DIMENSIONS = {
@@ -116,7 +117,7 @@ export const METRICS = {
 /** Descrição do catálogo para o agente (tool schema) e para a UI. */
 export function describeCatalog() {
   return {
-    grain: 'break distinto = BUSINESS_DATE + COALESCE(UTI, PROPRIETARY) + LEI CP1 + LEI CP2 + BREAKING_FIELD',
+    grain: 'break distinto = BUSINESS_DATE + REPORT_SUBMITTING_ENTITY + LEI CP1 + LEI CP2 + UTI + PROPRIETARY + ASSET_CLASS + BREAKING_FIELD (chave de produção)',
     metrics: Object.entries(METRICS).map(([id, m]) => ({
       id,
       title: m.title,

@@ -16,10 +16,11 @@ const C = config.columns;
 let db;
 let data;
 
-// O identificador do trade vem em UTI ou em PROPRIETARY (uti_alt).
-const utiOf = (r) => r[C.uti] ?? r[C.uti_alt];
-const keyOf = (r) => [r[C.business_date], utiOf(r), r[C.cp1_lei], r[C.cp2_lei], r[C.breaking_field]].join('\u0001');
-const posOf = (r) => [utiOf(r), r[C.cp1_lei], r[C.cp2_lei]].join('\u0001');
+// Chave de produção: REPORT_SUBMITTING_ENTITY, LEIs, UTI, PROPRIETARY (separados), asset class, campo.
+const utiOf = (r) => r[C.uti] ?? r[C.proprietary];
+const posOf = (r) =>
+  [r[C.report_submitting_entity], r[C.cp1_lei], r[C.cp2_lei], r[C.uti], r[C.proprietary], r[C.asset_class]].join('\u0001');
+const keyOf = (r) => [r[C.business_date], posOf(r), r[C.breaking_field]].join('\u0001');
 
 /** Expectativas calculadas em JS a partir das linhas geradas. */
 function expectations(rows) {
@@ -146,11 +147,13 @@ test('UTI nulo usa PROPRIETARY e não colapsa trades diferentes', { skip: !avail
   const date = data.dates[0];
   const viaAlt = data.rows.filter((r) => r[C.business_date] === date && r[C.uti] == null);
   assert.ok(viaAlt.length > 0, 'os dados sintéticos devem ter linhas só com PROPRIETARY');
-  const [health] = await db.all(`SELECT COUNT(*) AS n FROM breaks WHERE business_date = '${date}' AND uti IS NULL`);
+  const [health] = await db.all(
+    `SELECT COUNT(*) AS n FROM breaks WHERE business_date = '${date}' AND uti IS NULL AND proprietary IS NULL`,
+  );
   assert.equal(Number(health.n), 0, 'nenhum break fica sem identificador');
   const expected = new Set(expectations(viaAlt).distinct.map(posOf)).size;
   const [got] = await db.all(
-    `SELECT COUNT(*) AS n FROM (SELECT DISTINCT uti, cp1_lei, cp2_lei FROM breaks WHERE business_date = '${date}' AND uti LIKE 'SYNTHPRP%') p`,
+    `SELECT COUNT(*) AS n FROM (SELECT DISTINCT proprietary, cp1_lei, cp2_lei FROM breaks WHERE business_date = '${date}' AND proprietary LIKE 'SYNTHPRP%') p`,
   );
   assert.equal(Number(got.n), expected, 'cada trade só com PROPRIETARY é uma position própria');
 });
@@ -162,7 +165,7 @@ function breaksOn(date) {
   const m = new Map();
   for (const r of expectations(data.rows).distinct) {
     if (r[C.business_date] !== date) continue;
-    m.set([utiOf(r), r[C.cp1_lei], r[C.cp2_lei], r[C.breaking_field]].join('\u0001'), r);
+    m.set([posOf(r), r[C.breaking_field]].join('\u0001'), r);
   }
   return m;
 }

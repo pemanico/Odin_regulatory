@@ -5,7 +5,9 @@
 export const LOGICAL_COLUMNS = [
   'rec_stat_id',
   'business_date',
+  'report_submitting_entity',
   'uti',
+  'proprietary',
   'cp1_lei',
   'cp2_lei',
   'breaking_field',
@@ -25,18 +27,25 @@ export const LOGICAL_COLUMNS = [
   'trade_number',
 ];
 
+/** Identificadores do trade: vêm em UTI **ou** em PROPRIETARY (mutuamente exclusivos). Texto vazio = NULL. */
+const ID_TEXT_COLUMNS = ['uti', 'proprietary'];
+
 /**
- * Colunas físicas que não são colunas lógicas, mas alimentam uma delas:
- *  - uti_alt: o identificador do trade vem em UTI **ou** em PROPRIETARY (mutuamente exclusivos);
- *    a coluna lógica `uti` é o primeiro não vazio dos dois.
+ * Chave de uma position = a chave de produção sem o campo:
+ *   RANK() OVER (PARTITION BY BREAKING_FIELD, REPORTING_COUNTERPARTY_LEI, OTHER_COUNTERPARTY_LEGAL_LEI,
+ *                REPORT_SUBMITTING_ENTITY, UTI, PROPRIETARY, C_PRIMARY_ASSET_CLASS ...)
+ * UTI e PROPRIETARY entram como colunas separadas (como em produção e no ficheiro DTCC), não em COALESCE.
  */
-export const AUXILIARY_COLUMNS = ['uti_alt'];
+export const POSITION_KEY = ['report_submitting_entity', 'cp1_lei', 'cp2_lei', 'uti', 'proprietary', 'asset_class'];
 
-/** Chave de um break (grão da vista deduplicada). */
-export const BREAK_KEY = ['business_date', 'uti', 'cp1_lei', 'cp2_lei', 'breaking_field'];
+/** Chave de um break (grão da vista deduplicada) = business date + position + campo. */
+export const BREAK_KEY = ['business_date', ...POSITION_KEY, 'breaking_field'];
 
-/** Chave de uma position (vários breaks por position). */
-export const POSITION_KEY = ['uti', 'cp1_lei', 'cp2_lei'];
+/** Identificador do trade para mostrar/agregar: o que estiver preenchido (UTI ou PROPRIETARY). */
+export function tradeIdExpr(alias = '') {
+  const p = alias ? `${alias}.` : '';
+  return `COALESCE(${p}uti, ${p}proprietary)`;
+}
 
 /** Expressão SQL standard que identifica uma position (NULL-safe). */
 export function positionKeyExpr(alias = '') {
@@ -60,10 +69,9 @@ export function logicalSelect(config, dialect, fromSql) {
       return `${dialect.castDate(ref, config.source?.businessDateFormat)} AS business_date`;
     }
     if (logical === 'rec_stat_id') return `${ref} AS ${logical}`;
-    if (logical === 'uti' && cols.uti_alt) {
-      // SQL standard (COALESCE/NULLIF/TRIM): igual em DuckDB, ClickHouse e SQLite.
-      const nonEmpty = (r) => `NULLIF(TRIM(${dialect.castText(r)}), '')`;
-      return `COALESCE(${nonEmpty(ref)}, ${nonEmpty(quoteIdent(cols.uti_alt))}) AS uti`;
+    if (ID_TEXT_COLUMNS.includes(logical)) {
+      // SQL standard (NULLIF/TRIM): igual em DuckDB, ClickHouse e SQLite.
+      return `NULLIF(TRIM(${dialect.castText(ref)}), '') AS ${logical}`;
     }
     return `${dialect.castText(ref)} AS ${logical}`;
   });

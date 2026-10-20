@@ -6,7 +6,7 @@
 //  - grão e medida fixos por métrica: a mesma pergunta dá sempre o mesmo número.
 import { METRICS, DIMENSIONS, FILTER_OPS } from './catalog.js';
 import { ValidationError, literalFor, intValue, isValidDate } from './literals.js';
-import { positionKeyExpr } from '../db/model.js';
+import { positionKeyExpr, BREAK_KEY } from '../db/model.js';
 import { previousDateSql, assertNotExcluded } from './calendar.js';
 
 export class MetricUnavailableError extends Error {
@@ -157,9 +157,10 @@ LIMIT ${limit}`;
 
 /** NULL-safe e SQL standard (sem IS NOT DISTINCT FROM, que nem todos os motores aceitam fora de JOIN). */
 const sameValue = (a, b) => `(${a} = ${b} OR (${a} IS NULL AND ${b} IS NULL))`;
-/** Igualdade das colunas da chave (o uti já vem com COALESCE(UTI, PROPRIETARY)). */
+/** Igualdade NULL-safe das colunas da chave (UTI ou PROPRIETARY vêm sempre um deles NULL). */
 const sameKey = (a, b) => `COALESCE(${a}, '') = COALESCE(${b}, '')`;
-const PERSISTENCE_KEY = ['uti', 'cp1_lei', 'cp2_lei', 'breaking_field'];
+/** Chave do break sem a data (a de produção). */
+const PERSISTENCE_KEY = BREAK_KEY.filter((k) => k !== 'business_date');
 const PERSISTENCE_STATUSES = ['igual', 'alterado', 'novo', 'resolvido'];
 
 function compilePersistence(metric, req, opts) {
@@ -284,7 +285,7 @@ LEFT JOIN (
   FROM (
     SELECT business_date FROM breaks_raw
     ${where}
-    GROUP BY business_date, uti, cp1_lei, cp2_lei, breaking_field
+    GROUP BY ${BREAK_KEY.join(', ')}
     HAVING COUNT(DISTINCT ${valuePair}) > 1
   ) k
   GROUP BY business_date
