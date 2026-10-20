@@ -15,6 +15,7 @@
     "describe": "node scripts/describe.js",
     "map-fields": "node scripts/map-fields.js",
     "rules": "node scripts/rules.js",
+    "rules:sample": "node scripts/rules-sample.js",
     "test": "node --test"
   },
   "dependencies": {
