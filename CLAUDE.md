@@ -311,6 +311,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-20 | Regras que comparam com colunas comuns (REFERENCE_DATE, LEIs, UTI) = não verificáveis (Ordep). Catálogo v2026-10-20.4: 274 códigos — 147 verificáveis, 69 parciais, 58 não verificáveis |
 | 2026-10-20 | **Motor de regras fechado** (Ordep); teste com dados de produção fica do lado do Ordep. Passo 4 do plano: métrica certificada `rule_verdict` (sobre `break_verdict`; dimensões veredicto, campo, data, asset class, contraparte) |
 | 2026-10-20 | **Ordem revista: backend + frontend antes do agente** (Ordep). A próxima sessão começa num chat novo com o prompt da secção 7 |
+| 2026-10-20 | **A demo não é apresentada antes do agente** (Ordep). O ecrã 1 com seletor de métrica + filtros é só intermédio; a API do backend deve expor as mesmas operações que as tools do agente (`list_metrics`, `query_metric`, drill-down), para o agente encaixar sem refazer o backend |
 
 ---
 
@@ -415,8 +416,8 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 - **Feito (2026-10-20):** motor de regras fechado (passos 1–4); métrica `rule_verdict` na semantic layer. Validação com dados de produção: Ordep.
 - **Ordem revista (Ordep, 2026-10-20):** **backend + frontend primeiro, agente depois.** A próxima sessão continua num chat novo (prompt de arranque abaixo).
 - **Próximos passos:**
-  1. **Backend + frontend (próxima sessão, modo grill-me, plano aprovado antes de código).** Base já pronta: semantic layer (8 métricas, incl. `rule_verdict`), `break_detail` (chave + campo ESMA + valores TP1/TP2 + veredicto + erro em texto), auditoria. Ecrãs do plano: (1) prompt → tabela/gráfico (sem agente, a 1.ª versão pode ser seletor de métrica + filtros), (2) top 10 de breaking fields por business date, (3) drill-down campo → breaks com BNPP vs other cpty, veredicto e erro. Seletor de jurisdição só com EMIR.
-  2. **Agente (depois):** pergunta em aberto — formato do gateway interno de LLM (Anthropic Messages / OpenAI / próprio) e suporte de tool calling.
+  1. **Backend + frontend (próxima sessão, modo grill-me, plano aprovado antes de código).** Base já pronta: semantic layer (8 métricas, incl. `rule_verdict`), `break_detail` (chave + campo ESMA + valores TP1/TP2 + veredicto + erro em texto), auditoria. Ecrãs do plano: (1) prompt → tabela/gráfico (seletor de métrica + filtros só como versão intermédia: a demo não é apresentada antes do agente), (2) top 10 de breaking fields por business date, (3) drill-down campo → breaks com BNPP vs other cpty, veredicto e erro. Seletor de jurisdição só com EMIR.
+  2. **Agente (depois, mas no caminho crítico da demo):** pergunta em aberto — formato do gateway interno de LLM (Anthropic Messages / OpenAI / próprio) e suporte de tool calling. Convém obter a resposta já, em paralelo com o backend.
   3. **Validação com dados de produção (Ordep):** `npm run rules` + `rules:sample`; corrigir a regra CONFIRMED (q. 36) com `describe --values`.
   4. **Reunião com operacionais:** universo ~2,3M/dia (q. 9); `PROPRIETARY` é o identificador que a contraparte vê?; 3–5 casos difíceis (q. 5).
   5. **Avisos:** cancelar o pedido de correção da duplicação (não existe); avisar o dono do feed DTCC sobre 12/10; fixar a versão do `@duckdb/node-api` (q. 20).
@@ -435,7 +436,8 @@ Onde estamos: motor de regras fechado (274 códigos VR dos 128 campos com TP1_/T
 break_verdict e break_detail; métrica rule_verdict). Dados reais de 13–15/10 no meu PC (Windows x64, Node v24,
 PowerShell) em data/breaks/ e data/dtcc/; 12/10 é anómalo e fica fora.
 
-Objetivo desta sessão: backend + frontend da demo (o agente/LLM fica para depois). Ecrãs do plano: prompt/consulta
+Objetivo desta sessão: backend + frontend da demo (o agente/LLM fica para depois, mas a demo só é apresentada com o agente:
+os endpoints do backend devem espelhar as tools do agente). Ecrãs do plano: prompt/consulta
 de métricas, top 10 de breaking fields por business date, drill-down campo → breaks (chave, campo ESMA, valor BNPP =
 TP1_<campo>, valor other cpty = TP2_<campo>, veredicto, erro de format/condition). Seletor de jurisdição só com EMIR.
 
