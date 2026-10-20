@@ -147,3 +147,20 @@ export function confusionRow(r) {
     pct_nobreak_diff: pct(n.nobreak_diff, n.nobreak_diff + n.nobreak_equal),
   };
 }
+
+/**
+ * Classifica o resultado de um par TP (linha de confusionRow) para a validação completa.
+ *  - ok: todos os breaks encontrados, todos com TP1 ≠ TP2, e nenhuma diferença sem break
+ *  - sem diferenças: nenhum break e nenhuma diferença (campo sempre igual nos dois lados)
+ *  - diferenças sem break: TP1 ≠ TP2 em transações sem break (campo não reconciliado, tolerância, ou nome do
+ *    BREAKING_FIELD diferente do sufixo)
+ *  - breaks com valores iguais / breaks não encontrados: mapeamento ou chave errados
+ */
+export function classify(r) {
+  const issues = [];
+  if (r.breaks_found < r.n_breaks) issues.push('breaks não encontrados');
+  if (r.break_equal > 0) issues.push('breaks com valores iguais');
+  if (r.nobreak_diff > 0) issues.push('diferenças sem break');
+  if (issues.length) return issues.join(' + ');
+  return r.n_breaks > 0 ? 'ok' : 'sem diferenças';
+}

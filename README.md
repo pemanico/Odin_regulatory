@@ -42,6 +42,8 @@ Pré-requisito: `build:db` feito e um dia do ficheiro DTCC em `data/dtcc/{asset_
 ```bash
 npm run map-fields -- --date 2026-10-15                 # top 20 campos
 npm run map-fields -- --date 2026-10-15 --map CAMPO=SUFIXO --map ...   # mapeamento manual dos que não batem pelo nome
+npm run map-fields -- --date 2026-10-15 --all-pairs     # valida os ~179 pares; CSV completo em data/reports/
+npm run map-fields -- --date 2026-10-15 --explain VALUATION_CCY        # diferenças sem break por estado do relatório
 ```
 Para cada campo: `pct_found` (breaks encontrados no DTCC pela chave), `pct_break_diff` (breaks com TP1 ≠ TP2; ≈100 = sufixo certo) e `pct_nobreak_diff` (transações sem break com TP1 ≠ TP2; ≈0 = comparação igual à do Spark). Campos sem par com o mesmo nome aparecem com candidatos, nunca mapeados automaticamente. Só contagens.
 

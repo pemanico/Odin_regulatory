@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { tpPairs, matchFields, confusionSql, confusionRow, dtccSelectSql, explainSql } from '../src/analysis/fieldmap.js';
+import { tpPairs, matchFields, confusionSql, confusionRow, dtccSelectSql, explainSql, classify } from '../src/analysis/fieldmap.js';
 import { openSqlite, sqliteAvailable } from '../src/db/sqlite.js';
 import { loadConfig } from '../src/config.js';
 
@@ -72,4 +72,12 @@ test('confusionSql: matriz de confusão por campo (NULL vs valor conta como dife
   assert.equal(Number(byStatus.RECO.nobreak_diff), 0);
   assert.equal(Number(byStatus.RECO.break_diff), 2);
   await db.close();
+});
+
+test('classify: estados da validação completa dos pares', () => {
+  const r = (o) => ({ n_breaks: 0, breaks_found: 0, break_equal: 0, nobreak_diff: 0, ...o });
+  assert.equal(classify(r({ n_breaks: 5, breaks_found: 5 })), 'ok');
+  assert.equal(classify(r({})), 'sem diferenças');
+  assert.equal(classify(r({ nobreak_diff: 3 })), 'diferenças sem break');
+  assert.equal(classify(r({ n_breaks: 5, breaks_found: 4, break_equal: 1 })), 'breaks não encontrados + breaks com valores iguais');
 });
