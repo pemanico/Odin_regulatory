@@ -169,8 +169,8 @@ Ficheiro: `EMIR-Refit_Reconciliation status matching.xlsx`. Colunas: `Table`, `I
 - **Na demo:** só os níveis 1 e 2 dos 10 campos com mais volume.
 
 
-### 3.3.1 Mapeamento dos top 20 campos → regras ESMA (2026-10-20, a validar pelo Ordep)
-Fontes: folha `Validations_Cpty_derivative` do Excel (174 campos, só validation rules ESMA; **não contém regras internas**) + ficheiro de mapeamento "Field name → DTCC Mapping" (134 linhas). Cadeia: `BREAKING_FIELD` = sufixo TP → "Field name" → linha do Excel.
+### 3.3.1 Mapeamento dos top 20 campos → regras ESMA (2026-10-20, **confirmado pelo Ordep**)
+Fontes: folha `Validations_Cpty_derivative` do Excel (174 campos, só validation rules ESMA; **as regras internas são as mesmas da ESMA** — Ordep, 2026-10-20) + ficheiro de mapeamento "Field name → DTCC Mapping" (134 linhas). Cadeia: `BREAKING_FIELD` = sufixo TP → "Field name" → linha do Excel.
 Tipos de verificação: **A** = só o valor desse lado (formato, enum, check digit); **B** = outro campo TP do mesmo lado (condicional; disponível no ficheiro DTCC); **C** = lista externa (MIC ISO 10383 com tipo de venue, ISO 4217, ANNA DSB UPI); **L** = ciclo de vida (fora da demo).
 
 | BREAKING_FIELD | Item | Códigos VR | Tipos |
@@ -184,10 +184,10 @@ Tipos de verificação: **A** = só o valor desse lado (formato, enum, check dig
 | DELIVERY_TYPE | 2.47 | 2047-01 | A |
 | PRODUCT_CLASSIFICATION | 2.9 | 2009-01..02 | A (estrutura CFI), C (ISO 10962 completo) |
 | FLOAT_RATE_LEG2_IDENTIFIER | 2.99 | 2099-01..02 | A (check digit), B (2.11, 2.14) |
-| SPREAD_LEG2_TYP | **?** (candidato 2.109 Spread of leg 2) | — | sem linha no ficheiro de mapeamento |
+| SPREAD_LEG2_TYP | 2.109 Spread of leg 2 (confirmado) | 2109-01..03 | sem linha no ficheiro de mapeamento |
 | CLEARING_OBLIGATION | 2.30 | 2030-01..03 | B (2.31), B+C (tipo de venue) |
-| MASTER_AGREEMENT_VRSN_V | **?** (candidato 2.36 Master Agreement version) | 2036-01..02 | mapeamento diz `MASTER_AGREEMENT_VRSN`, ficheiro tem `_V` |
-| SETTLEMENT_DATE | **?** (candidato 2.46 Final contractual settlement date) | 2046-01..04 | sem linha no ficheiro de mapeamento |
+| MASTER_AGREEMENT_VRSN_V | 2.36 Master Agreement version (confirmado) | 2036-01..02 | mapeamento diz `MASTER_AGREEMENT_VRSN`, ficheiro tem `_V` |
+| SETTLEMENT_DATE | 2.46 Final contractual settlement date (confirmado) | 2046-01..04 | sem linha no ficheiro de mapeamento |
 | EXPIRATION_DATE | 2.44 | 2044-01..05 | B (2.10, 2.42, 2.43), A (≥ 2014-02-12), L (-04 REVI) |
 | CONFIRMATION_TIMESTAMP | 2.28 | 2028-01..05 | B (2.29, execution ts, reporting ts = `REFERENCE_DATE`, expiration) |
 | SETTLEMENT_CCY_2 | 2.20 | 2020-01..03 | B (2.47), C (ISO 4217), A |
@@ -275,6 +275,7 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 | 2026-10-20 | Mapeamento `BREAKING_FIELD` → par `TP1_`/`TP2_` **validado com dados** (`npm run map-fields`): nome igual normalizado ou `--map` manual; nomes diferentes nunca são ligados automaticamente (só candidatos). Critério de mapeamento certo: `pct_break_diff` ≈ 100% e `pct_nobreak_diff` ≈ 0%. Se `pct_nobreak_diff` for alto, o Spark normaliza antes de comparar e o motor de regras tem de replicar essa normalização |
 | 2026-10-20 | Sem normalização de valores no motor: TP1 e TP2 vêm do mesmo ficheiro DTCC (Ordep). Validação: `pct_nobreak_diff` do `map-fields` |
 | 2026-10-20 | **Mapeamento BREAKING_FIELD → `TP1_`/`TP2_` = nome igual** para os top 20 (validado: 100% breaks com TP1 ≠ TP2). Sem tabela de mapeamento manual por agora; `--map` só para campos fora do top 20 que não batam |
+| 2026-10-20 | Mapeamento dos top 20 campos → itens ESMA confirmado (3.3.1). Regras internas = regras ESMA (fonte única: o Excel) |
 
 ---
 
@@ -334,9 +335,9 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 25. **Ficheiro DTCC:** mapeamento dos top 20 validado (ver 3.2). **A seguir (Ordep, 2026-10-20): validar os 179 pares** com `map-fields --all-pairs` (estados: ok / sem diferenças / diferenças sem break / breaks com valores iguais / breaks não encontrados; `BREAKING_FIELD` sem par). Depois `--explain` dos pares com diferenças sem break. Também: caminho no S3 e `_SUCCESS`; `REFERENCE_DATE` vs `BUSINESS_DATE`; 6.277.763 vs 6.271.763 linhas.
 26. ~~**Alinhar a chave do break com a de produção.**~~ **Feito (2026-10-20).** Falta confirmar com dados reais: `build:db` + `data_quality` 13–15/10 com os mesmos totais e 0 conflitos.
 27. ~~**Lado BNPP em cada break.**~~ **Fechado (2026-10-20, Ordep):** BNPP = party 1 = `REPORTING_COUNTERPARTY_LEI` = `TP1_`; contraparte = party 2 = `TP2_`.
-28. **Confirmar o mapeamento dos 3 campos sem linha**: SPREAD_LEG2_TYP (2.109?), MASTER_AGREEMENT_VRSN_V (2.36?), SETTLEMENT_DATE (2.46?). E validar a tabela 3.3.1.
-29. **Listas de referência para as regras tipo C:** MIC ISO 10383 **com o tipo de venue** (RM / MTF / OTF / SI / third-country) — necessária para UPI, ISIN, CLEARING_OBLIGATION, CONFIRMED; ISO 4217 (pequena, pode ir para `config/`); ANNA DSB UPI (provavelmente fora da demo). Disponíveis no banco?
-30. **Regras internas:** o Excel só tem VR ESMA. Onde estão as regras internas referidas na secção 1?
+28. ~~Mapeamento dos 3 campos sem linha.~~ **Fechado (2026-10-20):** SPREAD_LEG2_TYP → 2.109, MASTER_AGREEMENT_VRSN_V → 2.36, SETTLEMENT_DATE → 2.46; tabela 3.3.1 confirmada.
+29. **Listas de referência (tipo C):** **não existe lista de MIC no banco** (Ordep, 2026-10-20). Afeta VENUE_OF_EXECUTION (2041-01), UPI, ISIN, CLEARING_OBLIGATION, CONFIRMED. Em discussão (grill-me): obter a lista pública ISO 10383 ou deixar essas regras fora da verificação automática. ISO 4217 (pequena) pode ir para `config/`; ANNA DSB UPI fora da demo.
+30. ~~Regras internas.~~ **Fechado (2026-10-20):** são as mesmas regras ESMA; não há catálogo interno à parte.
 31. **Ficheiro de mapeamento vs colunas reais:** 134 linhas vs 179 pares no ficheiro DTCC; pelo menos um nome difere (`MASTER_AGREEMENT_VRSN` vs `_V`). Verificar com `map-fields --all-pairs`.
 
 ## 7. Estado atual
