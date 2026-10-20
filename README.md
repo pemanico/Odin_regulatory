@@ -37,6 +37,14 @@ npm run profile -- --date 2026-10-13
 ## Estrutura de outros Parquet (ex.: ficheiro DTCC)
 `npm run describe -- "<glob>"` mostra nº de ficheiros e linhas, colunas e tipos (separando `TP1_`/`TP2_` e os pares assimétricos) e linhas por business date / asset class. `--key COL1,COL2` mede a unicidade de uma chave candidata; `--all` lista também as colunas `TP1_`/`TP2_`. Não mostra valores: pode ser colado.
 
+## Mapeamento `BREAKING_FIELD` → `TP1_`/`TP2_` (ficheiro DTCC)
+Pré-requisito: `build:db` feito e um dia do ficheiro DTCC em `data/dtcc/{asset_class}/{data}/` (`ODIN_DTCC_GLOB`).
+```bash
+npm run map-fields -- --date 2026-10-15                 # top 20 campos
+npm run map-fields -- --date 2026-10-15 --map CAMPO=SUFIXO --map ...   # mapeamento manual dos que não batem pelo nome
+```
+Para cada campo: `pct_found` (breaks encontrados no DTCC pela chave), `pct_break_diff` (breaks com TP1 ≠ TP2; ≈100 = sufixo certo) e `pct_nobreak_diff` (transações sem break com TP1 ≠ TP2; ≈0 = comparação igual à do Spark). Campos sem par com o mesmo nome aparecem com candidatos, nunca mapeados automaticamente. Só contagens.
+
 ## Métricas (semantic layer)
 | Métrica | O que responde |
 |---|---|

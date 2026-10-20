@@ -13,6 +13,7 @@
     "metric": "node scripts/metric.js",
     "profile": "node scripts/profile.js",
     "describe": "node scripts/describe.js",
+    "map-fields": "node scripts/map-fields.js",
     "test": "node --test"
   },
   "dependencies": {

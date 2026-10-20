@@ -21,8 +21,8 @@ export function parseArgs(argv) {
 }
 
 function pushArg(out, key, value) {
-  if (key === 'filter') {
-    (out.filter ??= []).push(value);
+  if (key === 'filter' || key === 'map') {
+    (out[key] ??= []).push(value);
   } else {
     out[key] = value;
   }

@@ -2,6 +2,7 @@
   "jurisdiction": "EMIR",
   "source": {
     "breaksGlob": "data/breaks/**/*.parquet",
+    "dtccGlob": "data/dtcc/**/*.parquet",
     "dbPath": "data/odin.duckdb",
     "businessDateFormat": null
   },

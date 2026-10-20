@@ -47,6 +47,7 @@ export function loadConfig(overrides = {}) {
     source: {
       ...(env.ODIN_BREAKS_GLOB ? { breaksGlob: env.ODIN_BREAKS_GLOB } : {}),
       ...(env.ODIN_DB_PATH ? { dbPath: env.ODIN_DB_PATH } : {}),
+      ...(env.ODIN_DTCC_GLOB ? { dtccGlob: env.ODIN_DTCC_GLOB } : {}),
       ...(env.ODIN_BUSINESS_DATE_FORMAT ? { businessDateFormat: env.ODIN_BUSINESS_DATE_FORMAT } : {}),
     },
   });
@@ -64,6 +65,7 @@ export function loadConfig(overrides = {}) {
 
   config.source.breaksGlob = absolute(config.source.breaksGlob);
   config.source.dbPath = absolute(config.source.dbPath);
+  if (config.source.dtccGlob) config.source.dtccGlob = absolute(config.source.dtccGlob);
   validateConfig(config);
   return config;
 }
