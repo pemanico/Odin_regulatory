@@ -59,7 +59,25 @@ try {
     .map((c) => described.find((d) => String(d.column_name).toUpperCase() === c)?.column_name ?? c);
   await db.exec(`CREATE OR REPLACE TEMP TABLE rule_input AS\n${ruleInputSql(config, db.dialect, src, D, { columns: inputCols })}`);
   const [{ n: inputRows }] = await db.all('SELECT COUNT(*) AS n FROM rule_input');
-  if (Number(inputRows) === 0) throw new Error(`Nenhuma transação DTCC de ${D} com break no data mart (build:db feito? ficheiro DTCC certo?)`);
+  if (Number(inputRows) === 0) {
+    // Diagnóstico: qual dos lados está vazio para esta data (só contagens e datas, sem dados).
+    const dateCol = db.dialect.castDate(`"${config.columns.business_date}"`, null);
+    const [{ n: nBreaks }] = await db.all(`SELECT COUNT(*) AS n FROM breaks WHERE business_date = '${D}'`);
+    const breakDates = (await db.all('SELECT business_date AS d, COUNT(*) AS n FROM breaks GROUP BY 1 ORDER BY 1'))
+      .map((r) => `${String(r.d).slice(0, 10)} (${r.n})`);
+    const dtccDates = (await db.all(`SELECT ${dateCol} AS d, COUNT(*) AS n FROM ${src} GROUP BY 1 ORDER BY 1`))
+      .map((r) => `${String(r.d).slice(0, 10)} (${r.n})`);
+    const lines = [
+      `Nenhuma transação DTCC de ${D} com break no data mart.`,
+      `  Base DuckDB: ${config.source.dbPath}`,
+      `  Breaks (data mart) por business date: ${breakDates.join(', ') || 'nenhum'}`,
+      `  Ficheiro DTCC (${glob}) por business date: ${dtccDates.join(', ') || 'nenhum'}`,
+    ];
+    if (Number(nBreaks) === 0) lines.push(`  -> A base não tem breaks de ${D}: copiar os Parquet dessa data para data/breaks e correr npm run build:db.`);
+    else if (!dtccDates.some((x) => x.startsWith(D))) lines.push(`  -> Falta o ficheiro DTCC de ${D}: copiar do S3 para data/dtcc/{asset_class}/${D}/.`);
+    else lines.push('  -> As duas fontes têm a data mas as chaves não casam: comparar as colunas da chave (describe --key).');
+    throw new Error(lines.join('\n'));
+  }
 
   await db.exec(RESULTS_DDL);
   await db.exec(VERDICT_DDL);
