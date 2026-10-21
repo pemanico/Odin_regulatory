@@ -1,12 +1,12 @@
-// Invólucro HTTP (Express) da API. A lógica está em api.js (testada sem Express).
+// HTTP wrapper (Express) of the API. The logic lives in api.js (tested without Express).
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { statusFor } from './api.js';
 
 /**
- * @param express  módulo express (injetado: o import fica em scripts/serve.js)
+ * @param express  express module (injected: the import is in scripts/serve.js)
  * @param api      createApi(...)
- * @param opts.staticDir  pasta do frontend compilado (web/dist); se não existir, só serve a API
+ * @param opts.staticDir  folder of the built frontend (web/dist); if it does not exist, only the API is served
  */
 export function createApp(express, api, { staticDir } = {}) {
   const app = express();
@@ -23,21 +23,21 @@ export function createApp(express, api, { staticDir } = {}) {
     }
   };
 
-  // Metadados
+  // Metadata
   app.get('/api/meta', handle(() => api.meta()));
-  // Tools do agente (só agregados)
+  // Agent tools (aggregates only)
   app.get('/api/tools', handle(() => api.tools()));
   app.get('/api/metrics', handle(() => api.listMetrics()));
   app.get('/api/questions', handle(() => api.questions()));
   app.post('/api/query', handle((req) => api.queryMetric(req.body, { source: req.get('x-odin-source') === 'agent' ? 'agent' : 'ui' })));
-  // Só UI (linhas): nunca expostos ao agente
+  // UI only (rows): never exposed to the agent
   app.get('/api/keys', handle((req) => api.listKeys(req.query)));
   app.get('/api/keys/:keyId', handle((req) => api.getKey(req.params.keyId, req.query)));
-  app.use('/api', (req, res) => res.status(404).json({ error: 'NotFound', message: `Rota desconhecida: ${req.path}` }));
+  app.use('/api', (req, res) => res.status(404).json({ error: 'NotFound', message: `Unknown route: ${req.path}` }));
 
   if (staticDir && existsSync(resolve(staticDir, 'index.html'))) {
     app.use(express.static(staticDir));
-    // SPA: qualquer outro GET devolve o index.html
+    // SPA: any other GET returns index.html
     app.use((req, res, next) => (req.method === 'GET' ? res.sendFile(resolve(staticDir, 'index.html')) : next()));
   }
   return app;

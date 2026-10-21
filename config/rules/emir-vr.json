@@ -1,19 +1,19 @@
 {
- "_doc": "Validation rules ESMA EMIR REFIT traduzidas para a DSL de src/rules/compile.js. Tradução de Claude a partir do Excel EMIR-Refit_Reconciliation status matching (texto original não copiado). Validação: npm run rules -- --stats (taxa de violação) + revisão do Ordep por amostra.",
- "version": "2026-10-20.4",
- "scope": "todos os 408 códigos VR do Excel (174 campos); campos sem colunas DTCC ou comuns = não verificáveis",
+ "_doc": "ESMA EMIR REFIT validation rules translated into the DSL of src/rules/compile.js. Translated by Claude from the Excel 'EMIR-Refit_Reconciliation status matching' (original text not copied). Validation: npm run rules -- --stats (violation rate) + sample review by Ordep.",
+ "version": "2026-10-21.1",
+ "scope": "all 408 VR codes in the Excel (174 fields), reduced to the 274 codes of the 128 fields with TP1_/TP2_ columns; fields without DTCC or common columns = not verifiable",
  "rules": [
   {
    "code": "EMIR-VR-2002-01",
    "item": "2.2",
-   "status": "nao_verificavel",
-   "nota": "depende do tipo de venue do MIC (RM/MTF/OTF/SI/país terceiro): não há lista MIC (decisão 2026-10-20, só campos TP)"
+   "status": "not_verifiable",
+   "note": "depends on the MIC venue type (RM/MTF/OTF/SI/third country): no MIC list available (decision 2026-10-20, TP fields only)"
   },
   {
    "code": "EMIR-VR-2002-02",
    "item": "2.2",
-   "status": "nao_verificavel",
-   "nota": "compara com 2.1 UTI, coluna comum sem TP1_/TP2_ (só se validam campos TP; decisão 2026-10-20)"
+   "status": "not_verifiable",
+   "note": "compares with 2.1 UTI, a common column without TP1_/TP2_ (only TP fields are validated; decision 2026-10-20)"
   },
   {
    "code": "EMIR-VR-2002-03",
@@ -30,8 +30,8 @@
    "check": {
     "blank": true
    },
-   "status": "parcial",
-   "nota": "verificado para XXXX e XOFF; outros MIC fora de venue precisam da lista MIC"
+   "status": "partial",
+   "note": "verified for XXXX and XOFF; other off-venue MICs need the MIC list"
   },
   {
    "code": "EMIR-VR-2002-04",
@@ -45,25 +45,25 @@
    "check": {
     "blank": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2003-01",
    "item": "2.3",
-   "status": "nao_verificavel",
-   "nota": "depende do action type / event type (2.151, 2.152 sem colunas DTCC)"
+   "status": "not_verifiable",
+   "note": "depends on the action type / event type (2.151, 2.152 have no DTCC columns)"
   },
   {
    "code": "EMIR-VR-2003-02",
    "item": "2.3",
-   "status": "nao_verificavel",
-   "nota": "depende do action type / event type (2.151, 2.152 sem colunas DTCC)"
+   "status": "not_verifiable",
+   "note": "depends on the action type / event type (2.151, 2.152 have no DTCC columns)"
   },
   {
    "code": "EMIR-VR-2003-03",
    "item": "2.3",
-   "status": "nao_verificavel",
-   "nota": "depende do action type / event type (2.151, 2.152 sem colunas DTCC)"
+   "status": "not_verifiable",
+   "note": "depends on the action type / event type (2.151, 2.152 have no DTCC columns)"
   },
   {
    "code": "EMIR-VR-2003-04",
@@ -71,13 +71,13 @@
    "check": {
     "regex": "[A-Za-z0-9]([A-Za-z0-9:._-]{0,50}[A-Za-z0-9])?"
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2003-05",
    "item": "2.3",
-   "status": "nao_verificavel",
-   "nota": "compara com 2.1 UTI, coluna comum sem TP1_/TP2_ (só se validam campos TP; decisão 2026-10-20)"
+   "status": "not_verifiable",
+   "note": "compares with 2.1 UTI, a common column without TP1_/TP2_ (only TP fields are validated; decision 2026-10-20)"
   },
   {
    "code": "EMIR-VR-2007-01",
@@ -91,8 +91,8 @@
    "check": {
     "required": true
    },
-   "status": "parcial",
-   "nota": "verificado só para MIC 'XOFF'; venues RM/MTF/OTF/SI precisam da lista MIC"
+   "status": "partial",
+   "note": "verified only for MIC 'XOFF'; RM/MTF/OTF/SI venues need the MIC list"
   },
   {
    "code": "EMIR-VR-2007-02",
@@ -100,8 +100,8 @@
    "check": {
     "regex": "[A-Z]{2}[A-Z0-9]{9}[0-9]"
    },
-   "status": "parcial",
-   "nota": "estrutura ISIN (2 letras + 9 alfanuméricos + 1 dígito); check digit ainda não verificado"
+   "status": "partial",
+   "note": "ISIN structure (2 letters + 9 alphanumerics + 1 digit); check digit not yet verified"
   },
   {
    "code": "EMIR-VR-2008-01",
@@ -112,19 +112,19 @@
    "check": {
     "blank": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2008-02",
    "item": "2.8",
-   "status": "nao_verificavel",
-   "nota": "depende do tipo de venue do MIC (RM/MTF/OTF/SI/país terceiro): não há lista MIC (decisão 2026-10-20, só campos TP)"
+   "status": "not_verifiable",
+   "note": "depends on the MIC venue type (RM/MTF/OTF/SI/third country): no MIC list available (decision 2026-10-20, TP fields only)"
   },
   {
    "code": "EMIR-VR-2008-03",
    "item": "2.8",
-   "status": "nao_verificavel",
-   "nota": "regra permissiva (campo opcional nesta situação): não gera violação"
+   "status": "not_verifiable",
+   "note": "permissive rule (optional field in this situation): never raises a violation"
   },
   {
    "code": "EMIR-VR-2008-04",
@@ -132,8 +132,8 @@
    "check": {
     "regex": "[A-Z0-9]{12}"
    },
-   "status": "parcial",
-   "nota": "só 12 caracteres alfanuméricos; existência na base ANNA DSB e check digit não verificados"
+   "status": "partial",
+   "note": "12 alphanumeric characters only; existence in the ANNA DSB database and check digit not verified"
   },
   {
    "code": "EMIR-VR-2009-01",
@@ -141,8 +141,8 @@
    "check": {
     "regex": "[A-Z]{6}"
    },
-   "status": "parcial",
-   "nota": "só 6 letras; conformidade completa com ISO 10962 não verificada"
+   "status": "partial",
+   "note": "6 letters only; full ISO 10962 compliance not verified"
   },
   {
    "code": "EMIR-VR-2009-02",
@@ -150,8 +150,8 @@
    "check": {
     "regex": "[A-WYZ]{2}[A-Z]{4}"
    },
-   "status": "parcial",
-   "nota": "verificados os 2 primeiros caracteres ≠ 'X'; o carácter da asset class não é verificado"
+   "status": "partial",
+   "note": "first 2 characters ≠ 'X' verified; the asset class character is not verified"
   },
   {
    "code": "EMIR-VR-2010-01",
@@ -169,7 +169,7 @@
      "OTHR"
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2011-01",
@@ -183,7 +183,7 @@
      "INTR"
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2012-01",
@@ -194,7 +194,7 @@
      "FALSE"
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2013-01",
@@ -208,7 +208,7 @@
    "check": {
     "required": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2013-02",
@@ -228,19 +228,19 @@
      "min": 1
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2013-03",
    "item": "2.13",
-   "status": "nao_verificavel",
-   "nota": "depende do campo 2.85 (Name of the floating rate of leg 1), que não está no ficheiro DTCC"
+   "status": "not_verifiable",
+   "note": "depends on field 2.85 (Name of the floating rate of leg 1), which is not in the DTCC file"
   },
   {
    "code": "EMIR-VR-2013-04",
    "item": "2.13",
-   "status": "nao_verificavel",
-   "nota": "regra permissiva (campo opcional nesta situação): não gera violação"
+   "status": "not_verifiable",
+   "note": "permissive rule (optional field in this situation): never raises a violation"
   },
   {
    "code": "EMIR-VR-2013-05",
@@ -252,7 +252,7 @@
      "X"
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2014-01",
@@ -273,8 +273,8 @@
      }
     ]
    },
-   "status": "parcial",
-   "nota": "estrutura ISIN; check digit não verificado"
+   "status": "partial",
+   "note": "ISIN structure; check digit not verified"
   },
   {
    "code": "EMIR-VR-2014-02",
@@ -288,8 +288,8 @@
    "check": {
     "regex": "[A-Z]{2}[A-Z0-9]{9}[0-9]"
    },
-   "status": "parcial",
-   "nota": "estrutura ISIN; check digit não verificado"
+   "status": "partial",
+   "note": "ISIN structure; check digit not verified"
   },
   {
    "code": "EMIR-VR-2014-03",
@@ -308,7 +308,7 @@
    "check": {
     "blank": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2019-01",
@@ -322,13 +322,13 @@
    "check": {
     "required": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2019-02",
    "item": "2.19",
-   "status": "nao_verificavel",
-   "nota": "regra permissiva (campo opcional nesta situação): não gera violação"
+   "status": "not_verifiable",
+   "note": "permissive rule (optional field in this situation): never raises a violation"
   },
   {
    "code": "EMIR-VR-2019-03",
@@ -336,8 +336,8 @@
    "check": {
     "regex": "[A-Z]{3}"
    },
-   "status": "parcial",
-   "nota": "só 3 letras; pertença à lista oficial ISO 4217 não verificada"
+   "status": "partial",
+   "note": "3 letters only; membership of the official ISO 4217 list not verified"
   },
   {
    "code": "EMIR-VR-2019-04",
@@ -358,7 +358,7 @@
      "XXX"
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2019-05",
@@ -372,7 +372,7 @@
    "check": {
     "blank": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2020-01",
@@ -380,8 +380,8 @@
    "check": {
     "regex": "[A-Z]{3}"
    },
-   "status": "parcial",
-   "nota": "só 3 letras; pertença à lista oficial ISO 4217 não verificada"
+   "status": "partial",
+   "note": "3 letters only; membership of the official ISO 4217 list not verified"
   },
   {
    "code": "EMIR-VR-2020-02",
@@ -402,7 +402,7 @@
      "XXX"
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2020-03",
@@ -416,7 +416,7 @@
    "check": {
     "blank": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2021-01",
@@ -428,7 +428,7 @@
      "sign": "any"
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2022-01",
@@ -446,8 +446,8 @@
      }
     ]
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade e 3 letras; pertença à lista oficial ISO 4217 não verificada"
+   "status": "partial",
+   "note": "mandatory and 3 letters; membership of the official ISO 4217 list not verified"
   },
   {
    "code": "EMIR-VR-2022-02",
@@ -468,7 +468,7 @@
      "XXX"
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2022-03",
@@ -479,7 +479,7 @@
    "check": {
     "blank": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2024-01",
@@ -509,7 +509,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2024-02",
@@ -540,7 +540,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2024-03",
@@ -566,7 +566,7 @@
    "check": {
     "blank": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2025-01",
@@ -598,7 +598,7 @@
    "check": {
     "required": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2025-02",
@@ -610,7 +610,7 @@
      "sign": "any"
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2025-03",
@@ -633,7 +633,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2028-01",
@@ -657,7 +657,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2028-02",
@@ -669,13 +669,13 @@
      "as": "timestamp"
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2028-03",
    "item": "2.28",
-   "status": "nao_verificavel",
-   "nota": "compara com 1.1 Reporting timestamp, coluna comum sem TP1_/TP2_ (só se validam campos TP; decisão 2026-10-20)"
+   "status": "not_verifiable",
+   "note": "compares with 1.1 Reporting timestamp, a common column without TP1_/TP2_ (only TP fields are validated; decision 2026-10-20)"
   },
   {
    "code": "EMIR-VR-2028-04",
@@ -690,8 +690,8 @@
      "as": "date"
     }
    },
-   "status": "parcial",
-   "nota": "verificado contra a expiration date quando não há early termination date"
+   "status": "partial",
+   "note": "verified against the expiration date when there is no early termination date"
   },
   {
    "code": "EMIR-VR-2028-05",
@@ -705,7 +705,7 @@
    "check": {
     "blank": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2029-01",
@@ -717,8 +717,8 @@
      "ECNF"
     ]
    },
-   "status": "parcial",
-   "nota": "verificados os valores permitidos; a obrigatoriedade depende do tipo de venue (RM), não verificada"
+   "status": "partial",
+   "note": "allowed values verified; whether it is mandatory depends on the venue type (RM), not verified"
   },
   {
    "code": "EMIR-VR-2030-01",
@@ -730,8 +730,8 @@
      "UKWN"
     ]
    },
-   "status": "parcial",
-   "nota": "verificados os valores permitidos; a obrigatoriedade depende do tipo de venue (RM), não verificada"
+   "status": "partial",
+   "note": "allowed values verified; whether it is mandatory depends on the venue type (RM), not verified"
   },
   {
    "code": "EMIR-VR-2030-02",
@@ -754,13 +754,13 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2030-03",
    "item": "2.30",
-   "status": "nao_verificavel",
-   "nota": "depende do tipo de venue do MIC (RM/MTF/OTF/SI/país terceiro): não há lista MIC (decisão 2026-10-20, só campos TP)"
+   "status": "not_verifiable",
+   "note": "depends on the MIC venue type (RM/MTF/OTF/SI/third country): no MIC list available (decision 2026-10-20, TP fields only)"
   },
   {
    "code": "EMIR-VR-2031-01",
@@ -771,7 +771,7 @@
      "N"
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2032-01",
@@ -792,7 +792,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2032-02",
@@ -804,13 +804,13 @@
      "as": "timestamp"
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2032-03",
    "item": "2.32",
-   "status": "nao_verificavel",
-   "nota": "compara com 1.1 Reporting timestamp, coluna comum sem TP1_/TP2_ (só se validam campos TP; decisão 2026-10-20)"
+   "status": "not_verifiable",
+   "note": "compares with 1.1 Reporting timestamp, a common column without TP1_/TP2_ (only TP fields are validated; decision 2026-10-20)"
   },
   {
    "code": "EMIR-VR-2032-04",
@@ -825,8 +825,8 @@
      "as": "date"
     }
    },
-   "status": "parcial",
-   "nota": "verificado contra a expiration date quando não há early termination date"
+   "status": "partial",
+   "note": "verified against the expiration date when there is no early termination date"
   },
   {
    "code": "EMIR-VR-2032-05",
@@ -840,7 +840,7 @@
    "check": {
     "blank": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2033-01",
@@ -861,20 +861,20 @@
      }
     ]
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade e formato LEI; existência na GLEIF não verificada"
+   "status": "partial",
+   "note": "mandatory and LEI format; existence in GLEIF not verified"
   },
   {
    "code": "EMIR-VR-2033-02",
    "item": "2.33",
-   "status": "nao_verificavel",
-   "nota": "depende da base GLEIF (existência/estado do LEI, sucursal): sem dados externos (decisão 2026-10-20, só campos TP)"
+   "status": "not_verifiable",
+   "note": "depends on the GLEIF database (LEI existence/status, branch): no external data (decision 2026-10-20, TP fields only)"
   },
   {
    "code": "EMIR-VR-2033-03",
    "item": "2.33",
-   "status": "nao_verificavel",
-   "nota": "depende da base GLEIF (existência/estado do LEI, sucursal): sem dados externos (decisão 2026-10-20, só campos TP)"
+   "status": "not_verifiable",
+   "note": "depends on the GLEIF database (LEI existence/status, branch): no external data (decision 2026-10-20, TP fields only)"
   },
   {
    "code": "EMIR-VR-2033-04",
@@ -888,7 +888,7 @@
    "check": {
     "blank": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2034-01",
@@ -918,7 +918,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2036-01",
@@ -942,7 +942,7 @@
    "check": {
     "required": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2036-02",
@@ -950,7 +950,7 @@
    "check": {
     "year": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2037-01",
@@ -961,8 +961,8 @@
      "FALSE"
     ]
    },
-   "status": "parcial",
-   "nota": "verificados os valores permitidos; depende do tipo de venue do MIC (RM/MTF/OTF/SI/país terceiro): não há lista MIC (decisão 2026-10-20, só campos TP)"
+   "status": "partial",
+   "note": "allowed values verified; depends on the MIC venue type (RM/MTF/OTF/SI/third country): no MIC list available (decision 2026-10-20, TP fields only)"
   },
   {
    "code": "EMIR-VR-2040-01",
@@ -970,26 +970,26 @@
    "check": {
     "regex": "[A-Z0-9]{18}[0-9]{2}"
    },
-   "status": "parcial",
-   "nota": "formato LEI quando preenchido; obrigatoriedade depende do campo 2.39 (Type of PTRR technique), que não está no ficheiro DTCC; GLEIF não verificada"
+   "status": "partial",
+   "note": "LEI format when populated; whether it is mandatory depends on field 2.39 (Type of PTRR technique), which is not in the DTCC file; GLEIF not verified"
   },
   {
    "code": "EMIR-VR-2040-02",
    "item": "2.40",
-   "status": "nao_verificavel",
-   "nota": "depende da base GLEIF (existência/estado do LEI, sucursal): sem dados externos (decisão 2026-10-20, só campos TP)"
+   "status": "not_verifiable",
+   "note": "depends on the GLEIF database (LEI existence/status, branch): no external data (decision 2026-10-20, TP fields only)"
   },
   {
    "code": "EMIR-VR-2040-03",
    "item": "2.40",
-   "status": "nao_verificavel",
-   "nota": "depende da base GLEIF (existência/estado do LEI, sucursal): sem dados externos (decisão 2026-10-20, só campos TP)"
+   "status": "not_verifiable",
+   "note": "depends on the GLEIF database (LEI existence/status, branch): no external data (decision 2026-10-20, TP fields only)"
   },
   {
    "code": "EMIR-VR-2040-04",
    "item": "2.40",
-   "status": "nao_verificavel",
-   "nota": "depende do campo 2.39 (Type of PTRR technique), que não está no ficheiro DTCC"
+   "status": "not_verifiable",
+   "note": "depends on field 2.39 (Type of PTRR technique), which is not in the DTCC file"
   },
   {
    "code": "EMIR-VR-2041-01",
@@ -997,8 +997,8 @@
    "check": {
     "regex": "[A-Z0-9]{4}"
    },
-   "status": "parcial",
-   "nota": "só 4 caracteres alfanuméricos; existência na lista ISO 10383 não verificada"
+   "status": "partial",
+   "note": "4 alphanumeric characters only; existence in the ISO 10383 list not verified"
   },
   {
    "code": "EMIR-VR-2041-02",
@@ -1008,7 +1008,7 @@
      "BILT"
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2042-01",
@@ -1023,7 +1023,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2042-02",
@@ -1035,13 +1035,13 @@
      "as": "date"
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2042-03",
    "item": "2.42",
-   "status": "nao_verificavel",
-   "nota": "regra de ciclo de vida (action type, reportes anteriores do mesmo UTI): não verificável registo a registo"
+   "status": "not_verifiable",
+   "note": "lifecycle rule (action type, previous reports for the same UTI): cannot be verified record by record"
   },
   {
    "code": "EMIR-VR-2043-01",
@@ -1056,7 +1056,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2043-02",
@@ -1068,7 +1068,7 @@
      "as": "date"
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2044-01",
@@ -1096,7 +1096,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2044-02",
@@ -1119,7 +1119,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2044-03",
@@ -1131,19 +1131,19 @@
      "as": "date"
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2044-04",
    "item": "2.44",
-   "status": "nao_verificavel",
-   "nota": "depende do action type REVI e do reporte anterior (ciclo de vida; campo 2.151 sem colunas DTCC)"
+   "status": "not_verifiable",
+   "note": "depends on action type REVI and on the previous report (lifecycle; field 2.151 has no DTCC columns)"
   },
   {
    "code": "EMIR-VR-2044-05",
    "item": "2.44",
-   "status": "nao_verificavel",
-   "nota": "regra permissiva (campo opcional nesta situação): não gera violação"
+   "status": "not_verifiable",
+   "note": "permissive rule (optional field in this situation): never raises a violation"
   },
   {
    "code": "EMIR-VR-2045-01",
@@ -1151,7 +1151,7 @@
    "check": {
     "date": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2045-02",
@@ -1163,7 +1163,7 @@
      "as": "date"
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2045-03",
@@ -1175,8 +1175,8 @@
      "as": "date"
     }
    },
-   "status": "parcial",
-   "nota": "comparado com a expiration date do mesmo reporte (a regra fala da reportada anteriormente para o UTI)"
+   "status": "partial",
+   "note": "compared with the expiration date of the same report (the rule refers to the one previously reported for the UTI)"
   },
   {
    "code": "EMIR-VR-2045-04",
@@ -1188,31 +1188,31 @@
      "as": "date"
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2045-05",
    "item": "2.45",
-   "status": "nao_verificavel",
-   "nota": "compara com 1.1 Reporting timestamp, coluna comum sem TP1_/TP2_ (só se validam campos TP; decisão 2026-10-20)"
+   "status": "not_verifiable",
+   "note": "compares with 1.1 Reporting timestamp, a common column without TP1_/TP2_ (only TP fields are validated; decision 2026-10-20)"
   },
   {
    "code": "EMIR-VR-2045-06",
    "item": "2.45",
-   "status": "nao_verificavel",
-   "nota": "regra de ciclo de vida (action type, reportes anteriores do mesmo UTI): não verificável registo a registo"
+   "status": "not_verifiable",
+   "note": "lifecycle rule (action type, previous reports for the same UTI): cannot be verified record by record"
   },
   {
    "code": "EMIR-VR-2045-07",
    "item": "2.45",
-   "status": "nao_verificavel",
-   "nota": "regra de ciclo de vida (action type, reportes anteriores do mesmo UTI): não verificável registo a registo"
+   "status": "not_verifiable",
+   "note": "lifecycle rule (action type, previous reports for the same UTI): cannot be verified record by record"
   },
   {
    "code": "EMIR-VR-2045-08",
    "item": "2.45",
-   "status": "nao_verificavel",
-   "nota": "regra de ciclo de vida (action type, reportes anteriores do mesmo UTI): não verificável registo a registo"
+   "status": "not_verifiable",
+   "note": "lifecycle rule (action type, previous reports for the same UTI): cannot be verified record by record"
   },
   {
    "code": "EMIR-VR-2046-01",
@@ -1240,7 +1240,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2046-02",
@@ -1252,7 +1252,7 @@
      "as": "date"
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2046-03",
@@ -1264,13 +1264,13 @@
      "as": "date"
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2046-04",
    "item": "2.46",
-   "status": "nao_verificavel",
-   "nota": "regra permissiva (campo opcional nesta situação): não gera violação"
+   "status": "not_verifiable",
+   "note": "permissive rule (optional field in this situation): never raises a violation"
   },
   {
    "code": "EMIR-VR-2047-01",
@@ -1282,7 +1282,7 @@
      "OPTL"
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2048-01",
@@ -1325,7 +1325,7 @@
    "check": {
     "required": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2048-02",
@@ -1341,14 +1341,14 @@
      ]
     }
    },
-   "status": "parcial",
-   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC; verificado o limite mais largo (18 dígitos, 13 decimais)"
+   "status": "partial",
+   "note": "notation (monetary / percentage / basis points) cannot be identified in the DTCC file; the widest limit is verified (18 digits, 13 decimals)"
   },
   {
    "code": "EMIR-VR-2048-03",
    "item": "2.48",
-   "status": "nao_verificavel",
-   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC"
+   "status": "not_verifiable",
+   "note": "notation (monetary / percentage / basis points) cannot be identified in the DTCC file"
   },
   {
    "code": "EMIR-VR-2049-01",
@@ -1356,8 +1356,8 @@
    "check": {
     "regex": "[A-Z]{3}"
    },
-   "status": "parcial",
-   "nota": "notação de 2.48 não identificável; verificado o formato quando preenchido; pertença à lista oficial ISO 4217 não verificada (só 3 letras)"
+   "status": "partial",
+   "note": "notation of 2.48 cannot be identified; format verified when populated; membership of the official ISO 4217 list not verified (3 letters only)"
   },
   {
    "code": "EMIR-VR-2049-02",
@@ -1378,7 +1378,7 @@
      "XXX"
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2049-03",
@@ -1389,8 +1389,8 @@
    "check": {
     "blank": true
    },
-   "status": "parcial",
-   "nota": "verificado 'em branco se 2.48 vazio'; a parte 'percentagem' não é identificável"
+   "status": "partial",
+   "note": "'blank if 2.48 is empty' verified; the 'percentage' part cannot be identified"
   },
   {
    "code": "EMIR-VR-2050-01",
@@ -1398,20 +1398,20 @@
    "check": {
     "date": true
    },
-   "status": "parcial",
-   "nota": "depende do campo 2.52 (Price in effect between the unadjusted effective and end date), que não está no ficheiro DTCC; verificado só o formato quando preenchido"
+   "status": "partial",
+   "note": "depends on field 2.52 (Price in effect between the unadjusted effective and end date), which is not in the DTCC file; only the format is verified when populated"
   },
   {
    "code": "EMIR-VR-2050-02",
    "item": "2.50",
-   "status": "nao_verificavel",
-   "nota": "compara com o período anterior do calendário (campo repetível): não verificável com um valor por transação"
+   "status": "not_verifiable",
+   "note": "compares with the previous period of the schedule (repeatable field): cannot be verified with one value per transaction"
   },
   {
    "code": "EMIR-VR-2053-01",
    "item": "2.53",
-   "status": "nao_verificavel",
-   "nota": "depende do campo 2.6 (Package identifier), que não está no ficheiro DTCC"
+   "status": "not_verifiable",
+   "note": "depends on field 2.6 (Package identifier), which is not in the DTCC file"
   },
   {
    "code": "EMIR-VR-2053-02",
@@ -1427,14 +1427,14 @@
      ]
     }
    },
-   "status": "parcial",
-   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC; verificado o limite mais largo (18 dígitos, 13 decimais)"
+   "status": "partial",
+   "note": "notation (monetary / percentage / basis points) cannot be identified in the DTCC file; the widest limit is verified (18 digits, 13 decimals)"
   },
   {
    "code": "EMIR-VR-2053-03",
    "item": "2.53",
-   "status": "nao_verificavel",
-   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC"
+   "status": "not_verifiable",
+   "note": "notation (monetary / percentage / basis points) cannot be identified in the DTCC file"
   },
   {
    "code": "EMIR-VR-2053-04",
@@ -1445,8 +1445,8 @@
    "check": {
     "blank": true
    },
-   "status": "parcial",
-   "nota": "verificado 'em branco se 2.111 preenchido'; a parte de 2.6 depende do campo 2.6 (Package identifier), que não está no ficheiro DTCC"
+   "status": "partial",
+   "note": "'blank if 2.111 is populated' verified; the 2.6 part depends on field 2.6 (Package identifier), which is not in the DTCC file"
   },
   {
    "code": "EMIR-VR-2054-01",
@@ -1454,8 +1454,8 @@
    "check": {
     "regex": "[A-Z]{3}"
    },
-   "status": "parcial",
-   "nota": "notação de 2.53 não identificável; verificado o formato quando preenchido; pertença à lista oficial ISO 4217 não verificada (só 3 letras)"
+   "status": "partial",
+   "note": "notation of 2.53 cannot be identified; format verified when populated; membership of the official ISO 4217 list not verified (3 letters only)"
   },
   {
    "code": "EMIR-VR-2054-02",
@@ -1476,7 +1476,7 @@
      "XXX"
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2054-03",
@@ -1487,8 +1487,8 @@
    "check": {
     "blank": true
    },
-   "status": "parcial",
-   "nota": "verificado 'em branco se 2.53 vazio'; a parte 'percentagem' não é identificável"
+   "status": "partial",
+   "note": "'blank if 2.53 is empty' verified; the 'percentage' part cannot be identified"
   },
   {
    "code": "EMIR-VR-2055-01",
@@ -1510,7 +1510,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2056-01",
@@ -1525,8 +1525,8 @@
      }
     ]
    },
-   "status": "parcial",
-   "nota": "pertença à lista oficial ISO 4217 não verificada (só 3 letras)"
+   "status": "partial",
+   "note": "membership of the official ISO 4217 list not verified (3 letters only)"
   },
   {
    "code": "EMIR-VR-2056-02",
@@ -1547,7 +1547,7 @@
      "XXX"
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2057-01",
@@ -1572,13 +1572,13 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2057-02",
    "item": "2.57",
-   "status": "nao_verificavel",
-   "nota": "compara com o período anterior do calendário (campo repetível): não verificável com um valor por transação"
+   "status": "not_verifiable",
+   "note": "compares with the previous period of the schedule (repeatable field): cannot be verified with one value per transaction"
   },
   {
    "code": "EMIR-VR-2058-01",
@@ -1586,7 +1586,7 @@
    "check": {
     "date": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2058-02",
@@ -1597,7 +1597,7 @@
    "check": {
     "blank": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2059-01",
@@ -1612,7 +1612,7 @@
      ]
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2060-01",
@@ -1657,7 +1657,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2061-01",
@@ -1682,13 +1682,13 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2061-02",
    "item": "2.61",
-   "status": "nao_verificavel",
-   "nota": "compara com o período anterior do calendário (campo repetível): não verificável com um valor por transação"
+   "status": "not_verifiable",
+   "note": "compares with the previous period of the schedule (repeatable field): cannot be verified with one value per transaction"
   },
   {
    "code": "EMIR-VR-2062-01",
@@ -1696,7 +1696,7 @@
    "check": {
     "date": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2062-02",
@@ -1707,7 +1707,7 @@
    "check": {
     "blank": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2063-01",
@@ -1722,7 +1722,7 @@
      ]
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2064-01",
@@ -1737,7 +1737,7 @@
      ]
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2065-01",
@@ -1762,8 +1762,8 @@
      }
     }
    },
-   "status": "parcial",
-   "nota": "pertença à lista oficial ISO 4217 não verificada (só 3 letras)"
+   "status": "partial",
+   "note": "membership of the official ISO 4217 list not verified (3 letters only)"
   },
   {
    "code": "EMIR-VR-2065-02",
@@ -1784,7 +1784,7 @@
      "XXX"
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2066-01",
@@ -1809,13 +1809,13 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2066-02",
    "item": "2.66",
-   "status": "nao_verificavel",
-   "nota": "compara com o período anterior do calendário (campo repetível): não verificável com um valor por transação"
+   "status": "not_verifiable",
+   "note": "compares with the previous period of the schedule (repeatable field): cannot be verified with one value per transaction"
   },
   {
    "code": "EMIR-VR-2067-01",
@@ -1823,7 +1823,7 @@
    "check": {
     "date": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2067-02",
@@ -1834,7 +1834,7 @@
    "check": {
     "blank": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2068-01",
@@ -1849,7 +1849,7 @@
      ]
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2069-01",
@@ -1864,7 +1864,7 @@
      ]
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2070-01",
@@ -1889,13 +1889,13 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2070-02",
    "item": "2.70",
-   "status": "nao_verificavel",
-   "nota": "compara com o período anterior do calendário (campo repetível): não verificável com um valor por transação"
+   "status": "not_verifiable",
+   "note": "compares with the previous period of the schedule (repeatable field): cannot be verified with one value per transaction"
   },
   {
    "code": "EMIR-VR-2071-01",
@@ -1903,7 +1903,7 @@
    "check": {
     "date": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2071-02",
@@ -1914,7 +1914,7 @@
    "check": {
     "blank": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2072-01",
@@ -1929,7 +1929,7 @@
      ]
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2073-01",
@@ -1941,7 +1941,7 @@
      "PEXH"
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2074-01",
@@ -1970,7 +1970,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2075-01",
@@ -1995,8 +1995,8 @@
      }
     }
    },
-   "status": "parcial",
-   "nota": "pertença à lista oficial ISO 4217 não verificada (só 3 letras)"
+   "status": "partial",
+   "note": "membership of the official ISO 4217 list not verified (3 letters only)"
   },
   {
    "code": "EMIR-VR-2075-02",
@@ -2017,7 +2017,7 @@
      "XXX"
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2076-01",
@@ -2042,7 +2042,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2077-01",
@@ -2067,26 +2067,26 @@
      }
     }
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade e até 72 alfanuméricos; LEI na GLEIF não verificado"
+   "status": "partial",
+   "note": "mandatory and up to 72 alphanumerics; LEI in GLEIF not verified"
   },
   {
    "code": "EMIR-VR-2077-02",
    "item": "2.77",
-   "status": "nao_verificavel",
-   "nota": "depende da base GLEIF (existência/estado do LEI, sucursal): sem dados externos (decisão 2026-10-20, só campos TP)"
+   "status": "not_verifiable",
+   "note": "depends on the GLEIF database (LEI existence/status, branch): no external data (decision 2026-10-20, TP fields only)"
   },
   {
    "code": "EMIR-VR-2077-03",
    "item": "2.77",
-   "status": "nao_verificavel",
-   "nota": "depende da base GLEIF (existência/estado do LEI, sucursal): sem dados externos (decisão 2026-10-20, só campos TP)"
+   "status": "not_verifiable",
+   "note": "depends on the GLEIF database (LEI existence/status, branch): no external data (decision 2026-10-20, TP fields only)"
   },
   {
    "code": "EMIR-VR-2077-04",
    "item": "2.77",
-   "status": "nao_verificavel",
-   "nota": "compara com 1.4 / 1.9 LEI das counterparties, coluna comum sem TP1_/TP2_ (só se validam campos TP; decisão 2026-10-20)"
+   "status": "not_verifiable",
+   "note": "compares with 1.4 / 1.9 counterparty LEIs, a common column without TP1_/TP2_ (only TP fields are validated; decision 2026-10-20)"
   },
   {
    "code": "EMIR-VR-2077-05",
@@ -2097,7 +2097,7 @@
      "unless": "2.33"
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2078-01",
@@ -2122,26 +2122,26 @@
      }
     }
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade e até 72 alfanuméricos; LEI na GLEIF não verificado"
+   "status": "partial",
+   "note": "mandatory and up to 72 alphanumerics; LEI in GLEIF not verified"
   },
   {
    "code": "EMIR-VR-2078-02",
    "item": "2.78",
-   "status": "nao_verificavel",
-   "nota": "depende da base GLEIF (existência/estado do LEI, sucursal): sem dados externos (decisão 2026-10-20, só campos TP)"
+   "status": "not_verifiable",
+   "note": "depends on the GLEIF database (LEI existence/status, branch): no external data (decision 2026-10-20, TP fields only)"
   },
   {
    "code": "EMIR-VR-2078-03",
    "item": "2.78",
-   "status": "nao_verificavel",
-   "nota": "depende da base GLEIF (existência/estado do LEI, sucursal): sem dados externos (decisão 2026-10-20, só campos TP)"
+   "status": "not_verifiable",
+   "note": "depends on the GLEIF database (LEI existence/status, branch): no external data (decision 2026-10-20, TP fields only)"
   },
   {
    "code": "EMIR-VR-2078-04",
    "item": "2.78",
-   "status": "nao_verificavel",
-   "nota": "compara com 1.4 / 1.9 LEI das counterparties, coluna comum sem TP1_/TP2_ (só se validam campos TP; decisão 2026-10-20)"
+   "status": "not_verifiable",
+   "note": "compares with 1.4 / 1.9 counterparty LEIs, a common column without TP1_/TP2_ (only TP fields are validated; decision 2026-10-20)"
   },
   {
    "code": "EMIR-VR-2078-05",
@@ -2152,19 +2152,19 @@
      "unless": "2.33"
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2079-01",
    "item": "2.79",
-   "status": "nao_verificavel",
-   "nota": "depende do campo 2.85 (Name of the floating rate of leg 1), que não está no ficheiro DTCC"
+   "status": "not_verifiable",
+   "note": "depends on field 2.85 (Name of the floating rate of leg 1), which is not in the DTCC file"
   },
   {
    "code": "EMIR-VR-2079-02",
    "item": "2.79",
-   "status": "nao_verificavel",
-   "nota": "depende do campo 2.85 (Name of the floating rate of leg 1), que não está no ficheiro DTCC"
+   "status": "not_verifiable",
+   "note": "depends on field 2.85 (Name of the floating rate of leg 1), which is not in the DTCC file"
   },
   {
    "code": "EMIR-VR-2079-03",
@@ -2176,7 +2176,7 @@
      "sign": "any"
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2080-01",
@@ -2223,7 +2223,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2081-01",
@@ -2255,7 +2255,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2082-01",
@@ -2293,7 +2293,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2083-01",
@@ -2301,8 +2301,8 @@
    "check": {
     "regex": "[A-Z0-9]{12}"
    },
-   "status": "parcial",
-   "nota": "só 12 caracteres alfanuméricos; check digit não verificado"
+   "status": "partial",
+   "note": "12 alphanumeric characters only; check digit not verified"
   },
   {
    "code": "EMIR-VR-2083-02",
@@ -2323,7 +2323,7 @@
    "check": {
     "blank": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2084-01",
@@ -2364,13 +2364,13 @@
      "CZNA"
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2084-02",
    "item": "2.84",
-   "status": "nao_verificavel",
-   "nota": "depende do campo 2.15 (Indicator of the underlying index), que não está no ficheiro DTCC"
+   "status": "not_verifiable",
+   "note": "depends on field 2.15 (Indicator of the underlying index), which is not in the DTCC file"
   },
   {
    "code": "EMIR-VR-2086-01",
@@ -2400,8 +2400,8 @@
      "NARR"
     ]
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade depende do campo 2.85 (Name of the floating rate of leg 1), que não está no ficheiro DTCC; verificados os valores permitidos"
+   "status": "partial",
+   "note": "whether it is mandatory depends on field 2.85 (Name of the floating rate of leg 1), which is not in the DTCC file; allowed values verified"
   },
   {
    "code": "EMIR-VR-2087-01",
@@ -2416,8 +2416,8 @@
      "EXPI"
     ]
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade depende do campo 2.85 (Name of the floating rate of leg 1), que não está no ficheiro DTCC; verificados os valores permitidos"
+   "status": "partial",
+   "note": "whether it is mandatory depends on field 2.85 (Name of the floating rate of leg 1), which is not in the DTCC file; allowed values verified"
   },
   {
    "code": "EMIR-VR-2088-01",
@@ -2455,7 +2455,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2089-01",
@@ -2470,8 +2470,8 @@
      "EXPI"
     ]
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade depende do campo 2.85 (Name of the floating rate of leg 1), que não está no ficheiro DTCC; verificados os valores permitidos"
+   "status": "partial",
+   "note": "whether it is mandatory depends on field 2.85 (Name of the floating rate of leg 1), which is not in the DTCC file; allowed values verified"
   },
   {
    "code": "EMIR-VR-2090-01",
@@ -2509,7 +2509,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2091-01",
@@ -2524,8 +2524,8 @@
      "EXPI"
     ]
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade depende do campo 2.85 (Name of the floating rate of leg 1), que não está no ficheiro DTCC; verificados os valores permitidos"
+   "status": "partial",
+   "note": "whether it is mandatory depends on field 2.85 (Name of the floating rate of leg 1), which is not in the DTCC file; allowed values verified"
   },
   {
    "code": "EMIR-VR-2092-01",
@@ -2563,7 +2563,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2093-01",
@@ -2575,20 +2575,20 @@
      "sign": "any"
     }
    },
-   "status": "parcial",
-   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC; verificado o limite mais largo (18 dígitos, 13 decimais); obrigatoriedade depende de 2.15/2.85 (sem colunas DTCC)"
+   "status": "partial",
+   "note": "notation (monetary / percentage / basis points) cannot be identified in the DTCC file; the widest limit is verified (18 digits, 13 decimals); whether it is mandatory depends on 2.15/2.85 (no DTCC columns)"
   },
   {
    "code": "EMIR-VR-2093-02",
    "item": "2.93",
-   "status": "nao_verificavel",
-   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC"
+   "status": "not_verifiable",
+   "note": "notation (monetary / percentage / basis points) cannot be identified in the DTCC file"
   },
   {
    "code": "EMIR-VR-2093-03",
    "item": "2.93",
-   "status": "nao_verificavel",
-   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC"
+   "status": "not_verifiable",
+   "note": "notation (monetary / percentage / basis points) cannot be identified in the DTCC file"
   },
   {
    "code": "EMIR-VR-2094-01",
@@ -2596,8 +2596,8 @@
    "check": {
     "regex": "[A-Z]{3}"
    },
-   "status": "parcial",
-   "nota": "notação de 2.93 não identificável; verificado o formato quando preenchido; pertença à lista oficial ISO 4217 não verificada (só 3 letras)"
+   "status": "partial",
+   "note": "notation of 2.93 cannot be identified; format verified when populated; membership of the official ISO 4217 list not verified (3 letters only)"
   },
   {
    "code": "EMIR-VR-2094-02",
@@ -2618,7 +2618,7 @@
      "XXX"
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2095-01",
@@ -2648,8 +2648,8 @@
    "check": {
     "blank": true
    },
-   "status": "parcial",
-   "nota": "verificado o 'senão em branco'; a alternativa 2.95/2.101 depende do campo 2.101 (Name of the floating rate of leg 2), que não está no ficheiro DTCC"
+   "status": "partial",
+   "note": "the 'otherwise blank' part verified; the 2.95/2.101 alternative depends on field 2.101 (Name of the floating rate of leg 2), which is not in the DTCC file"
   },
   {
    "code": "EMIR-VR-2095-02",
@@ -2661,7 +2661,7 @@
      "sign": "any"
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2096-01",
@@ -2708,7 +2708,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2097-01",
@@ -2740,7 +2740,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2098-01",
@@ -2778,7 +2778,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2099-01",
@@ -2786,8 +2786,8 @@
    "check": {
     "regex": "[A-Z0-9]{12}"
    },
-   "status": "parcial",
-   "nota": "só 12 caracteres alfanuméricos; check digit não verificado"
+   "status": "partial",
+   "note": "12 alphanumeric characters only; check digit not verified"
   },
   {
    "code": "EMIR-VR-2099-02",
@@ -2808,7 +2808,7 @@
    "check": {
     "blank": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2100-01",
@@ -2849,13 +2849,13 @@
      "CZNA"
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2100-02",
    "item": "2.100",
-   "status": "nao_verificavel",
-   "nota": "depende do campo 2.15 (Indicator of the underlying index), que não está no ficheiro DTCC"
+   "status": "not_verifiable",
+   "note": "depends on field 2.15 (Indicator of the underlying index), which is not in the DTCC file"
   },
   {
    "code": "EMIR-VR-2102-01",
@@ -2885,8 +2885,8 @@
      "NARR"
     ]
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade depende do campo 2.101 (Name of the floating rate of leg 2), que não está no ficheiro DTCC; verificados os valores permitidos"
+   "status": "partial",
+   "note": "whether it is mandatory depends on field 2.101 (Name of the floating rate of leg 2), which is not in the DTCC file; allowed values verified"
   },
   {
    "code": "EMIR-VR-2103-01",
@@ -2901,8 +2901,8 @@
      "EXPI"
     ]
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade depende do campo 2.101 (Name of the floating rate of leg 2), que não está no ficheiro DTCC; verificados os valores permitidos"
+   "status": "partial",
+   "note": "whether it is mandatory depends on field 2.101 (Name of the floating rate of leg 2), which is not in the DTCC file; allowed values verified"
   },
   {
    "code": "EMIR-VR-2104-01",
@@ -2940,7 +2940,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2105-01",
@@ -2955,8 +2955,8 @@
      "EXPI"
     ]
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade depende do campo 2.101 (Name of the floating rate of leg 2), que não está no ficheiro DTCC; verificados os valores permitidos"
+   "status": "partial",
+   "note": "whether it is mandatory depends on field 2.101 (Name of the floating rate of leg 2), which is not in the DTCC file; allowed values verified"
   },
   {
    "code": "EMIR-VR-2106-01",
@@ -2994,7 +2994,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2107-01",
@@ -3009,8 +3009,8 @@
      "EXPI"
     ]
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade depende do campo 2.101 (Name of the floating rate of leg 2), que não está no ficheiro DTCC; verificados os valores permitidos"
+   "status": "partial",
+   "note": "whether it is mandatory depends on field 2.101 (Name of the floating rate of leg 2), which is not in the DTCC file; allowed values verified"
   },
   {
    "code": "EMIR-VR-2108-01",
@@ -3048,28 +3048,28 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2109-01",
    "item": "2.109",
    "column": "SPREAD_LEG2",
-   "status": "nao_verificavel",
-   "nota": "depende do campo 2.101 (Name of the floating rate of leg 2, sem colunas DTCC) e dos códigos de notação em SPREAD_LEG2_TYP (não documentados no Excel)"
+   "status": "not_verifiable",
+   "note": "depends on field 2.101 (Name of the floating rate of leg 2, no DTCC columns) and on the notation codes in SPREAD_LEG2_TYP (not documented in the Excel)"
   },
   {
    "code": "EMIR-VR-2109-02",
    "item": "2.109",
    "column": "SPREAD_LEG2",
-   "status": "nao_verificavel",
-   "nota": "depende do campo 2.101 (Name of the floating rate of leg 2, sem colunas DTCC) e dos códigos de notação em SPREAD_LEG2_TYP (não documentados no Excel)"
+   "status": "not_verifiable",
+   "note": "depends on field 2.101 (Name of the floating rate of leg 2, no DTCC columns) and on the notation codes in SPREAD_LEG2_TYP (not documented in the Excel)"
   },
   {
    "code": "EMIR-VR-2109-03",
    "item": "2.109",
    "column": "SPREAD_LEG2",
-   "status": "nao_verificavel",
-   "nota": "depende do campo 2.101 (Name of the floating rate of leg 2, sem colunas DTCC) e dos códigos de notação em SPREAD_LEG2_TYP (não documentados no Excel)"
+   "status": "not_verifiable",
+   "note": "depends on field 2.101 (Name of the floating rate of leg 2, no DTCC columns) and on the notation codes in SPREAD_LEG2_TYP (not documented in the Excel)"
   },
   {
    "code": "EMIR-VR-2110-01",
@@ -3097,8 +3097,8 @@
      }
     ]
    },
-   "status": "parcial",
-   "nota": "notação de 2.109 não identificável; verificado o formato quando preenchido; pertença à lista oficial ISO 4217 não verificada (só 3 letras)"
+   "status": "partial",
+   "note": "notation of 2.109 cannot be identified; format verified when populated; membership of the official ISO 4217 list not verified (3 letters only)"
   },
   {
    "code": "EMIR-VR-2111-01",
@@ -3110,20 +3110,20 @@
      "sign": "any"
     }
    },
-   "status": "parcial",
-   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC; verificado o limite mais largo (18 dígitos, 13 decimais); obrigatoriedade depende do campo 2.6 (Package identifier), que não está no ficheiro DTCC"
+   "status": "partial",
+   "note": "notation (monetary / percentage / basis points) cannot be identified in the DTCC file; the widest limit is verified (18 digits, 13 decimals); whether it is mandatory depends on field 2.6 (Package identifier), which is not in the DTCC file"
   },
   {
    "code": "EMIR-VR-2111-02",
    "item": "2.111",
-   "status": "nao_verificavel",
-   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC"
+   "status": "not_verifiable",
+   "note": "notation (monetary / percentage / basis points) cannot be identified in the DTCC file"
   },
   {
    "code": "EMIR-VR-2111-03",
    "item": "2.111",
-   "status": "nao_verificavel",
-   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC"
+   "status": "not_verifiable",
+   "note": "notation (monetary / percentage / basis points) cannot be identified in the DTCC file"
   },
   {
    "code": "EMIR-VR-2111-04",
@@ -3134,8 +3134,8 @@
    "check": {
     "blank": true
    },
-   "status": "parcial",
-   "nota": "verificado 'em branco se 2.53 preenchido'; a parte de 2.6 depende do campo 2.6 (Package identifier), que não está no ficheiro DTCC"
+   "status": "partial",
+   "note": "'blank if 2.53 is populated' verified; the 2.6 part depends on field 2.6 (Package identifier), which is not in the DTCC file"
   },
   {
    "code": "EMIR-VR-2112-01",
@@ -3143,8 +3143,8 @@
    "check": {
     "regex": "[A-Z]{3}"
    },
-   "status": "parcial",
-   "nota": "notação de 2.111 não identificável; verificado o formato quando preenchido; pertença à lista oficial ISO 4217 não verificada (só 3 letras)"
+   "status": "partial",
+   "note": "notation of 2.111 cannot be identified; format verified when populated; membership of the official ISO 4217 list not verified (3 letters only)"
   },
   {
    "code": "EMIR-VR-2112-02",
@@ -3165,7 +3165,7 @@
      "XXX"
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2113-01",
@@ -3185,7 +3185,7 @@
      "min": 1
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2113-02",
@@ -3215,7 +3215,7 @@
      "max": 1
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2113-03",
@@ -3227,7 +3227,7 @@
      "sign": "positive"
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2114-01",
@@ -3247,7 +3247,7 @@
      "min": 1
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2114-02",
@@ -3277,7 +3277,7 @@
      "max": 1
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2114-03",
@@ -3289,7 +3289,7 @@
      "sign": "positive"
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2115-01",
@@ -3303,7 +3303,7 @@
    "check": {
     "required": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2115-02",
@@ -3311,8 +3311,8 @@
    "check": {
     "regex": "[A-Z]{3}/[A-Z]{3}"
    },
-   "status": "parcial",
-   "nota": "pertença à lista oficial ISO 4217 não verificada (só 3 letras)"
+   "status": "partial",
+   "note": "membership of the official ISO 4217 list not verified (3 letters only)"
   },
   {
    "code": "EMIR-VR-2116-01",
@@ -3355,8 +3355,8 @@
      }
     }
    },
-   "status": "parcial",
-   "nota": "Excel tem gralhas nos códigos ('ENRVR', 'FRTL'/'FRLTL'): usados os códigos ISO 'ENVR' e 'FRTL'"
+   "status": "partial",
+   "note": "the Excel has typos in the codes ('ENRVR', 'FRTL'/'FRLTL'): the ISO codes 'ENVR' and 'FRTL' are used"
   },
   {
    "code": "EMIR-VR-2117-01",
@@ -3388,7 +3388,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2117-02",
@@ -3419,7 +3419,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2117-03",
@@ -3445,7 +3445,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2117-04",
@@ -3471,7 +3471,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2117-05",
@@ -3500,8 +3500,8 @@
      }
     ]
    },
-   "status": "parcial",
-   "nota": "Excel diz 'FRLTL': usado o código 'FRTL'"
+   "status": "partial",
+   "note": "the Excel says 'FRLTL': the code 'FRTL' is used"
   },
   {
    "code": "EMIR-VR-2117-06",
@@ -3525,7 +3525,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2117-07",
@@ -3549,7 +3549,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2117-08",
@@ -3576,7 +3576,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2117-09",
@@ -3600,7 +3600,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2117-10",
@@ -3627,7 +3627,7 @@
    "check": {
     "blank": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2118-01",
@@ -3655,7 +3655,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2118-02",
@@ -3682,7 +3682,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2118-03",
@@ -3706,7 +3706,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2118-04",
@@ -3730,7 +3730,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2118-05",
@@ -3757,7 +3757,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2118-06",
@@ -3785,7 +3785,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2118-07",
@@ -3832,7 +3832,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2118-08",
@@ -3859,7 +3859,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2118-09",
@@ -3883,7 +3883,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2118-10",
@@ -3907,7 +3907,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2118-11",
@@ -3942,7 +3942,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2118-12",
@@ -3969,7 +3969,7 @@
      }
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2118-13",
@@ -4018,7 +4018,7 @@
    "check": {
     "blank": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2120-01",
@@ -4049,8 +4049,8 @@
      }
     }
    },
-   "status": "parcial",
-   "nota": "16 caracteres alfanuméricos; pertença à lista de códigos EIC não verificada"
+   "status": "partial",
+   "note": "16 alphanumeric characters; membership of the EIC code list not verified"
   },
   {
    "code": "EMIR-VR-2121-01",
@@ -4066,8 +4066,8 @@
      "OTHR"
     ]
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade depende de 2.119 (Delivery point or zone, sem colunas DTCC) / código EIC em 2.120; verificado só o formato quando preenchido"
+   "status": "partial",
+   "note": "whether it is mandatory depends on 2.119 (Delivery point or zone, no DTCC columns) / EIC code in 2.120; only the format is verified when populated"
   },
   {
    "code": "EMIR-VR-2122-01",
@@ -4075,8 +4075,8 @@
    "check": {
     "regex": "([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]Z"
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade depende de 2.119 (Delivery point or zone, sem colunas DTCC) / código EIC em 2.120; verificado só o formato quando preenchido"
+   "status": "partial",
+   "note": "whether it is mandatory depends on 2.119 (Delivery point or zone, no DTCC columns) / EIC code in 2.120; only the format is verified when populated"
   },
   {
    "code": "EMIR-VR-2123-01",
@@ -4084,8 +4084,8 @@
    "check": {
     "regex": "([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]Z"
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade depende de 2.119 (Delivery point or zone, sem colunas DTCC) / código EIC em 2.120; verificado só o formato quando preenchido"
+   "status": "partial",
+   "note": "whether it is mandatory depends on 2.119 (Delivery point or zone, no DTCC columns) / EIC code in 2.120; only the format is verified when populated"
   },
   {
    "code": "EMIR-VR-2124-01",
@@ -4093,8 +4093,8 @@
    "check": {
     "date": true
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade depende de 2.119 (Delivery point or zone, sem colunas DTCC) / código EIC em 2.120; verificado só o formato quando preenchido"
+   "status": "partial",
+   "note": "whether it is mandatory depends on 2.119 (Delivery point or zone, no DTCC columns) / EIC code in 2.120; only the format is verified when populated"
   },
   {
    "code": "EMIR-VR-2125-01",
@@ -4102,8 +4102,8 @@
    "check": {
     "date": true
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade depende de 2.119 (Delivery point or zone, sem colunas DTCC) / código EIC em 2.120; verificado só o formato quando preenchido"
+   "status": "partial",
+   "note": "whether it is mandatory depends on 2.119 (Delivery point or zone, no DTCC columns) / EIC code in 2.120; only the format is verified when populated"
   },
   {
    "code": "EMIR-VR-2126-01",
@@ -4121,8 +4121,8 @@
      "OTHR"
     ]
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade depende de 2.119 (Delivery point or zone, sem colunas DTCC) / código EIC em 2.120; verificado só o formato quando preenchido"
+   "status": "partial",
+   "note": "whether it is mandatory depends on 2.119 (Delivery point or zone, no DTCC columns) / EIC code in 2.120; only the format is verified when populated"
   },
   {
    "code": "EMIR-VR-2127-01",
@@ -4130,8 +4130,8 @@
    "check": {
     "regex": "(WDAY|WEND|MOND|TUED|WEDD|THUD|FRID|SATD|SUND|XBHL|IBHL)([,; ](WDAY|WEND|MOND|TUED|WEDD|THUD|FRID|SATD|SUND|XBHL|IBHL))*"
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade depende de 2.119 (Delivery point or zone, sem colunas DTCC) / código EIC em 2.120; verificado só o formato quando preenchido; vários valores aceites separados por vírgula/ponto e vírgula/espaço (separador do ficheiro DTCC por confirmar)"
+   "status": "partial",
+   "note": "whether it is mandatory depends on 2.119 (Delivery point or zone, no DTCC columns) / EIC code in 2.120; only the format is verified when populated; several values accepted, separated by comma/semicolon/space (DTCC file separator to be confirmed)"
   },
   {
    "code": "EMIR-VR-2128-01",
@@ -4143,8 +4143,8 @@
      "sign": "any"
     }
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade depende de 2.119 (Delivery point or zone, sem colunas DTCC) / código EIC em 2.120; verificado só o formato quando preenchido"
+   "status": "partial",
+   "note": "whether it is mandatory depends on 2.119 (Delivery point or zone, no DTCC columns) / EIC code in 2.120; only the format is verified when populated"
   },
   {
    "code": "EMIR-VR-2129-01",
@@ -4173,8 +4173,8 @@
      "GJDD"
     ]
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade depende de 2.119 (Delivery point or zone, sem colunas DTCC) / código EIC em 2.120; verificado só o formato quando preenchido"
+   "status": "partial",
+   "note": "whether it is mandatory depends on 2.119 (Delivery point or zone, no DTCC columns) / EIC code in 2.120; only the format is verified when populated"
   },
   {
    "code": "EMIR-VR-2130-01",
@@ -4186,8 +4186,8 @@
      "sign": "any"
     }
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade depende de 2.119 (Delivery point or zone, sem colunas DTCC) / código EIC em 2.120; verificado só o formato quando preenchido"
+   "status": "partial",
+   "note": "whether it is mandatory depends on 2.119 (Delivery point or zone, no DTCC columns) / EIC code in 2.120; only the format is verified when populated"
   },
   {
    "code": "EMIR-VR-2131-01",
@@ -4215,8 +4215,8 @@
      }
     ]
    },
-   "status": "parcial",
-   "nota": "obrigatoriedade depende de 2.119 (Delivery point or zone, sem colunas DTCC) / código EIC em 2.120; verificado só o formato quando preenchido"
+   "status": "partial",
+   "note": "whether it is mandatory depends on 2.119 (Delivery point or zone, no DTCC columns) / EIC code in 2.120; only the format is verified when populated"
   },
   {
    "code": "EMIR-VR-2132-01",
@@ -4251,7 +4251,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2133-01",
@@ -4286,7 +4286,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2134-01",
@@ -4303,13 +4303,13 @@
    "check": {
     "required": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2134-02",
    "item": "2.134",
-   "status": "nao_verificavel",
-   "nota": "regra permissiva (campo opcional nesta situação): não gera violação"
+   "status": "not_verifiable",
+   "note": "permissive rule (optional field in this situation): never raises a violation"
   },
   {
    "code": "EMIR-VR-2134-03",
@@ -4321,14 +4321,14 @@
      "sign": "any"
     }
    },
-   "status": "parcial",
-   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC; verificado o limite mais largo (18 dígitos, 13 decimais)"
+   "status": "partial",
+   "note": "notation (monetary / percentage / basis points) cannot be identified in the DTCC file; the widest limit is verified (18 digits, 13 decimals)"
   },
   {
    "code": "EMIR-VR-2134-04",
    "item": "2.134",
-   "status": "nao_verificavel",
-   "nota": "notação (monetário / percentagem / pontos base) não identificável no ficheiro DTCC"
+   "status": "not_verifiable",
+   "note": "notation (monetary / percentage / basis points) cannot be identified in the DTCC file"
   },
   {
    "code": "EMIR-VR-2135-01",
@@ -4336,8 +4336,8 @@
    "check": {
     "date": true
    },
-   "status": "parcial",
-   "nota": "depende do campo 2.137 (Strike price in effect on associated effective date), que não está no ficheiro DTCC; verificado só o formato quando preenchido"
+   "status": "partial",
+   "note": "depends on field 2.137 (Strike price in effect on associated effective date), which is not in the DTCC file; only the format is verified when populated"
   },
   {
    "code": "EMIR-VR-2136-01",
@@ -4345,13 +4345,13 @@
    "check": {
     "date": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2136-02",
    "item": "2.136",
-   "status": "nao_verificavel",
-   "nota": "depende do campo 2.137 (Strike price in effect on associated effective date), que não está no ficheiro DTCC"
+   "status": "not_verifiable",
+   "note": "depends on field 2.137 (Strike price in effect on associated effective date), which is not in the DTCC file"
   },
   {
    "code": "EMIR-VR-2139-01",
@@ -4389,7 +4389,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2140-01",
@@ -4420,8 +4420,8 @@
      }
     }
    },
-   "status": "parcial",
-   "nota": "pertença à lista oficial ISO 4217 não verificada (só 3 letras)"
+   "status": "partial",
+   "note": "membership of the official ISO 4217 list not verified (3 letters only)"
   },
   {
    "code": "EMIR-VR-2140-02",
@@ -4442,7 +4442,7 @@
      "XXX"
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2141-01",
@@ -4473,7 +4473,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2142-01",
@@ -4501,7 +4501,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2142-02",
@@ -4513,7 +4513,7 @@
      "as": "date"
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2144-01",
@@ -4533,7 +4533,7 @@
      "min": 1
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2144-02",
@@ -4541,14 +4541,14 @@
    "check": {
     "regex": "[A-Z]{2}|[A-Z]{2}-[A-Z0-9]{1,3}|[A-Z0-9]{18}[0-9]{2}"
    },
-   "status": "parcial",
-   "nota": "formato país / subdivisão / LEI; validade ISO 3166 e GLEIF não verificadas"
+   "status": "partial",
+   "note": "country / subdivision / LEI format; ISO 3166 and GLEIF validity not verified"
   },
   {
    "code": "EMIR-VR-2144-03",
    "item": "2.144",
-   "status": "nao_verificavel",
-   "nota": "depende da base GLEIF (existência/estado do LEI, sucursal): sem dados externos (decisão 2026-10-20, só campos TP)"
+   "status": "not_verifiable",
+   "note": "depends on the GLEIF database (LEI existence/status, branch): no external data (decision 2026-10-20, TP fields only)"
   },
   {
    "code": "EMIR-VR-2144-04",
@@ -4571,7 +4571,7 @@
    "check": {
     "blank": true
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2145-01",
@@ -4613,7 +4613,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2146-01",
@@ -4655,7 +4655,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2147-01",
@@ -4704,7 +4704,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2148-01",
@@ -4735,7 +4735,7 @@
      }
     }
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2154-01",
@@ -4746,19 +4746,19 @@
      "PSTN"
     ]
    },
-   "status": "verificavel"
+   "status": "verifiable"
   },
   {
    "code": "EMIR-VR-2154-02",
    "item": "2.154",
-   "status": "nao_verificavel",
-   "nota": "regra de ciclo de vida (action type, reportes anteriores do mesmo UTI): não verificável registo a registo"
+   "status": "not_verifiable",
+   "note": "lifecycle rule (action type, previous reports for the same UTI): cannot be verified record by record"
   },
   {
    "code": "EMIR-VR-2154-03",
    "item": "2.154",
-   "status": "nao_verificavel",
-   "nota": "regra de ciclo de vida (action type, reportes anteriores do mesmo UTI): não verificável registo a registo"
+   "status": "not_verifiable",
+   "note": "lifecycle rule (action type, previous reports for the same UTI): cannot be verified record by record"
   }
  ]
 }

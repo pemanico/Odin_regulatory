@@ -1,5 +1,5 @@
-// Carrega a configuração: config/default.json + config/local.json (opcional) + .env + variáveis de ambiente.
-// Nomes de tabelas, colunas e caminhos vivem aqui, nunca hardcoded no resto do código.
+// Loads the configuration: config/default.json + config/local.json (optional) + .env + environment variables.
+// Table names, columns and paths live here, never hardcoded in the rest of the code.
 import { readFileSync, existsSync } from 'node:fs';
 import { dirname, resolve, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,7 +7,7 @@ import { normalizeExcludedDates } from './semantic/calendar.js';
 
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-/** Lê um ficheiro .env simples (KEY=VALUE). Não sobrepõe variáveis já definidas. */
+/** Reads a simple .env file (KEY=VALUE). Does not override variables that are already set. */
 export function loadDotEnv(path = resolve(ROOT, '.env')) {
   if (!existsSync(path)) return;
   for (const line of readFileSync(path, 'utf8').split(/\r?\n/)) {
@@ -35,7 +35,7 @@ function absolute(p) {
   return p && !isAbsolute(p) ? resolve(ROOT, p) : p;
 }
 
-/** Devolve a configuração final. `overrides` serve para testes. */
+/** Returns the final configuration. `overrides` is for tests. */
 export function loadConfig(overrides = {}) {
   loadDotEnv();
   let config = readJson(resolve(ROOT, 'config/default.json'));
@@ -52,11 +52,11 @@ export function loadConfig(overrides = {}) {
     },
   });
   if (env.ODIN_EXCLUDED_DATES !== undefined) {
-    // Lista separada por vírgulas; vazio = nenhuma data excluída (ex.: dados sintéticos).
+    // Comma-separated list; empty = no excluded dates (e.g. synthetic data).
     config.excludedDates = env.ODIN_EXCLUDED_DATES.split(',').map((s) => s.trim()).filter(Boolean);
   }
   config = deepMerge(config, overrides);
-  // Compatibilidade: `uti_alt` (antes de 2026-10-20) passou a chamar-se `proprietary`.
+  // Compatibility: `uti_alt` (before 2026-10-20) was renamed to `proprietary`.
   if (config.columns?.uti_alt !== undefined) {
     if (config.columns.uti_alt) config.columns.proprietary = config.columns.uti_alt;
     delete config.columns.uti_alt;
@@ -77,12 +77,12 @@ const REQUIRED_COLUMNS = [
 
 export function validateConfig(config) {
   for (const key of REQUIRED_COLUMNS) {
-    if (!config.columns?.[key]) throw new Error(`Configuração inválida: falta o mapeamento da coluna "${key}"`);
+    if (!config.columns?.[key]) throw new Error(`Invalid configuration: missing mapping for column "${key}"`);
   }
   for (const [logical, physical] of Object.entries(config.columns)) {
-    if (physical == null) continue; // mapeamento opcional desligado (ex.: business_line: null)
+    if (physical == null) continue; // optional mapping switched off (e.g. business_line: null)
     if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(physical)) {
-      throw new Error(`Nome de coluna inválido para "${logical}": ${physical}`);
+      throw new Error(`Invalid column name for "${logical}": ${physical}`);
     }
   }
 }

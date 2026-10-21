@@ -1,15 +1,15 @@
-// Mapeamento BREAKING_FIELD (data mart) -> par de colunas TP1_<sufixo> / TP2_<sufixo> (ficheiro DTCC),
-// e validação empírica: para o sufixo certo, os breaks têm TP1 ≠ TP2 e as transações sem break têm TP1 = TP2.
-// Só produz nomes de colunas e contagens (nunca valores).
+// Mapping BREAKING_FIELD (data mart) -> pair of columns TP1_<suffix> / TP2_<suffix> (DTCC file),
+// and empirical validation: for the right suffix, breaks have TP1 ≠ TP2 and transactions without a break have TP1 = TP2.
+// Only produces column names and counts (never values).
 import { dateLiteral, stringLiteral } from '../semantic/literals.js';
 import { POSITION_KEY } from '../db/model.js';
 
-/** Nome normalizado para comparação: maiúsculas, só letras e dígitos. */
+/** Normalised name for comparison: upper case, letters and digits only. */
 export const normalizeName = (s) => String(s).toUpperCase().replace(/[^A-Z0-9]/g, '');
 const tokens = (s) => String(s).toUpperCase().split(/[^A-Z0-9]+/).filter(Boolean);
 
 /**
- * Pares TP1_/TP2_ a partir dos nomes das colunas do ficheiro DTCC.
+ * TP1_/TP2_ pairs from the DTCC file column names.
  * @returns {{ suffix: string, tp1: string, tp2: string }[]}
  */
 export function tpPairs(columnNames) {
@@ -19,7 +19,7 @@ export function tpPairs(columnNames) {
     .map((c) => ({ suffix: c.slice(4), tp1: c, tp2: tp2.get(c.slice(4).toUpperCase()) }));
 }
 
-/** Semelhança entre nomes (0..1): tokens em comum + bónus se um nome normalizado contém o outro. */
+/** Similarity between names (0..1): shared tokens + a bonus if one normalised name contains the other. */
 export function similarity(a, b) {
   const ta = new Set(tokens(a));
   const tb = new Set(tokens(b));
@@ -32,11 +32,11 @@ export function similarity(a, b) {
 }
 
 /**
- * Liga cada campo a um par TP. Ordem: override explícito > nome igual (normalizado) > sem mapeamento
- * (com até 3 candidatos por semelhança, para decisão humana — nunca escolhidos automaticamente).
- * @param fields  nomes de BREAKING_FIELD
- * @param pairs   resultado de tpPairs()
- * @param overrides  { CAMPO: 'SUFIXO' }
+ * Links each field to a TP pair. Order: explicit override > same (normalised) name > no mapping
+ * (with up to 3 candidates by similarity, for a human decision — never picked automatically).
+ * @param fields  BREAKING_FIELD names
+ * @param pairs   result of tpPairs()
+ * @param overrides  { FIELD: 'SUFFIX' }
  */
 export function matchFields(fields, pairs, overrides = {}) {
   const bySuffix = new Map(pairs.map((p) => [normalizeName(p.suffix), p]));
@@ -45,10 +45,10 @@ export function matchFields(fields, pairs, overrides = {}) {
     const n = normalizeName(field);
     if (ov.has(n)) {
       const pair = bySuffix.get(ov.get(n));
-      if (!pair) throw new Error(`Override inválido: ${field} -> ${overrides[field] ?? ov.get(n)} (sufixo não existe no ficheiro DTCC)`);
+      if (!pair) throw new Error(`Invalid override: ${field} -> ${overrides[field] ?? ov.get(n)} (suffix does not exist in the DTCC file)`);
       return { field, pair, how: 'override', candidates: [] };
     }
-    if (bySuffix.has(n)) return { field, pair: bySuffix.get(n), how: 'nome igual', candidates: [] };
+    if (bySuffix.has(n)) return { field, pair: bySuffix.get(n), how: 'same name', candidates: [] };
     const candidates = pairs
       .map((p) => ({ suffix: p.suffix, score: similarity(field, p.suffix) }))
       .filter((c) => c.score > 0)
@@ -60,36 +60,36 @@ export function matchFields(fields, pairs, overrides = {}) {
 }
 
 const quoteIdent = (name) => {
-  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) throw new Error(`Nome de coluna inválido: ${name}`);
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) throw new Error(`Invalid column name: ${name}`);
   return `"${name}"`;
 };
 
 /**
- * SELECT do ficheiro DTCC para UMA business date, só com a chave (nomes lógicos, normalizada como no data mart)
- * e os pares TP pedidos (tp1_0, tp2_0, tp1_1, ...). As colunas físicas da chave são as mesmas do data mart.
+ * SELECT from the DTCC file for ONE business date, with only the key (logical names, normalised as in the data mart)
+ * and the requested TP pairs (tp1_0, tp2_0, tp1_1, ...). The physical key columns are the same as in the data mart.
  */
 export function dtccSelectSql(config, dialect, fromSql, date, pairs, extraCols = []) {
   const d = dateLiteral(date);
   const cols = config.columns;
   const key = POSITION_KEY.map((logical) => {
     const physical = cols[logical];
-    if (!physical) throw new Error(`Falta o mapeamento da coluna "${logical}" (necessária para ligar ao ficheiro DTCC)`);
+    if (!physical) throw new Error(`Missing mapping for column "${logical}" (needed to join the DTCC file)`);
     return `NULLIF(TRIM(${dialect.castText(quoteIdent(physical))}), '') AS ${logical}`;
   });
   const tps = pairs.flatMap((p, i) => [
     `${dialect.castText(quoteIdent(p.tp1))} AS tp1_${i}`,
     `${dialect.castText(quoteIdent(p.tp2))} AS tp2_${i}`,
   ]);
-  // Colunas de estado do relatório (ex.: VALUATION_RECONCILIATION) para explicar diferenças sem break: st_0, st_1...
+  // Report status columns (e.g. VALUATION_RECONCILIATION) to explain differences without a break: st_0, st_1...
   const extra = extraCols.map((c, i) => `${dialect.castText(quoteIdent(c))} AS st_${i}`);
   const dateCol = dialect.castDate(quoteIdent(cols.business_date), null);
   return `SELECT\n  ${[...key, ...tps, ...extra].join(',\n  ')}\nFROM ${fromSql}\nWHERE ${dateCol} = ${d}`;
 }
 
 /**
- * Matriz de confusão de um campo: breaks do data mart (business date + campo) vs. TP1 ≠ TP2 no ficheiro DTCC.
- * `dtccTable` tem a chave lógica + tp1_<i>/tp2_<i> (ver dtccSelectSql). SQL standard.
- * Diferente = valores diferentes, ou só um dos lados NULL.
+ * Confusion matrix of a field: data mart breaks (business date + field) vs. TP1 ≠ TP2 in the DTCC file.
+ * `dtccTable` has the logical key + tp1_<i>/tp2_<i> (see dtccSelectSql). Standard SQL.
+ * Different = different values, or only one of the sides NULL.
  */
 export function confusionSql(date, field, i, dtccTable = 'dtcc') {
   const d = dateLiteral(date);
@@ -122,9 +122,9 @@ FROM j`;
 }
 
 /**
- * Para um campo, conta break / sem break × TP1 ≠ TP2 por valores das colunas de estado st_0..st_{n-1}.
- * Serve para perceber porque há TP1 ≠ TP2 sem break (ex.: valuation não reconciliada nessa transação).
- * As colunas de estado são códigos de estado do relatório (não identificadores).
+ * For one field, counts break / no break × TP1 ≠ TP2 by the values of the status columns st_0..st_{n-1}.
+ * Explains why there is TP1 ≠ TP2 without a break (e.g. valuation not reconciled in that transaction).
+ * The status columns are report status codes (not identifiers).
  */
 export function explainSql(date, field, i, nStatus, dtccTable = 'dtcc') {
   const base = confusionSql(date, field, i, dtccTable);
@@ -137,7 +137,7 @@ export function explainSql(date, field, i, nStatus, dtccTable = 'dtcc') {
 
 const pct = (n, d) => (d > 0 ? Math.round((n / d) * 1000) / 10 : null);
 
-/** Acrescenta percentagens à linha da matriz de confusão. */
+/** Adds percentages to the confusion matrix row. */
 export function confusionRow(r) {
   const n = Object.fromEntries(Object.entries(r).map(([k, v]) => [k, Number(v ?? 0)]));
   return {
@@ -149,18 +149,18 @@ export function confusionRow(r) {
 }
 
 /**
- * Classifica o resultado de um par TP (linha de confusionRow) para a validação completa.
- *  - ok: todos os breaks encontrados, todos com TP1 ≠ TP2, e nenhuma diferença sem break
- *  - sem diferenças: nenhum break e nenhuma diferença (campo sempre igual nos dois lados)
- *  - diferenças sem break: TP1 ≠ TP2 em transações sem break (campo não reconciliado, tolerância, ou nome do
- *    BREAKING_FIELD diferente do sufixo)
- *  - breaks com valores iguais / breaks não encontrados: mapeamento ou chave errados
+ * Classifies the result of a TP pair (confusionRow row) for the full validation.
+ *  - ok: all breaks found, all with TP1 ≠ TP2, and no difference without a break
+ *  - no differences: no break and no difference (field always equal on both sides)
+ *  - differences without break: TP1 ≠ TP2 in transactions without a break (field not reconciled, tolerance, or
+ *    BREAKING_FIELD name different from the suffix)
+ *  - breaks with equal values / breaks not found: wrong mapping or key
  */
 export function classify(r) {
   const issues = [];
-  if (r.breaks_found < r.n_breaks) issues.push('breaks não encontrados');
-  if (r.break_equal > 0) issues.push('breaks com valores iguais');
-  if (r.nobreak_diff > 0) issues.push('diferenças sem break');
+  if (r.breaks_found < r.n_breaks) issues.push('breaks not found');
+  if (r.break_equal > 0) issues.push('breaks with equal values');
+  if (r.nobreak_diff > 0) issues.push('differences without break');
   if (issues.length) return issues.join(' + ');
-  return r.n_breaks > 0 ? 'ok' : 'sem diferenças';
+  return r.n_breaks > 0 ? 'ok' : 'no differences';
 }

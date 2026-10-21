@@ -1,8 +1,8 @@
-// Adaptador DuckDB (@duckdb/node-api). Toda a interação com o driver está isolada aqui:
-// se a API do driver mudar, só este ficheiro precisa de ser ajustado.
+// DuckDB adapter (@duckdb/node-api). All interaction with the driver is isolated here:
+// if the driver API changes, only this file needs adjusting.
 import { dialects } from './dialects.js';
 
-/** Converte valores do driver (BigInt, DATE, TIMESTAMP...) para JS simples. */
+/** Converts driver values (BigInt, DATE, TIMESTAMP...) to plain JS. */
 export function normalizeValue(v) {
   if (v === null || v === undefined) return null;
   if (typeof v === 'bigint') {
@@ -17,8 +17,8 @@ function normalizeRows(rows) {
 }
 
 /**
- * Abre uma base DuckDB. `path` = ficheiro .duckdb ou ':memory:'. `readOnly` = só leitura (servidor da UI).
- * Devolve uma interface mínima { dialect, exec, all, close } partilhada com o adaptador SQLite de testes.
+ * Opens a DuckDB database. `path` = .duckdb file or ':memory:'. `readOnly` = read only (UI server).
+ * Returns a minimal interface { dialect, exec, all, close } shared with the SQLite test adapter.
  */
 export async function openDuckDb(path = ':memory:', { readOnly = false } = {}) {
   let api;
@@ -26,10 +26,10 @@ export async function openDuckDb(path = ':memory:', { readOnly = false } = {}) {
     api = await import('@duckdb/node-api');
   } catch (err) {
     throw new Error(
-      'Não foi possível carregar @duckdb/node-api. Corre `npm install` primeiro.\n' + `Detalhe: ${err.message}`,
+      'Could not load @duckdb/node-api. Run `npm install` first.\n' + `Detail: ${err.message}`,
     );
   }
-  // READ_ONLY: vários processos podem ler ao mesmo tempo (servidor da UI + consultas), mas nenhum pode escrever.
+  // READ_ONLY: several processes can read at the same time (UI server + queries), but none can write.
   const instance = await api.DuckDBInstance.create(path, readOnly ? { access_mode: 'READ_ONLY' } : undefined);
   const connection = await instance.connect();
 

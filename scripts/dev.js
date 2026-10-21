@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Desenvolvimento: API (node --watch, porta 3001) + Vite (http://localhost:5173, com proxy de /api para a API).
-// Sem dependências extra (substitui o "concurrently"). Ctrl+C pára os dois.
+// Development: API (node --watch, port 3001) + Vite (http://localhost:5173, proxying /api to the API).
+// No extra dependencies (replaces "concurrently"). Ctrl+C stops both.
 import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
 import { ROOT } from '../src/config.js';

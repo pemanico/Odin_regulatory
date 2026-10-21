@@ -1,4 +1,4 @@
-// key_summary, métricas key_verdict / field_combinations e API (sem Express), sobre SQLite.
+// key_summary, key_verdict / field_combinations metrics and the API (without Express), on SQLite.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { openSqlite, sqliteAvailable } from '../src/db/sqlite.js';
@@ -8,20 +8,20 @@ import { createApi, statusFor, keysQuery } from '../src/server/api.js';
 import { AGENT_TOOLS } from '../src/server/tools.js';
 import { ValidationError } from '../src/semantic/literals.js';
 
-const skip = !(await sqliteAvailable()) && 'node:sqlite indisponível';
+const skip = !(await sqliteAvailable()) && 'node:sqlite unavailable';
 const D = '2026-10-15';
 const KEY = ['report_submitting_entity', 'cp1_lei', 'cp2_lei', 'uti', 'proprietary', 'asset_class'];
 
-// [uti, proprietary, cp2, asset class, campo, veredicto]
+// [uti, proprietary, cp2, asset class, field, verdict]
 const BREAKS = [
-  ['U1', null, 'B', 'CURR', 'DELIVERY_TYPE', 'so_bnpp'],
-  ['U1', null, 'B', 'CURR', 'VALUATION_AMT', 'divergencia'],
-  [null, 'P2', 'B', 'CURR', 'ISIN', 'so_contraparte'],
-  [null, 'P2', 'B', 'CURR', 'UNIQUE_PRODUCT_ID', 'ambos'],
-  [null, 'P2', 'B', 'CURR', 'VALUATION_AMT', 'sem_regras_verificaveis'],
-  ['U3', null, 'B', 'CURR', 'VALUATION_AMT', 'divergencia'],
-  ['U4', null, 'C', 'EQ', 'VALUATIONXAMT', 'divergencia'], // o _ do LIKE não pode apanhar este campo
-  ['U5', null, 'C', 'EQ', 'ISIN', 'so_contraparte'],
+  ['U1', null, 'B', 'CURR', 'DELIVERY_TYPE', 'bnpp_only'],
+  ['U1', null, 'B', 'CURR', 'VALUATION_AMT', 'divergence'],
+  [null, 'P2', 'B', 'CURR', 'ISIN', 'cpty_only'],
+  [null, 'P2', 'B', 'CURR', 'UNIQUE_PRODUCT_ID', 'both'],
+  [null, 'P2', 'B', 'CURR', 'VALUATION_AMT', 'no_verifiable_rules'],
+  ['U3', null, 'B', 'CURR', 'VALUATION_AMT', 'divergence'],
+  ['U4', null, 'C', 'EQ', 'VALUATIONXAMT', 'divergence'], // the LIKE _ must not match this field
+  ['U5', null, 'C', 'EQ', 'ISIN', 'cpty_only'],
 ];
 
 async function fixture() {
@@ -33,7 +33,7 @@ async function fixture() {
     const key = ['E', 'A', cp2, uti, prop, ac].map(lit).join(', ');
     await db.exec(`INSERT INTO break_verdict VALUES ('${D}', ${key}, '${field}', 1, 0, 0, NULL, NULL, '${verdict}', 'v1')`);
     await db.exec(`INSERT INTO break_detail VALUES ('${D}', ${key}, '2.x ${field}', '${field}', 'b-${field}', 'c-${field}',
-      'texto ${verdict}', NULL, NULL, 'v1')`);
+      'text ${verdict}', NULL, NULL, 'v1')`);
   }
   await db.exec(KEY_SUMMARY_DDL);
   await db.exec(insertKeySummarySql(D, db.dialect, 'v1'));
@@ -45,44 +45,44 @@ async function apiFor(db, events = []) {
   return createApi(pool, { excludedDates: [], audit: (e) => events.push(e) });
 }
 
-test('key_summary: uma linha por Key, combinação ordenada e veredicto da Key', { skip }, async () => {
+test('key_summary: one row per Key, sorted combination and Key verdict', { skip }, async () => {
   const db = await fixture();
   const rows = await db.all(`SELECT key_id, uti, proprietary, n_fields, combo, key_verdict FROM key_summary ORDER BY key_id`);
   assert.equal(rows.length, 5);
   assert.deepEqual(rows[0], {
-    key_id: 1, uti: null, proprietary: 'P2', n_fields: 3, combo: '|ISIN|UNIQUE_PRODUCT_ID|VALUATION_AMT|', key_verdict: 'misto',
+    key_id: 1, uti: null, proprietary: 'P2', n_fields: 3, combo: '|ISIN|UNIQUE_PRODUCT_ID|VALUATION_AMT|', key_verdict: 'mixed',
   });
   const by = Object.fromEntries(rows.map((r) => [r.uti ?? r.proprietary, r.key_verdict]));
-  assert.deepEqual(by, { P2: 'misto', U1: 'bnpp', U3: 'sem_explicacao', U4: 'sem_explicacao', U5: 'contraparte' });
+  assert.deepEqual(by, { P2: 'mixed', U1: 'bnpp', U3: 'unexplained', U4: 'unexplained', U5: 'counterparty' });
   assert.equal(rows[1].combo, '|DELIVERY_TYPE|VALUATION_AMT|');
   await db.close();
 });
 
-test('métricas key_verdict e field_combinations (filtro por campo contido na combinação)', { skip }, async () => {
+test('key_verdict and field_combinations metrics (filter by a field contained in the combination)', { skip }, async () => {
   const db = await fixture();
   const api = await apiFor(db);
   const f = [{ dimension: 'business_date', op: 'eq', value: D }];
   const kv = await api.queryMetric({ metric: 'key_verdict', filters: f });
   assert.deepEqual(Object.fromEntries(kv.rows.map((r) => [r.key_verdict, Number(r.n_keys)])),
-    { sem_explicacao: 2, misto: 1, bnpp: 1, contraparte: 1 });
+    { unexplained: 2, mixed: 1, bnpp: 1, counterparty: 1 });
   const combos = await api.queryMetric({
     metric: 'field_combinations', filters: [...f, { dimension: 'breaking_field', op: 'eq', value: 'valuation_amt' }],
   });
   assert.deepEqual(combos.rows.map((r) => [r.combo, Number(r.n_keys)]), [
     ['DELIVERY_TYPE + VALUATION_AMT', 1], ['ISIN + UNIQUE_PRODUCT_ID + VALUATION_AMT', 1], ['VALUATION_AMT', 1],
-  ], 'VALUATIONXAMT não entra (o _ é escapado no LIKE); minúsculas aceites');
+  ], 'VALUATIONXAMT is excluded (the _ is escaped in LIKE); lower case accepted');
   assert.equal(combos.rows[0].combo_key, '|DELIVERY_TYPE|VALUATION_AMT|');
   await assert.rejects(
     api.queryMetric({ metric: 'field_combinations', filters: [...f, { dimension: 'breaking_field', op: 'eq', value: "X%' OR 1=1 --" }] }),
     ValidationError,
   );
-  // breaking_field sem distinção de maiúsculas nas outras métricas
+  // breaking_field is case-insensitive in the other metrics
   const rv = await api.queryMetric({ metric: 'rule_verdict', filters: [...f, { dimension: 'breaking_field', op: 'eq', value: 'isin' }] });
-  assert.deepEqual(rv.rows.map((r) => [r.verdict, Number(r.n_breaks)]), [['so_contraparte', 2]]);
+  assert.deepEqual(rv.rows.map((r) => [r.verdict, Number(r.n_breaks)]), [['cpty_only', 2]]);
   await db.close();
 });
 
-test('API keys: filtros, veredicto do campo, paginação e pesquisa por identificador', { skip }, async () => {
+test('API keys: filters, field verdict, pagination and search by identifier', { skip }, async () => {
   const db = await fixture();
   const events = [];
   const api = await apiFor(db, events);
@@ -94,42 +94,42 @@ test('API keys: filtros, veredicto do campo, paginação e pesquisa por identifi
 
   const byField = await api.listKeys({ date: D, field: 'valuation_amt' });
   assert.deepEqual(byField.rows.map((r) => [r.trade_id, r.field_verdict]),
-    [['P2', 'sem_regras_verificaveis'], ['U1', 'divergencia'], ['U3', 'divergencia']]);
-  const div = await api.listKeys({ date: D, field: 'VALUATION_AMT', field_verdict: 'divergencia', sort: 'fields_asc' });
+    [['P2', 'no_verifiable_rules'], ['U1', 'divergence'], ['U3', 'divergence']]);
+  const div = await api.listKeys({ date: D, field: 'VALUATION_AMT', field_verdict: 'divergence', sort: 'fields_asc' });
   assert.deepEqual(div.rows.map((r) => r.trade_id), ['U3', 'U1']);
   assert.equal((await api.listKeys({ date: D, combo: '|ISIN|' })).rows[0].trade_id, 'U5');
-  assert.equal((await api.listKeys({ date: D, key_verdict: 'misto' })).total, 1);
+  assert.equal((await api.listKeys({ date: D, key_verdict: 'mixed' })).total, 1);
   assert.equal((await api.listKeys({ date: D, asset_class: 'EQ', min_fields: 1 })).total, 2);
   assert.equal((await api.listKeys({ date: D, trade: 'U' })).total, 4);
   const p2 = await api.listKeys({ date: D, page: 2, page_size: 2 });
   assert.deepEqual([p2.total, p2.rows.map((r) => r.trade_id)], [5, ['U3', 'U4']]);
 
-  for (const bad of [{}, { date: D, sort: 'x; DROP' }, { date: D, field_verdict: 'so_bnpp' }, { date: D, combo: "|A|' OR 1=1" },
+  for (const bad of [{}, { date: D, sort: 'x; DROP' }, { date: D, field_verdict: 'bnpp_only' }, { date: D, combo: "|A|' OR 1=1" },
     { date: D, page_size: 1000 }, { date: D, trade: "U1' --" }]) {
     await assert.rejects(api.listKeys(bad), ValidationError, JSON.stringify(bad));
   }
-  // Auditoria sem linhas de dados: só parâmetros e contagem.
+  // Audit without data rows: parameters and count only.
   const ok = events.find((e) => e.endpoint === 'keys' && e.status === 'ok');
   assert.ok(ok && 'rowCount' in ok && !('rows' in ok));
   await db.close();
 });
 
-test('API key: todos os breaks da Key com valores TP1/TP2 e veredicto', { skip }, async () => {
+test('API key: all breaks of the Key with TP1/TP2 values and verdict', { skip }, async () => {
   const db = await fixture();
   const api = await apiFor(db);
   const { key, breaks } = await api.getKey('1', { date: D });
   assert.equal(key.trade_id, 'P2');
-  assert.deepEqual(breaks.map((b) => [b.breaking_field, b.valor_bnpp, b.valor_other_cpty, b.verdict]), [
-    ['ISIN', 'b-ISIN', 'c-ISIN', 'so_contraparte'],
-    ['UNIQUE_PRODUCT_ID', 'b-UNIQUE_PRODUCT_ID', 'c-UNIQUE_PRODUCT_ID', 'ambos'],
-    ['VALUATION_AMT', 'b-VALUATION_AMT', 'c-VALUATION_AMT', 'sem_regras_verificaveis'],
+  assert.deepEqual(breaks.map((b) => [b.breaking_field, b.bnpp_value, b.other_cpty_value, b.verdict]), [
+    ['ISIN', 'b-ISIN', 'c-ISIN', 'cpty_only'],
+    ['UNIQUE_PRODUCT_ID', 'b-UNIQUE_PRODUCT_ID', 'c-UNIQUE_PRODUCT_ID', 'both'],
+    ['VALUATION_AMT', 'b-VALUATION_AMT', 'c-VALUATION_AMT', 'no_verifiable_rules'],
   ]);
   await assert.rejects(api.getKey('99', { date: D }), (e) => statusFor(e) === 404);
   await assert.rejects(api.getKey('1', {}), ValidationError);
   await db.close();
 });
 
-test('API meta: datas com regras e jurisdições (só EMIR ativa); base sem key_summary dá dica', { skip }, async () => {
+test('API meta: dates with rules and jurisdictions (only EMIR enabled); database without key_summary gives a hint', { skip }, async () => {
   const db = await fixture();
   const meta = await (await apiFor(db)).meta();
   assert.deepEqual(meta.dates, [{ date: D, rulesVersion: 'v1' }]);
@@ -142,7 +142,7 @@ test('API meta: datas com regras e jurisdições (só EMIR ativa); base sem key_
   await empty.close();
 });
 
-test('pool: ligação curta (fecha sem pedidos) e erro de lock -> 503', async () => {
+test('pool: short-lived connection (closes without requests) and lock error -> 503', async () => {
   let opened = 0;
   let closed = 0;
   const pool = createDbPool(async () => {
@@ -150,8 +150,8 @@ test('pool: ligação curta (fecha sem pedidos) e erro de lock -> 503', async ()
     return { all: async () => [], close: async () => { closed += 1; } };
   });
   await Promise.all([pool.with(async () => 1), pool.with(async () => 2)]);
-  assert.equal(opened, 1, 'pedidos simultâneos partilham a ligação');
-  assert.equal(closed, 1, 'fecha quando não há pedidos em curso');
+  assert.equal(opened, 1, 'concurrent requests share the connection');
+  assert.equal(closed, 1, 'closes when no request is in flight');
   await pool.with(async () => 3);
   assert.equal(opened, 2);
   const busy = createDbPool(async () => { throw new Error('IO Error: Could not set lock on file'); });
@@ -159,15 +159,15 @@ test('pool: ligação curta (fecha sem pedidos) e erro de lock -> 503', async ()
   assert.equal(isLockError(new Error('Catalog Error')), false);
 });
 
-test('tools do agente: nenhuma tool devolve linhas; keysQuery só com literais validados', () => {
+test('agent tools: no tool returns rows; keysQuery with validated literals only', () => {
   assert.deepEqual(AGENT_TOOLS.map((t) => t.name), ['list_metrics', 'query_metric', 'open_drilldown']);
   assert.ok(!AGENT_TOOLS.some((t) => /keys/.test(t.name)));
-  const q = keysQuery({ date: D, field: 'isin', field_verdict: 'so_contraparte' });
+  const q = keysQuery({ date: D, field: 'isin', field_verdict: 'cpty_only' });
   assert.match(q.join, /bv\.breaking_field = 'ISIN'/);
   assert.equal(statusFor(new ValidationError('x')), 400);
 });
 
-test('perguntas sugeridas: todas compilam (conjunto de teste do agente)', async () => {
+test('suggested questions: all compile (agent test set)', async () => {
   const { compileMetric } = await import('../src/semantic/compiler.js');
   const api = createApi(createDbPool(async () => ({})), { audit: false });
   const qs = api.questions();
@@ -176,4 +176,21 @@ test('perguntas sugeridas: todas compilam (conjunto de teste do agente)', async 
     const req = JSON.parse(JSON.stringify(q.request).replaceAll('$date', D));
     assert.doesNotThrow(() => compileMetric(req), q.id);
   }
+});
+
+test('legacy (Portuguese) rule tables are detected so that npm run rules can drop them', { skip }, async () => {
+  const { hasLegacyRuleTables } = await import('../src/rules/sql.js');
+  const fresh = await fixture();
+  assert.equal(await hasLegacyRuleTables(fresh), false);
+  await fresh.close();
+  const legacyCols = await openSqlite();
+  await legacyCols.exec('CREATE TABLE break_detail (business_date TEXT, campo TEXT)');
+  assert.equal(await hasLegacyRuleTables(legacyCols), true);
+  await legacyCols.close();
+  const legacyValues = await openSqlite();
+  await legacyValues.exec(VERDICT_DDL);
+  await legacyValues.exec(`INSERT INTO break_verdict (business_date, verdict) VALUES ('${D}', 'divergencia')`);
+  assert.equal(await hasLegacyRuleTables(legacyValues), true);
+  await legacyValues.close();
+  assert.equal(await hasLegacyRuleTables(await openSqlite()), false, 'empty database');
 });

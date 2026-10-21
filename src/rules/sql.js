@@ -1,18 +1,18 @@
-// SQL do motor de regras: entrada (transações DTCC com break), resultados por regra e veredicto por break.
-// Só SQL standard + funções do dialeto (regexFull, castNumber, stringAgg).
+// Rules engine SQL: input (DTCC transactions with a break), results per rule and verdict per break.
+// Standard SQL only + dialect functions (regexFull, castNumber, stringAgg).
 import { dateLiteral } from '../semantic/literals.js';
 import { POSITION_KEY } from '../db/model.js';
 
 const quoteIdent = (name) => {
-  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) throw new Error(`Nome de coluna inválido: ${name}`);
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) throw new Error(`Invalid column name: ${name}`);
   return `"${name}"`;
 };
 const sqlString = (v) => `'${String(v).replace(/'/g, "''")}'`;
 
-/** Colunas da chave na tabela de entrada: k_<lógica> (evita colisão com os nomes físicos, ex. UTI). */
+/** Key columns in the input table: k_<logical> (avoids clashes with the physical names, e.g. UTI). */
 export const K = POSITION_KEY.map((k) => `k_${k}`);
 
-/** Chave normalizada a partir das colunas físicas (as mesmas no data mart e no ficheiro DTCC). */
+/** Normalised key from the physical columns (the same in the data mart and in the DTCC file). */
 export function keySelect(config, dialect) {
   return POSITION_KEY.map(
     (logical) => `NULLIF(TRIM(${dialect.castText(quoteIdent(config.columns[logical]))}), '') AS k_${logical}`,
@@ -20,10 +20,10 @@ export function keySelect(config, dialect) {
 }
 
 /**
- * Transações do ficheiro DTCC de uma business date que têm break no data mart, com a chave normalizada
- * e só as colunas que as regras usam (`columns`; vazio = todas).
- * Âmbito (Ordep, 2026-10-20): as regras só correm sobre os breaks do data mart. Validar o ficheiro DTCC inteiro
- * é "data quality", requisito futuro.
+ * DTCC file transactions of a business date that have a break in the data mart, with the normalised key
+ * and only the columns the rules use (`columns`; empty = all).
+ * Scope (Ordep, 2026-10-20): the rules only run on the data mart breaks. Validating the whole DTCC file
+ * is "data quality", a future requirement.
  */
 export function ruleInputSql(config, dialect, fromSql, date, { columns = [] } = {}) {
   const d = dateLiteral(date);
@@ -50,8 +50,8 @@ export const RESULTS_DDL = `CREATE TABLE IF NOT EXISTS rule_results (
 )`;
 
 /**
- * INSERT das violações de uma regra num lado, só nas transações em que o campo da regra está em break
- * (a regra de VALUATION_CCY só corre nos breaks de VALUATION_CCY). `violates` = expressão de compileRule.
+ * INSERT of the violations of one rule on one side, only for the transactions where the rule's field is in break
+ * (the VALUATION_CCY rule only runs on VALUATION_CCY breaks). `violates` = expression from compileRule.
  */
 export function insertViolationsSql(date, c, side, violates, version, input = 'rule_input') {
   const d = dateLiteral(date);
@@ -69,19 +69,19 @@ WHERE ${violates}
   )`;
 }
 
-/** Violações por regra e lado numa business date (para a taxa por regra). */
+/** Violations per rule and side on a business date (for the rate per rule). */
 export function violationCountsSql(date) {
   return `SELECT code, side, COUNT(*) AS n FROM rule_results WHERE business_date = ${dateLiteral(date)} GROUP BY code, side`;
 }
 
-/** Breaks por campo (maiúsculas) numa business date. */
+/** Breaks per field (upper case) on a business date. */
 export function breaksByFieldSql(date) {
   return `SELECT UPPER(breaking_field) AS target, COUNT(*) AS n FROM breaks WHERE business_date = ${dateLiteral(date)} GROUP BY UPPER(breaking_field)`;
 }
 
 /**
- * Regra suspeita de tradução errada: viola nos DOIS lados em mais de `pct`% dos breaks do seu campo.
- * Um erro real costuma estar num lado; uma tradução errada falha nos dois (o formato é o mesmo dos dois lados).
+ * Rule suspected of a wrong translation: violates on BOTH sides in more than `pct`% of the breaks of its field.
+ * A real error is usually on one side; a wrong translation fails on both (the format is the same on both sides).
  */
 export function isSuspect(pctBnpp, pctCpty, pct = 5) {
   return pctBnpp != null && pctCpty != null && pctBnpp > pct && pctCpty > pct;
@@ -100,14 +100,14 @@ export const VERDICT_DDL = `CREATE TABLE IF NOT EXISTS break_verdict (
   rules_version VARCHAR
 )`;
 
-/** Veredictos possíveis (por ordem de leitura na UI). */
-export const VERDICTS = ['so_bnpp', 'so_contraparte', 'ambos', 'divergencia', 'sem_regras_verificaveis'];
+/** Possible verdicts per break (in UI reading order). */
+export const VERDICTS = ['bnpp_only', 'cpty_only', 'both', 'divergence', 'no_verifiable_rules'];
 export const DIVERGENCE_MESSAGE =
-  'Divergência: os dois valores cumprem as regras ESMA verificáveis; as regras não determinam o lado errado.';
+  'Divergence: both values comply with the verifiable ESMA rules; the rules do not determine which side is wrong.';
 
 /**
- * Veredicto por break da business date. `fieldRules` = tabela (target, n) com o nº de regras verificáveis por campo.
- * Um break cujo campo não tem regras verificáveis fica "sem_regras_verificaveis" (não é divergência).
+ * Verdict per break on the business date. `field_rules` = table (target, n) with the number of verifiable rules per field.
+ * A break whose field has no verifiable rules is "no_verifiable_rules" (not a divergence).
  */
 export function insertVerdictSql(date, dialect, version) {
   const d = dateLiteral(date);
@@ -125,11 +125,11 @@ SELECT
   ${codes('BNPP')},
   ${codes('CPTY')},
   CASE
-    WHEN COALESCE(MAX(f.n), 0) = 0 THEN 'sem_regras_verificaveis'
-    WHEN SUM(CASE WHEN r.side = 'BNPP' THEN 1 ELSE 0 END) > 0 AND SUM(CASE WHEN r.side = 'CPTY' THEN 1 ELSE 0 END) > 0 THEN 'ambos'
-    WHEN SUM(CASE WHEN r.side = 'BNPP' THEN 1 ELSE 0 END) > 0 THEN 'so_bnpp'
-    WHEN SUM(CASE WHEN r.side = 'CPTY' THEN 1 ELSE 0 END) > 0 THEN 'so_contraparte'
-    ELSE 'divergencia'
+    WHEN COALESCE(MAX(f.n), 0) = 0 THEN 'no_verifiable_rules'
+    WHEN SUM(CASE WHEN r.side = 'BNPP' THEN 1 ELSE 0 END) > 0 AND SUM(CASE WHEN r.side = 'CPTY' THEN 1 ELSE 0 END) > 0 THEN 'both'
+    WHEN SUM(CASE WHEN r.side = 'BNPP' THEN 1 ELSE 0 END) > 0 THEN 'bnpp_only'
+    WHEN SUM(CASE WHEN r.side = 'CPTY' THEN 1 ELSE 0 END) > 0 THEN 'cpty_only'
+    ELSE 'divergence'
   END,
   ${sqlString(version)}
 FROM (SELECT ${POSITION_KEY.join(', ')}, UPPER(breaking_field) AS field FROM breaks WHERE business_date = ${d}) b
@@ -141,7 +141,7 @@ LEFT JOIN rule_results r
 GROUP BY ${POSITION_KEY.map((k) => `b.${k}`).join(', ')}, b.field`;
 }
 
-/** Tabela field_rules (target, n) a partir das regras compiladas (n = regras com SQL em pelo menos um lado). */
+/** field_rules table (target, n) from the compiled rules (n = rules with SQL on at least one side). */
 export function fieldRulesSql(compiled) {
   const counts = new Map();
   for (const c of compiled) {
@@ -155,7 +155,7 @@ export function fieldRulesSql(compiled) {
   return `CREATE TEMP TABLE field_rules AS ${body}`;
 }
 
-/** Colunas físicas usadas nas expressões compiladas (identificadores entre aspas). */
+/** Physical columns used in the compiled expressions (quoted identifiers). */
 export function usedColumns(compiled) {
   const out = new Set();
   for (const c of compiled) {
@@ -166,45 +166,45 @@ export function usedColumns(compiled) {
   return [...out].sort();
 }
 
-/** Tabelas temporárias de apoio: rule_catalog (código -> mensagem de erro) e field_names (sufixo -> campo ESMA). */
+/** Supporting temp tables: rule_catalog (code -> error message) and field_names (suffix -> ESMA field label). */
 export function catalogTablesSql(compiled, fieldMap, describeRule, fieldLabel) {
   const rows = compiled.map((c) => `SELECT ${sqlString(c.rule.code)} AS code, ${sqlString(describeRule(c.rule, fieldMap))} AS message`);
   const names = new Map();
   for (const e of Object.values(fieldMap.items)) for (const t of e.tp ?? []) names.set(t.toUpperCase(), fieldLabel(t, fieldMap));
-  const nrows = [...names.entries()].map(([t, l]) => `SELECT ${sqlString(t)} AS target, ${sqlString(l)} AS campo`);
+  const nrows = [...names.entries()].map(([t, l]) => `SELECT ${sqlString(t)} AS target, ${sqlString(l)} AS field_label`);
   return [
     'DROP TABLE IF EXISTS rule_catalog',
     `CREATE TEMP TABLE rule_catalog AS ${rows.length ? rows.join('\nUNION ALL ') : "SELECT '' AS code, '' AS message WHERE 1 = 0"}`,
     'DROP TABLE IF EXISTS field_names',
-    `CREATE TEMP TABLE field_names AS ${nrows.length ? nrows.join('\nUNION ALL ') : "SELECT '' AS target, '' AS campo WHERE 1 = 0"}`,
+    `CREATE TEMP TABLE field_names AS ${nrows.length ? nrows.join('\nUNION ALL ') : "SELECT '' AS target, '' AS field_label WHERE 1 = 0"}`,
   ];
 }
 
 export const DETAIL_DDL = `CREATE TABLE IF NOT EXISTS break_detail (
   business_date DATE,
   ${POSITION_KEY.map((k) => `${k} VARCHAR`).join(',\n  ')},
-  campo VARCHAR,
+  field_label VARCHAR,
   breaking_field VARCHAR,
-  valor_bnpp VARCHAR,
-  valor_other_cpty VARCHAR,
-  veredicto VARCHAR,
-  erro_bnpp VARCHAR,
-  erro_other_cpty VARCHAR,
+  bnpp_value VARCHAR,
+  other_cpty_value VARCHAR,
+  verdict_text VARCHAR,
+  bnpp_error VARCHAR,
+  other_cpty_error VARCHAR,
   rules_version VARCHAR
 )`;
 
-/** Texto do veredicto para o operacional (os erros vêm das regras; divergência e sem regras têm mensagem fixa). */
+/** Verdict text for the operations user (errors come from the rules; divergence and no rules have a fixed message). */
 export const VERDICT_TEXT = {
-  so_bnpp: 'Erro do lado BNPP',
-  so_contraparte: 'Erro do lado da contraparte',
-  ambos: 'Erro dos dois lados',
-  divergencia: DIVERGENCE_MESSAGE,
-  sem_regras_verificaveis: 'Sem regras ESMA verificáveis para este campo com os dados do ficheiro DTCC.',
+  bnpp_only: 'Error on the BNPP side',
+  cpty_only: 'Error on the counterparty side',
+  both: 'Error on both sides',
+  divergence: DIVERGENCE_MESSAGE,
+  no_verifiable_rules: 'No ESMA rules can be verified for this field with the DTCC file data.',
 };
 
 /**
- * Detalhe por break para os operacionais: chave, campo ESMA, valores TP1 (BNPP) / TP2 (other cpty) do campo em break,
- * veredicto e mensagens das regras violadas em cada lado. `valueFields` = sufixos com colunas TP1_/TP2_ em rule_input.
+ * Detail per break for the operations users: key, ESMA field, TP1 (BNPP) / TP2 (other cpty) values of the field in break,
+ * verdict and the messages of the rules violated on each side. `valueFields` = suffixes with TP1_/TP2_ columns in rule_input.
  */
 export function insertDetailSql(date, dialect, valueFields, version, input = 'rule_input') {
   const d = dateLiteral(date);
@@ -223,7 +223,7 @@ WITH m AS (
   GROUP BY ${POSITION_KEY.map((k) => `r.${k}`).join(', ')}, r.target, r.side
 )
 SELECT ${d}, ${POSITION_KEY.map((k) => `bv.${k}`).join(', ')},
-  COALESCE(fn.campo, bv.breaking_field), bv.breaking_field,
+  COALESCE(fn.field_label, bv.breaking_field), bv.breaking_field,
   ${val('TP1')},
   ${val('TP2')},
   ${verdictText},
@@ -237,13 +237,13 @@ WHERE bv.business_date = ${d}`;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// Resumo por Key (transação) — ecrã 3 da demo (plano aprovado em 2026-10-20).
-// Key = chave de produção SEM o campo (POSITION_KEY). Uma linha por Key e por business date, com o nº de campos em
-// break, a combinação de campos, as contagens por veredicto e o veredicto da Key. Pré-calculado no `npm run rules`
-// para o servidor só ler (DuckDB READ_ONLY).
+// Summary per Key (transaction) — demo screen 3 (plan approved on 2026-10-20).
+// Key = production key WITHOUT the field (POSITION_KEY). One row per Key and business date, with the number of fields
+// in break, the field combination, the counts per verdict and the Key verdict. Precomputed by `npm run rules`
+// so that the server only reads (DuckDB READ_ONLY).
 
-/** Veredicto de uma Key (filtro e ordenação). Um campo "ambos" conta como erro dos dois lados → "misto". */
-export const KEY_VERDICTS = ['bnpp', 'contraparte', 'misto', 'sem_explicacao'];
+/** Verdict of a Key (filter and sort). A "both" field counts as an error on both sides → "mixed". */
+export const KEY_VERDICTS = ['bnpp', 'counterparty', 'mixed', 'unexplained'];
 
 export const KEY_SUMMARY_DDL = `CREATE TABLE IF NOT EXISTS key_summary (
   business_date DATE,
@@ -251,19 +251,19 @@ export const KEY_SUMMARY_DDL = `CREATE TABLE IF NOT EXISTS key_summary (
   ${POSITION_KEY.map((k) => `${k} VARCHAR`).join(',\n  ')},
   n_fields INTEGER,
   combo VARCHAR,
-  n_so_bnpp INTEGER,
-  n_so_contraparte INTEGER,
-  n_ambos INTEGER,
-  n_divergencia INTEGER,
-  n_sem_regras INTEGER,
+  n_bnpp_only INTEGER,
+  n_cpty_only INTEGER,
+  n_both INTEGER,
+  n_divergence INTEGER,
+  n_no_rules INTEGER,
   key_verdict VARCHAR,
   rules_version VARCHAR
 )`;
 
 /**
- * INSERT do resumo por Key a partir de break_verdict. `combo` = campos em break ordenados, no formato `|A|B|C|`
- * (os delimitadores nas pontas permitem filtrar "combinações com o campo X" com LIKE '%|X|%').
- * `key_id` = número sequencial por data (mais campos primeiro): identifica a Key no URL sem expor UTI/LEIs.
+ * INSERT of the per-Key summary from break_verdict. `combo` = sorted fields in break, formatted as `|A|B|C|`
+ * (the delimiters at both ends allow filtering "combinations containing field X" with LIKE '%|X|%').
+ * `key_id` = sequence number per date (most fields first): identifies the Key in the URL without exposing UTI/LEIs.
  */
 export function insertKeySummarySql(date, dialect, version) {
   const d = dateLiteral(date);
@@ -273,24 +273,49 @@ export function insertKeySummarySql(date, dialect, version) {
   return `INSERT INTO key_summary
 SELECT ${d},
   ROW_NUMBER() OVER (ORDER BY n_fields DESC, ${order}),
-  ${keys}, n_fields, combo, n_so_bnpp, n_so_contraparte, n_ambos, n_divergencia, n_sem_regras,
+  ${keys}, n_fields, combo, n_bnpp_only, n_cpty_only, n_both, n_divergence, n_no_rules,
   CASE
-    WHEN n_so_bnpp + n_ambos > 0 AND n_so_contraparte + n_ambos > 0 THEN 'misto'
-    WHEN n_so_bnpp > 0 THEN 'bnpp'
-    WHEN n_so_contraparte > 0 THEN 'contraparte'
-    ELSE 'sem_explicacao'
+    WHEN n_bnpp_only + n_both > 0 AND n_cpty_only + n_both > 0 THEN 'mixed'
+    WHEN n_bnpp_only > 0 THEN 'bnpp'
+    WHEN n_cpty_only > 0 THEN 'counterparty'
+    ELSE 'unexplained'
   END,
   ${sqlString(version)}
 FROM (
   SELECT ${keys},
     COUNT(*) AS n_fields,
     '|' || ${dialect.stringAgg('breaking_field', '|', 'breaking_field')} || '|' AS combo,
-    ${n('so_bnpp')} AS n_so_bnpp,
-    ${n('so_contraparte')} AS n_so_contraparte,
-    ${n('ambos')} AS n_ambos,
-    ${n('divergencia')} AS n_divergencia,
-    ${n('sem_regras_verificaveis')} AS n_sem_regras
+    ${n('bnpp_only')} AS n_bnpp_only,
+    ${n('cpty_only')} AS n_cpty_only,
+    ${n('both')} AS n_both,
+    ${n('divergence')} AS n_divergence,
+    ${n('no_verifiable_rules')} AS n_no_rules
   FROM (SELECT * FROM break_verdict WHERE business_date = ${d} ORDER BY breaking_field) bv
   GROUP BY ${keys}
 ) g`;
+}
+
+/**
+ * Rule result tables created before 2026-10-21 have Portuguese identifiers (verdicts so_bnpp/divergencia...,
+ * columns campo/valor_bnpp/n_so_bnpp...). Probe queries: if any succeeds, the tables are legacy and must be dropped
+ * (every business date then needs `npm run rules` again).
+ */
+export const LEGACY_PROBES = [
+  'SELECT campo FROM break_detail LIMIT 0',
+  'SELECT n_so_bnpp FROM key_summary LIMIT 0',
+  "SELECT 1 FROM break_verdict WHERE verdict IN ('so_bnpp', 'so_contraparte', 'ambos', 'divergencia', 'sem_regras_verificaveis') LIMIT 1",
+];
+export const RULE_TABLES = ['rule_results', 'break_verdict', 'break_detail', 'key_summary'];
+
+/** true if the database still has rule tables with the legacy (Portuguese) schema or values. */
+export async function hasLegacyRuleTables(db) {
+  for (const sql of LEGACY_PROBES) {
+    try {
+      const rows = await db.all(sql);
+      if (!sql.includes('LIMIT 1') || rows.length) return true;
+    } catch {
+      // table or column does not exist: not legacy
+    }
+  }
+  return false;
 }

@@ -6,7 +6,7 @@ import { describeCatalog } from '../src/semantic/catalog.js';
 
 const onDate = (value = '2026-10-15') => [{ dimension: 'business_date', op: 'eq', value }];
 
-test('catálogo tem as 6 métricas do plano + persistence, rule_verdict, key_verdict e field_combinations, com reference_id_distribution pendente', () => {
+test('catalog has the 6 metrics of the plan + persistence, rule_verdict, key_verdict and field_combinations, with reference_id_distribution pending', () => {
   const cat = describeCatalog();
   assert.deepEqual(
     cat.metrics.map((m) => m.id).sort(),
@@ -16,23 +16,23 @@ test('catálogo tem as 6 métricas do plano + persistence, rule_verdict, key_ver
   assert.equal(cat.metrics.find((m) => m.id === 'reference_id_distribution').available, false);
 });
 
-test('métrica desconhecida e métrica pendente são rejeitadas', () => {
+test('unknown metric and pending metric are rejected', () => {
   assert.throws(() => compileMetric({ metric: 'drop_table', filters: onDate() }), ValidationError);
   assert.throws(() => compileMetric({ metric: 'reference_id_distribution' }), MetricUnavailableError);
 });
 
-test('top_fields compila com limite por omissão 10 e grão deduplicado', () => {
+test('top_fields compiles with default limit 10 and deduplicated grain', () => {
   const { sql } = compileMetric({ metric: 'top_fields', filters: onDate() });
   assert.match(sql, /FROM breaks\n/);
   assert.match(sql, /business_date = '2026-10-15'/);
   assert.match(sql, /LIMIT 10$/);
 });
 
-test('filtro obrigatório em falta', () => {
-  assert.throws(() => compileMetric({ metric: 'top_fields' }), /obrigatório/);
+test('missing required filter', () => {
+  assert.throws(() => compileMetric({ metric: 'top_fields' }), /Missing required filter/);
 });
 
-test('valores de filtro são escapados (sem injeção)', () => {
+test('filter values are escaped (no injection)', () => {
   const { sql } = compileMetric({
     metric: 'breaks_by_field',
     filters: [...onDate(), { dimension: 'cp2_lei', op: 'eq', value: "X' OR 1=1 --" }],
@@ -40,78 +40,78 @@ test('valores de filtro são escapados (sem injeção)', () => {
   assert.match(sql, /cp2_lei = 'X'' OR 1=1 --'/);
 });
 
-test('dimensões e filtros fora da whitelist são rejeitados', () => {
+test('dimensions and filters outside the whitelist are rejected', () => {
   assert.throws(
     () => compileMetric({ metric: 'top_fields', filters: onDate(), dimensions: ['cp2_lei'] }),
-    /Dimensão não permitida/,
+    /Dimension not allowed/,
   );
   assert.throws(
     () => compileMetric({ metric: 'breaks_by_field', filters: [...onDate(), { dimension: 'bnpp_value', op: 'eq', value: 'x' }] }),
-    /Filtro não permitido/,
+    /Filter not allowed/,
   );
   assert.throws(
     () => compileMetric({ metric: 'breaks_by_field', filters: onDate(), dimensions: ['breaking_field; DROP TABLE breaks'] }),
-    /Dimensão não permitida/,
+    /Dimension not allowed/,
   );
 });
 
-test('datas inválidas, intervalos invertidos e limites fora do intervalo', () => {
-  assert.throws(() => compileMetric({ metric: 'top_fields', filters: onDate('2026-02-30') }), /Data inválida/);
+test('invalid dates, inverted ranges and out-of-range limits', () => {
+  assert.throws(() => compileMetric({ metric: 'top_fields', filters: onDate('2026-02-30') }), /Invalid date/);
   assert.throws(
     () => compileMetric({ metric: 'top_fields', filters: [{ dimension: 'business_date', op: 'between', value: ['2026-10-15', '2026-10-12'] }] }),
-    /invertido/,
+    /Inverted/,
   );
-  assert.throws(() => compileMetric({ metric: 'top_fields', filters: onDate(), limit: 0 }), /Inteiro inválido/);
-  assert.throws(() => compileMetric({ metric: 'top_fields', filters: onDate(), limit: 'all' }), /Inteiro inválido/);
+  assert.throws(() => compileMetric({ metric: 'top_fields', filters: onDate(), limit: 0 }), /Invalid integer/);
+  assert.throws(() => compileMetric({ metric: 'top_fields', filters: onDate(), limit: 'all' }), /Invalid integer/);
 });
 
-test('breaks_dod exige business_date com eq', () => {
+test('breaks_dod requires business_date with eq', () => {
   assert.throws(
     () => compileMetric({ metric: 'breaks_dod', filters: [{ dimension: 'business_date', op: 'between', value: ['2026-10-12', '2026-10-15'] }] }),
-    /só aceita: eq/,
+    /only accepts: eq/,
   );
   const { sql } = compileMetric({ metric: 'breaks_dod', filters: onDate() });
   assert.match(sql, /business_date < '2026-10-15'/);
 });
 
-test('filtro "in" valida a lista', () => {
+test('"in" filter validates the list', () => {
   assert.throws(
     () => compileMetric({ metric: 'breaks_by_field', filters: [...onDate(), { dimension: 'breaking_field', op: 'in', value: [] }] }),
-    /lista/,
+    /list/,
   );
   const { sql } = compileMetric({
     metric: 'breaks_by_field',
     filters: [...onDate(), { dimension: 'breaking_field', op: 'in', value: ['isin', 'VALUATION_AMT'] }],
   });
-  // breaking_field compara sem distinguir maiúsculas (minúsculas no data mart, maiúsculas em break_verdict).
+  // breaking_field is compared case-insensitively (lower case in the data mart, upper case in break_verdict).
   assert.match(sql, /UPPER\(breaking_field\) IN \('ISIN', 'VALUATION_AMT'\)/);
 });
 
-test('profile: redactIds remove UTI e LEIs e mantém os agregados', async () => {
+test('profile: redactIds removes UTI and LEIs and keeps the aggregates', async () => {
   const { redactIds } = await import('../src/analysis/profile.js');
   const [row] = redactIds([{ uti: 'X', cp1_lei: 'A', cp2_lei: 'B', raw_rows: 3, n_fields: 2, n_trade_numbers: 1 }]);
   assert.deepEqual(row, { raw_rows: 3, n_fields: 2, n_trade_numbers: 1 });
 });
 
-test('datas excluídas: saltadas no dia anterior e rejeitadas como data pedida', () => {
+test('excluded dates: skipped as previous day and rejected as requested date', () => {
   const excludedDates = ['2026-10-12'];
   for (const metric of ['breaks_dod', 'persistence']) {
     const { sql } = compileMetric({ metric, filters: onDate('2026-10-13') }, { excludedDates });
     assert.match(sql, /business_date < '2026-10-13' AND business_date NOT IN \('2026-10-12'\)/);
-    assert.throws(() => compileMetric({ metric, filters: onDate('2026-10-12') }, { excludedDates }), /excluída/);
+    assert.throws(() => compileMetric({ metric, filters: onDate('2026-10-12') }, { excludedDates }), /excluded/);
   }
-  // Sem datas excluídas, o comportamento antigo mantém-se.
+  // Without excluded dates, the previous behaviour is kept.
   const { sql } = compileMetric({ metric: 'breaks_dod', filters: onDate('2026-10-13') });
   assert.doesNotMatch(sql, /NOT IN/);
-  assert.throws(() => compileMetric({ metric: 'persistence', filters: onDate() }, { excludedDates: ['15/10/2026'] }), /inválida/);
+  assert.throws(() => compileMetric({ metric: 'persistence', filters: onDate() }, { excludedDates: ['15/10/2026'] }), /Invalid excluded date/);
 });
 
-test('persistence: só eq na data, dimensões na whitelist, SQL sem IS NOT DISTINCT FROM', () => {
+test('persistence: eq only on the date, whitelisted dimensions, SQL without IS NOT DISTINCT FROM', () => {
   assert.throws(
     () => compileMetric({ metric: 'persistence', filters: [{ dimension: 'business_date', op: 'between', value: ['2026-10-13', '2026-10-15'] }] }),
-    /só aceita: eq/,
+    /only accepts: eq/,
   );
-  assert.throws(() => compileMetric({ metric: 'persistence', filters: onDate(), dimensions: ['cp2_lei'] }), /Dimensão não permitida/);
+  assert.throws(() => compileMetric({ metric: 'persistence', filters: onDate(), dimensions: ['cp2_lei'] }), /Dimension not allowed/);
   const { sql } = compileMetric({
     metric: 'persistence',
     filters: [...onDate(), { dimension: 'asset_class', op: 'eq', value: 'CREDIT' }],
@@ -123,7 +123,7 @@ test('persistence: só eq na data, dimensões na whitelist, SQL sem IS NOT DISTI
   assert.match(sql, /GROUP BY breaking_field/);
 });
 
-test('chave do break = chave de produção (UTI e PROPRIETARY separados)', async () => {
+test('break key = production key (UTI and PROPRIETARY separate)', async () => {
   const { BREAK_KEY, dedupSelect } = await import('../src/db/model.js');
   assert.deepEqual(BREAK_KEY, [
     'business_date', 'report_submitting_entity', 'cp1_lei', 'cp2_lei', 'uti', 'proprietary', 'asset_class', 'breaking_field',
@@ -131,14 +131,14 @@ test('chave do break = chave de produção (UTI e PROPRIETARY separados)', async
   assert.match(dedupSelect(), /PARTITION BY business_date, report_submitting_entity, cp1_lei, cp2_lei, uti, proprietary, asset_class, breaking_field/);
 });
 
-test('config: uti_alt antigo em config/local.json é aceite como proprietary', async () => {
+test('config: legacy uti_alt in config/local.json is accepted as proprietary', async () => {
   const { loadConfig } = await import('../src/config.js');
   const c = loadConfig({ columns: { uti_alt: 'PROPRIETARY_X' } });
   assert.equal(c.columns.proprietary, 'PROPRIETARY_X');
   assert.equal(c.columns.uti_alt, undefined);
 });
 
-test('rule_verdict: lê break_verdict, filtros só nas colunas que a tabela tem', () => {
+test('rule_verdict: reads break_verdict, filters only on the columns the table has', () => {
   const { sql } = compileMetric({
     metric: 'rule_verdict',
     filters: [...onDate(), { dimension: 'breaking_field', op: 'eq', value: 'VALUATION_CCY' }],
@@ -148,6 +148,6 @@ test('rule_verdict: lê break_verdict, filtros só nas colunas que a tabela tem'
   assert.match(sql, /GROUP BY breaking_field, verdict/);
   assert.throws(
     () => compileMetric({ metric: 'rule_verdict', filters: [...onDate(), { dimension: 'business_line', op: 'eq', value: 'X' }] }),
-    /Filtro não permitido/,
+    /Filter not allowed/,
   );
 });

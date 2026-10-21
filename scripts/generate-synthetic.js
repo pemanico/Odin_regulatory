@@ -1,10 +1,11 @@
 #!/usr/bin/env node
-// Gera dados sintéticos de breaks (um ficheiro por business date) para desenvolver sem dados reais.
+// Generates synthetic breaks data (one file per business date) to develop without real data.
 //
 //   npm run synthetic -- [--days 4] [--positions 5000] [--start 2026-10-12] [--seed 42] [--out data/synthetic] [--keep-csv]
 //
-// Escreve CSV e, se o DuckDB estiver instalado, converte para Parquet.
-// Depois: ODIN_BREAKS_GLOB=data/synthetic/*.parquet npm run build:db
+// Writes CSV and, if DuckDB is installed, converts it to Parquet.
+// Then: ODIN_BREAKS_GLOB=data/synthetic/*.parquet npm run build:db
+// Note: it does not generate a DTCC file, so npm run rules cannot run on synthetic data (CLAUDE.md, question 44).
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { loadConfig, ROOT } from '../src/config.js';
@@ -32,14 +33,14 @@ for (const date of dates) {
   writeFileSync(path, toCsv(rows.filter((r) => r[dateCol] === date), headers));
   csvFiles.push(path);
 }
-console.log(`${rows.length} linhas sintéticas em ${dates.length} business dates (${dates[0]} a ${dates.at(-1)}).`);
+console.log(`${rows.length} synthetic rows over ${dates.length} business dates (${dates[0]} to ${dates.at(-1)}).`);
 
 let duck = null;
 try {
   const { openDuckDb } = await import('../src/db/duckdb.js');
   duck = await openDuckDb(':memory:');
 } catch {
-  console.log(`DuckDB não instalado: ficaram só os CSV em ${outDir}. Corre \`npm install\` e repete para gerar Parquet.`);
+  console.log(`DuckDB not installed: only the CSV files were written to ${outDir}. Run \`npm install\` and repeat to generate Parquet.`);
   process.exit(0);
 }
 
@@ -54,7 +55,7 @@ try {
       ) TO '${parquet}' (FORMAT parquet)`);
     if (!args['keep-csv']) rmSync(csv);
   }
-  console.log(`Parquet escrito em ${outDir}. Próximo passo:\n  ODIN_BREAKS_GLOB=${outDir}/*.parquet npm run build:db`);
+  console.log(`Parquet written to ${outDir}. Next step:\n  ODIN_BREAKS_GLOB=${outDir}/*.parquet npm run build:db`);
 } finally {
   await duck.close();
 }

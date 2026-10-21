@@ -1,12 +1,12 @@
-// Queries de análise exploratória (não são métricas certificadas).
-// Servem para validar hipóteses do plano: duplicação, chaves nulas, grupos de campos correlacionados.
+// Exploratory analysis queries (not certified metrics).
+// They validate hypotheses of the plan: duplication, null keys, groups of correlated fields.
 import { dateLiteral, intValue } from '../semantic/literals.js';
 import { previousDateSql } from '../semantic/calendar.js';
 import { positionKeyExpr, POSITION_KEY, tradeIdExpr } from '../db/model.js';
 
 const POS = POSITION_KEY.join(', ');
 
-/** Combinações de campos em break por position (hipótese dos grupos correlacionados). */
+/** Combinations of breaking fields per position (correlated groups hypothesis). */
 export function fieldCombinationsSql(dialect, date, limit = 20) {
   const d = dateLiteral(date);
   const n = intValue(limit, { min: 1, max: 1000 });
@@ -26,7 +26,7 @@ ORDER BY positions DESC, fields
 LIMIT ${n}`;
 }
 
-/** Positions com mais linhas brutas — ajuda a diagnosticar a causa da duplicação. */
+/** Positions with the most raw rows — helps to diagnose the cause of duplication. */
 export function topDuplicatedPositionsSql(date, limit = 10) {
   const d = dateLiteral(date);
   const n = intValue(limit, { min: 1, max: 1000 });
@@ -42,9 +42,9 @@ LIMIT ${n}`;
 }
 
 /**
- * Chaves nulas e LEIs iguais.
- * bnpp_null / cpty_null saíram em 2026-10-20: BNPP_REPORTED / CPTY_REPORTED não são os valores do campo
- * (estão no ficheiro DTCC), por isso "nulo" não quer dizer "lado sem valor" (CLAUDE.md §3.1.2).
+ * Null keys and equal LEIs.
+ * bnpp_null / cpty_null were removed on 2026-10-20: BNPP_REPORTED / CPTY_REPORTED are not the field values
+ * (those are in the DTCC file), so "null" does not mean "side without a value" (CLAUDE.md §3.1.2).
  */
 export function keyHealthSql(date) {
   const d = dateLiteral(date);
@@ -62,9 +62,9 @@ WHERE business_date = ${d}`;
 }
 
 /**
- * Positions de D sem correspondência pela chave em D-1, mas com o mesmo par de LEIs + trade number em D-1
- * debaixo de outro identificador (ex.: PROPRIETARY -> UTI). Esses trades inflacionam "novo" e "resolvido"
- * na métrica persistence. Só agregados. Positions sem trade number não entram no diagnóstico.
+ * Positions of D without a key match in D-1, but with the same LEI pair + trade number in D-1
+ * under another identifier (e.g. PROPRIETARY -> UTI). Those trades inflate "new" and "resolved"
+ * in the persistence metric. Aggregates only. Positions without a trade number are not part of the diagnosis.
  */
 export function idChangeSql(date, excludedDates = []) {
   const d = dateLiteral(date);
@@ -91,15 +91,15 @@ SELECT
   ) AS id_changed_positions`;
 }
 
-/** Colunas com identificadores reais (UTI, PROPRIETARY, LEIs) que não devem sair no ecrã por omissão. */
+/** Columns with real identifiers (UTI, PROPRIETARY, LEIs) that must not be shown by default. */
 export const ID_COLUMNS = ['uti', 'proprietary', 'cp1_lei', 'cp2_lei', 'report_submitting_entity'];
 
-/** Remove os identificadores das linhas (só ficam os agregados). */
+/** Removes the identifiers from the rows (only the aggregates remain). */
 export function redactIds(rows) {
   return rows.map((r) => Object.fromEntries(Object.entries(r).filter(([k]) => !ID_COLUMNS.includes(k))));
 }
 
-/** Corre o perfil completo de uma business date. */
+/** Runs the full profile of a business date. */
 export async function profileDate(db, date, { combos = 20, dups = 10, excludedDates = [] } = {}) {
   const [keyHealth] = await db.all(keyHealthSql(date));
   const [idChange] = await db.all(idChangeSql(date, excludedDates));

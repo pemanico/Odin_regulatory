@@ -1,7 +1,7 @@
-// Modelo lógico dos breaks: nomes de colunas estáveis usados pela semantic layer,
-// independentes dos nomes físicos (Oracle/Parquet) definidos em config/default.json.
+// Logical model of the breaks: stable column names used by the semantic layer,
+// independent of the physical names (Oracle/Parquet) defined in config/default.json.
 
-/** Colunas lógicas expostas em breaks_raw e breaks, pela ordem. */
+/** Logical columns exposed in breaks_raw and breaks, in order. */
 export const LOGICAL_COLUMNS = [
   'rec_stat_id',
   'business_date',
@@ -27,27 +27,27 @@ export const LOGICAL_COLUMNS = [
   'trade_number',
 ];
 
-/** Identificadores do trade: vêm em UTI **ou** em PROPRIETARY (mutuamente exclusivos). Texto vazio = NULL. */
+/** Trade identifiers: they come in UTI **or** in PROPRIETARY (mutually exclusive). Empty text = NULL. */
 const ID_TEXT_COLUMNS = ['uti', 'proprietary'];
 
 /**
- * Chave de uma position = a chave de produção sem o campo:
+ * Key of a position = the production key without the field:
  *   RANK() OVER (PARTITION BY BREAKING_FIELD, REPORTING_COUNTERPARTY_LEI, OTHER_COUNTERPARTY_LEGAL_LEI,
  *                REPORT_SUBMITTING_ENTITY, UTI, PROPRIETARY, C_PRIMARY_ASSET_CLASS ...)
- * UTI e PROPRIETARY entram como colunas separadas (como em produção e no ficheiro DTCC), não em COALESCE.
+ * UTI and PROPRIETARY are separate columns (as in production and in the DTCC file), not a COALESCE.
  */
 export const POSITION_KEY = ['report_submitting_entity', 'cp1_lei', 'cp2_lei', 'uti', 'proprietary', 'asset_class'];
 
-/** Chave de um break (grão da vista deduplicada) = business date + position + campo. */
+/** Key of a break (grain of the deduplicated view) = business date + position + field. */
 export const BREAK_KEY = ['business_date', ...POSITION_KEY, 'breaking_field'];
 
-/** Identificador do trade para mostrar/agregar: o que estiver preenchido (UTI ou PROPRIETARY). */
+/** Trade identifier to show/aggregate: whichever is populated (UTI or PROPRIETARY). */
 export function tradeIdExpr(alias = '') {
   const p = alias ? `${alias}.` : '';
   return `COALESCE(${p}uti, ${p}proprietary)`;
 }
 
-/** Expressão SQL standard que identifica uma position (NULL-safe). */
+/** Standard SQL expression identifying a position (NULL-safe). */
 export function positionKeyExpr(alias = '') {
   const p = alias ? `${alias}.` : '';
   return POSITION_KEY.map((c) => `COALESCE(${p}${c}, '')`).join(` || '|' || `);
@@ -56,8 +56,8 @@ export function positionKeyExpr(alias = '') {
 const quoteIdent = (name) => `"${name}"`;
 
 /**
- * SELECT que converte as colunas físicas da fonte para o modelo lógico.
- * Colunas lógicas sem mapeamento na config ficam NULL.
+ * SELECT converting the source's physical columns to the logical model.
+ * Logical columns without a mapping in the config are NULL.
  */
 export function logicalSelect(config, dialect, fromSql) {
   const cols = config.columns;
@@ -70,7 +70,7 @@ export function logicalSelect(config, dialect, fromSql) {
     }
     if (logical === 'rec_stat_id') return `${ref} AS ${logical}`;
     if (ID_TEXT_COLUMNS.includes(logical)) {
-      // SQL standard (NULLIF/TRIM): igual em DuckDB, ClickHouse e SQLite.
+      // Standard SQL (NULLIF/TRIM): the same in DuckDB, ClickHouse and SQLite.
       return `NULLIF(TRIM(${dialect.castText(ref)}), '') AS ${logical}`;
     }
     return `${dialect.castText(ref)} AS ${logical}`;
@@ -79,9 +79,9 @@ export function logicalSelect(config, dialect, fromSql) {
 }
 
 /**
- * Vista deduplicada: uma linha por break (BREAK_KEY).
- * Mantém a linha com o menor rec_stat_id. Duplicados com valores diferentes
- * são reportados pela métrica data_quality (conflicting_keys), não escondidos.
+ * Deduplicated view: one row per break (BREAK_KEY).
+ * Keeps the row with the lowest rec_stat_id. Duplicates with different values
+ * are reported by the data_quality metric (conflicting_keys), not hidden.
  */
 export function dedupSelect(rawTable = 'breaks_raw') {
   return `SELECT ${LOGICAL_COLUMNS.join(', ')}
@@ -94,8 +94,8 @@ WHERE rn = 1`;
 }
 
 /**
- * Instruções para criar breaks_raw e breaks numa base acabada de criar.
- * `materialize=true` cria tabelas (rápido para consultas repetidas); false cria vistas.
+ * Statements creating breaks_raw and breaks in a freshly created database.
+ * `materialize=true` creates tables (fast for repeated queries); false creates views.
  */
 export function buildModelStatements(config, dialect, fromSql, { materialize = true } = {}) {
   const kind = materialize ? 'TABLE' : 'VIEW';

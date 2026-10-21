@@ -1,17 +1,17 @@
-// Gerador de dados sintéticos com a forma da tabela de breaks (formato longo).
-// Serve para desenvolver e testar SEM dados reais. Todos os identificadores são falsos
-// (prefixo SYNTH) e os valores não correspondem a nenhuma operação real.
+// Synthetic data generator with the shape of the breaks table (long format).
+// For developing and testing WITHOUT real data. Every identifier is fake
+// (SYNTH prefix) and the values do not match any real transaction.
 //
-// Reproduz os padrões observados na análise exploratória (CLAUDE.md §4):
-//  - grupos de campos correlacionados (package, produto, valuation);
-//  - LEI CP1 = LEI CP2 em alguns casos;
-//  - duplicação em fan-out (mesmo break repetido N vezes, trade_number diferente);
-//  - duplicados com valores diferentes (conflitos);
-//  - positions que se repetem de um dia para o outro (para a métrica persistence):
-//    breaks iguais, breaks com valores alterados, campos resolvidos, positions novas e resolvidas,
-//    e trades que passam de PROPRIETARY para UTI (aparecem como novo + resolvido).
+// Reproduces the patterns observed in the exploratory analysis (CLAUDE.md §4):
+//  - groups of correlated fields (package, product, valuation);
+//  - LEI CP1 = LEI CP2 in some cases;
+//  - fan-out duplication (same break repeated N times, different trade_number);
+//  - duplicates with different values (conflicts);
+//  - positions repeated from one day to the next (for the persistence metric):
+//    same breaks, breaks with changed values, resolved fields, new and resolved positions,
+//    and trades moving from PROPRIETARY to UTI (they show up as new + resolved).
 
-/** PRNG determinístico (mulberry32) para resultados reproduzíveis. */
+/** Deterministic PRNG (mulberry32) for reproducible results. */
 export function prng(seed) {
   let a = seed >>> 0;
   return () => {
@@ -34,7 +34,7 @@ const ACTIVITIES = [
 ];
 export const SYNTH_BNPP_LEI = 'SYNTHBNPP00000000001';
 
-/** Lista de business dates (dias úteis) a partir de startDate. */
+/** List of business dates (working days) from startDate. */
 export function businessDates(startDate, days) {
   const out = [];
   const d = new Date(`${startDate}T00:00:00Z`);
@@ -54,7 +54,7 @@ function makeHelpers(rand) {
   return { pick, chance, code, amount };
 }
 
-/** Gera os breaks de uma position (lista de { field, bnpp, cpty }). */
+/** Generates the breaks of a position (list of { field, bnpp, cpty }). */
 function positionBreaks(h) {
   const { pick, chance, code, amount, rand } = h;
   const out = [];
@@ -69,7 +69,7 @@ function positionBreaks(h) {
     });
   }
   if (chance(0.25)) {
-    // Package: tipicamente um lado reporta os três campos e o outro não.
+    // Package: typically one side reports the three fields and the other does not.
     const bnppSide = chance(0.1);
     const typ = pick(['PRIC', 'SPRD', 'PERC']);
     const ccy = pick(['EUR', 'USD']);
@@ -79,7 +79,7 @@ function positionBreaks(h) {
     }
   }
   if (chance(0.3)) {
-    // Produto: UPI diverge e arrasta ISIN e CFI com frequência.
+    // Product: UPI diverges and often drags ISIN and CFI along.
     out.push({ field: 'UNIQUE_PRODUCT_ID', bnpp: `QZ${code(10)}`, cpty: `QZ${code(10)}` });
     if (chance(0.85)) out.push({ field: 'ISIN', bnpp: chance(0.5) ? `SY${code(10)}` : null, cpty: `SY${code(10)}` });
     if (chance(0.6)) out.push({ field: 'PRODUCT_CLASSIFICATION', bnpp: `S${code(5)}`, cpty: `S${code(5)}` });
@@ -103,17 +103,17 @@ function positionBreaks(h) {
   return out;
 }
 
-/** Position que transita para o dia seguinte: maioria igual, alguns valores alterados, alguns campos resolvidos. */
+/** Position carried over to the next day: mostly the same, some values changed, some fields resolved. */
 function carryOver(h, p, { changeRate, fieldResolveRate, idSwitchRate }) {
   const breaks = p.breaks
     .filter(() => !h.chance(fieldResolveRate))
     .map((b) => {
       if (!h.chance(changeRate)) return b;
-      // Muda um dos lados (incluindo passar de NULL a valor e vice-versa).
+      // Changes one of the sides (including going from NULL to a value and vice versa).
       if (h.chance(0.5)) return { ...b, bnpp: b.bnpp === null ? 'SYNTHCHG' : null };
       return { ...b, cpty: b.cpty === null ? 'SYNTHCHG' : `${b.cpty}C` };
     });
-  // Trade que só tinha PROPRIETARY recebe UTI: a chave muda (novo + resolvido para o mesmo trade).
+  // Trade that only had PROPRIETARY gets a UTI: the key changes (new + resolved for the same trade).
   const switchId = p.proprietary && h.chance(idSwitchRate);
   return {
     ...p,
@@ -124,11 +124,11 @@ function carryOver(h, p, { changeRate, fieldResolveRate, idSwitchRate }) {
 
 function newPosition(h, n, cptyPool) {
   const { pick, chance, code } = h;
-  // Distribuição enviesada: poucas contrapartes concentram muitos breaks (como na realidade).
+  // Skewed distribution: few counterparties concentrate many breaks (as in reality).
   const idx = Math.floor(cptyPool.length * Math.pow(h.rand(), 3));
   const sameLei = chance(0.05);
   const activity = pick(ACTIVITIES);
-  // ~10% das positions trazem o identificador em PROPRIETARY em vez de UTI (como nos dados reais).
+  // ~10% of positions carry the identifier in PROPRIETARY instead of UTI (as in the real data).
   const proprietary = chance(0.1);
   return {
     uti: proprietary ? null : `SYNTHUTI${String(n).padStart(10, '0')}${code(6)}`,
@@ -146,7 +146,7 @@ function newPosition(h, n, cptyPool) {
 }
 
 /**
- * Gera as linhas da tabela de breaks com os NOMES FÍSICOS da config (config.columns).
+ * Generates the breaks table rows with the PHYSICAL NAMES from the config (config.columns).
  * @returns {{ dates: string[], rows: object[] }}
  */
 export function generateBreakRows({
@@ -163,7 +163,7 @@ export function generateBreakRows({
   fieldResolveRate = 0.05,
   idSwitchRate = 0.2,
 } = {}) {
-  if (!columns) throw new Error('generateBreakRows: falta o mapeamento de colunas (config.columns)');
+  if (!columns) throw new Error('generateBreakRows: missing column mapping (config.columns)');
   const rand = prng(seed);
   const h = { ...makeHelpers(rand), rand };
   const cptyPool = Array.from({ length: 300 }, () => `SYNTH${h.code(15)}`);
@@ -201,7 +201,7 @@ export function generateBreakRows({
       [col('trade_number')]: p.trade,
       ...overrides,
     };
-    delete row.undefined; // colunas lógicas sem mapeamento físico
+    delete row.undefined; // logical columns without a physical mapping
     rows.push(row);
   };
 
@@ -225,7 +225,7 @@ export function generateBreakRows({
   return { dates, rows };
 }
 
-/** Serializa linhas para CSV (vazio = NULL). */
+/** Serialises rows to CSV (empty = NULL). */
 export function toCsv(rows, headers) {
   const esc = (v) => {
     if (v === null || v === undefined) return '';

@@ -1,4 +1,4 @@
-// Carrega e valida a configuração do motor de regras (config/rules/).
+// Loads and validates the rules engine configuration (config/rules/).
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { ROOT } from '../config.js';
@@ -14,7 +14,7 @@ export function loadRules({ fieldMap = loadFieldMap(), path = resolve(ROOT, 'con
   return { fieldMap, rulesDoc: doc };
 }
 
-/** Todas as referências a itens usadas nas regras (when, compare.ref, count_populated.refs). */
+/** All item references used by a rule (when, compare.ref, count_populated.refs). */
 export function referencedItems(rule) {
   const out = new Set();
   const walk = (x) => {

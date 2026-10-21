@@ -1,11 +1,11 @@
-// Adaptador SQLite (node:sqlite, Node >= 22.13) usado APENAS nos testes automáticos,
-// para validar o SQL standard da semantic layer sem instalar dependências.
+// SQLite adapter (node:sqlite, Node >= 22.13) used ONLY in the automated tests,
+// to validate the semantic layer's standard SQL without installing dependencies.
 import { dialects } from './dialects.js';
 
 export async function openSqlite() {
   const { DatabaseSync } = await import('node:sqlite');
   const db = new DatabaseSync(':memory:');
-  // Mesma semântica do regexp_full_match do DuckDB (o texto inteiro tem de casar). NULL -> NULL.
+  // Same semantics as DuckDB's regexp_full_match (the whole text must match). NULL -> NULL.
   const cache = new Map();
   db.function('regexp_full_match', { deterministic: true }, (s, p) => {
     if (s == null || p == null) return null;
@@ -27,7 +27,7 @@ export async function openSqlite() {
   };
 }
 
-/** true se node:sqlite estiver disponível nesta versão do Node. */
+/** true if node:sqlite is available in this Node version. */
 export async function sqliteAvailable() {
   try {
     await import('node:sqlite');

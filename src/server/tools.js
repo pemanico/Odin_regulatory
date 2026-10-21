@@ -1,8 +1,8 @@
-// Tools do agente (fase seguinte). A API do backend expõe as MESMAS operações (plano aprovado em 2026-10-20):
+// Agent tools (next phase). The backend API exposes the SAME operations (plan approved on 2026-10-20):
 //   list_metrics   -> GET  /api/metrics
 //   query_metric   -> POST /api/query
-//   open_drilldown -> não chama o backend: devolve à UI os filtros do ecrã 3 (a UI mostra as linhas).
-// Regra de arquitetura: o LLM só vê agregados. Os endpoints com linhas (/api/keys) são só da UI e NUNCA são tools.
+//   open_drilldown -> does not call the backend: returns the screen 3 filters to the UI (the UI shows the rows).
+// Architecture rule: the LLM only sees aggregates. The endpoints with rows (/api/keys) are UI only and are NEVER tools.
 import { DIMENSIONS, FILTER_OPS, METRICS } from '../semantic/catalog.js';
 import { VERDICTS, KEY_VERDICTS } from '../rules/sql.js';
 
@@ -10,15 +10,15 @@ export const AGENT_TOOLS = [
   {
     name: 'list_metrics',
     description:
-      'Lista as métricas certificadas (EMIR breaks): id, descrição, dimensões e filtros permitidos, filtros obrigatórios. ' +
-      'Chamar antes de query_metric se houver dúvida sobre a métrica certa.',
+      'Lists the certified metrics (EMIR breaks): id, description, allowed dimensions and filters, required filters. ' +
+      'Call it before query_metric when unsure which metric is right.',
     input_schema: { type: 'object', properties: {}, additionalProperties: false },
   },
   {
     name: 'query_metric',
     description:
-      'Corre uma métrica certificada e devolve linhas AGREGADAS (contagens). Nunca devolve breaks individuais. ' +
-      'business_date é obrigatório em todas as métricas (formato YYYY-MM-DD).',
+      'Runs a certified metric and returns AGGREGATED rows (counts). Never returns individual breaks. ' +
+      'business_date is required in every metric (format YYYY-MM-DD).',
     input_schema: {
       type: 'object',
       properties: {
@@ -45,8 +45,8 @@ export const AGENT_TOOLS = [
   {
     name: 'open_drilldown',
     description:
-      'Abre o ecrã de drill-down para o operacional ver os breaks (as linhas são mostradas pela UI; o agente não as vê). ' +
-      'Usar depois de uma resposta agregada, para o utilizador verificar a evidência.',
+      'Opens the drill-down screen so that the operations user can see the breaks (the rows are shown by the UI; the agent does not see them). ' +
+      'Use it after an aggregated answer, so that the user can check the evidence.',
     input_schema: {
       type: 'object',
       properties: {
@@ -54,7 +54,7 @@ export const AGENT_TOOLS = [
         breaking_field: { type: 'string' },
         field_verdict: { type: 'string', enum: VERDICTS },
         key_verdict: { type: 'string', enum: KEY_VERDICTS },
-        combo: { type: 'string', description: 'Combinação de campos no formato |A|B| (combo_key de field_combinations)' },
+        combo: { type: 'string', description: 'Field combination in the format |A|B| (combo_key from field_combinations)' },
         asset_class: { type: 'string' },
       },
       required: ['business_date'],

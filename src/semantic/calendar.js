@@ -1,30 +1,30 @@
-// Calendário de business dates para as métricas que comparam um dia com o anterior.
-// "Dia anterior" = business date anterior DISPONÍVEL nos dados, saltando as datas excluídas
-// (ex.: 2026-10-12, dia anómalo com o lado da contraparte em falta — ver CLAUDE.md §4.1).
+// Business date calendar for the metrics that compare a day with the previous one.
+// "Previous day" = previous business date AVAILABLE in the data, skipping the excluded dates
+// (e.g. 2026-10-12, an anomalous day with the counterparty side missing — see CLAUDE.md §4.1).
 import { ValidationError, dateLiteral, isValidDate } from './literals.js';
 
-/** Normaliza e valida a lista de datas excluídas (YYYY-MM-DD). */
+/** Normalises and validates the list of excluded dates (YYYY-MM-DD). */
 export function normalizeExcludedDates(list) {
   if (list == null) return [];
-  if (!Array.isArray(list)) throw new ValidationError('excludedDates tem de ser uma lista de datas YYYY-MM-DD');
+  if (!Array.isArray(list)) throw new ValidationError('excludedDates must be a list of YYYY-MM-DD dates');
   for (const d of list) {
-    if (!isValidDate(d)) throw new ValidationError(`Data excluída inválida (esperado YYYY-MM-DD): ${JSON.stringify(d)}`);
+    if (!isValidDate(d)) throw new ValidationError(`Invalid excluded date (expected YYYY-MM-DD): ${JSON.stringify(d)}`);
   }
   return [...new Set(list)].sort();
 }
 
-/** Rejeita comparações cuja data pedida está excluída. */
+/** Rejects comparisons whose requested date is excluded. */
 export function assertNotExcluded(date, excludedDates) {
   if (normalizeExcludedDates(excludedDates).includes(date)) {
     throw new ValidationError(
-      `A business date ${date} está excluída das comparações entre dias (config excludedDates). Escolha outra data.`,
+      `Business date ${date} is excluded from day-on-day comparisons (config excludedDates). Choose another date.`,
     );
   }
 }
 
 /**
- * Subquery escalar com a business date anterior disponível (NULL se não houver).
- * SQL standard: igual em DuckDB, ClickHouse e SQLite.
+ * Scalar subquery with the previous available business date (NULL if there is none).
+ * Standard SQL: the same in DuckDB, ClickHouse and SQLite.
  */
 export function previousDateSql(date, excludedDates, table = 'breaks') {
   const d = dateLiteral(date);

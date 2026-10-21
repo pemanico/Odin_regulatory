@@ -8,7 +8,7 @@ import { openSqlite, sqliteAvailable } from '../src/db/sqlite.js';
 import { dialects } from '../src/db/dialects.js';
 import { loadConfig } from '../src/config.js';
 
-const skip = !(await sqliteAvailable()) && 'node:sqlite indisponível';
+const skip = !(await sqliteAvailable()) && 'node:sqlite unavailable';
 
 const FIELD_MAP = {
   items: {
@@ -28,7 +28,7 @@ const SUFFIXES = ['CONTRACT_TYPE', 'SETTLEMENT_CCY_1', 'VALUATION_AMT', 'EXECUTI
 const COLUMNS = new Map([['REFERENCE_DATE', 'VARCHAR'], ...SUFFIXES.flatMap((s) => [[`TP1_${s}`, 'VARCHAR'], [`TP2_${s}`, 'VARCHAR']])]);
 const KEY = ['report_submitting_entity', 'cp1_lei', 'cp2_lei', 'uti', 'proprietary', 'asset_class'];
 
-const R = (code, item, check, extra = {}) => ({ code, item, check, status: 'verificavel', ...extra });
+const R = (code, item, check, extra = {}) => ({ code, item, check, status: 'verifiable', ...extra });
 
 /** Cria rule_input com uma linha por caso; valores TP1 e TP2 por sufixo. */
 async function inputDb(rows) {
@@ -50,14 +50,14 @@ async function violating(db, rule, side = 'BNPP') {
   return (await db.all(`SELECT k_uti FROM rule_input WHERE ${c.sql} ORDER BY k_uti`)).map((r) => r.k_uti);
 }
 
-test('enum, required/blank condicionais e lados separados', { skip }, async () => {
+test('enum, conditional required/blank and separate sides', { skip }, async () => {
   const db = await inputDb([
-    { TP1_DELIVERY_TYPE: 'CASH', TP1_SETTLEMENT_CCY_1: 'EUR', TP2_DELIVERY_TYPE: 'XXXX' }, // U0: CPTY enum inválido
-    { TP1_DELIVERY_TYPE: 'CASH', TP1_SETTLEMENT_CCY_1: null }, // U1: required_if CASH violado
-    { TP1_DELIVERY_TYPE: 'PHYS', TP1_SETTLEMENT_CCY_1: 'EUR' }, // U2: blank_if PHYS violado
+    { TP1_DELIVERY_TYPE: 'CASH', TP1_SETTLEMENT_CCY_1: 'EUR', TP2_DELIVERY_TYPE: 'XXXX' }, // U0: invalid CPTY enum
+    { TP1_DELIVERY_TYPE: 'CASH', TP1_SETTLEMENT_CCY_1: null }, // U1: required_if CASH violated
+    { TP1_DELIVERY_TYPE: 'PHYS', TP1_SETTLEMENT_CCY_1: 'EUR' }, // U2: blank_if PHYS violated
     { TP1_DELIVERY_TYPE: 'PHYS', TP1_SETTLEMENT_CCY_1: null }, // U3: ok
-    { TP1_DELIVERY_TYPE: null, TP1_SETTLEMENT_CCY_1: null }, // U4: vazio não viola o enum
-    { TP1_DELIVERY_TYPE: 'cash' }, // U5: enum é sensível a maiúsculas (valor reportado tem de ser exato)
+    { TP1_DELIVERY_TYPE: null, TP1_SETTLEMENT_CCY_1: null }, // U4: empty does not violate the enum
+    { TP1_DELIVERY_TYPE: 'cash' }, // U5: enum is case-sensitive (the reported value must be exact)
   ]);
   const enumRule = R('EMIR-VR-2047-01', '2.47', { enum: ['CASH', 'PHYS', 'OPTL'] });
   assert.deepEqual(await violating(db, enumRule, 'BNPP'), ['U5']);
@@ -67,24 +67,24 @@ test('enum, required/blank condicionais e lados separados', { skip }, async () =
   await db.close();
 });
 
-test('decimal: dígitos, casas decimais, sinal e valores aceites', { skip }, async () => {
+test('decimal: digits, decimal places, sign and accepted values', { skip }, async () => {
   const vals = ['1.12345', '1.123456', '-12.5', '1.', '1234567890123456789012345', '12345678901234567890123456', '0', 'abc', '9999999999999999999999999'];
   const db = await inputDb(vals.map((v) => ({ TP1_VALUATION_AMT: v, TP1_EXCHANGE_RATE1: v })));
   const any = R('EMIR-VR-2021-01', '2.21', { decimal: { digits: 25, decimals: 5, sign: 'any' } });
   assert.deepEqual(await violating(db, any), ['U1', 'U3', 'U5', 'U7']);
   const pos = R('EMIR-VR-2113-03', '2.113', { decimal: { digits: 18, decimals: 13, sign: 'positive' } });
-  // positivo: falham o negativo (U2), o zero (U6), os que excedem 18 dígitos (U4, U5, U8), U1? (6 casas ≤ 13: ok), '1.' (U3), 'abc' (U7)
+  // positive: the negative (U2), zero (U6), those over 18 digits (U4, U5, U8), U1? (6 places ≤ 13: ok), '1.' (U3), 'abc' (U7) fail
   assert.deepEqual(await violating(db, pos), ['U2', 'U3', 'U4', 'U5', 'U6', 'U7', 'U8']);
   await db.close();
 });
 
-test('datas, timestamps e comparações (só quando os dois valores são válidos)', { skip }, async () => {
+test('dates, timestamps and comparisons (only when both values are valid)', { skip }, async () => {
   const db = await inputDb([
-    { TP1_EXPIRATION_DATE: '2020-01-01', TP1_EXECUTION_TIMESTAMP: '2021-05-05T10:00:00Z' }, // U0: expira antes da execução
+    { TP1_EXPIRATION_DATE: '2020-01-01', TP1_EXECUTION_TIMESTAMP: '2021-05-05T10:00:00Z' }, // U0: expires before execution
     { TP1_EXPIRATION_DATE: '2030-01-01', TP1_EXECUTION_TIMESTAMP: '2021-05-05T10:00:00Z' }, // U1: ok
-    { TP1_EXPIRATION_DATE: '01/01/2020', TP1_EXECUTION_TIMESTAMP: '2021-05-05T10:00:00Z' }, // U2: formato inválido -> sem comparação
-    { TP1_EXPIRATION_DATE: '2013-12-31' }, // U3: antes de 2014-02-12
-    { TP1_EXECUTION_TIMESTAMP: '2021-05-05 10:00:00' }, // U4: timestamp sem T/Z
+    { TP1_EXPIRATION_DATE: '01/01/2020', TP1_EXECUTION_TIMESTAMP: '2021-05-05T10:00:00Z' }, // U2: invalid format -> no comparison
+    { TP1_EXPIRATION_DATE: '2013-12-31' }, // U3: before 2014-02-12
+    { TP1_EXECUTION_TIMESTAMP: '2021-05-05 10:00:00' }, // U4: timestamp without T/Z
   ]);
   assert.deepEqual(await violating(db, R('EMIR-VR-2044-02', '2.44', { compare: { op: '>=', ref: '2.42', as: 'date' } })), ['U0']);
   assert.deepEqual(await violating(db, R('EMIR-VR-2044-03', '2.44', { compare: { op: '>=', value: '2014-02-12', as: 'date' } })), ['U3']);
@@ -93,10 +93,10 @@ test('datas, timestamps e comparações (só quando os dois valores são válido
   await db.close();
 });
 
-test('count_populated e check "all"', { skip }, async () => {
+test('count_populated and check "all"', { skip }, async () => {
   const db = await inputDb([
-    { TP1_EXCHANGE_RATE1: '1.1', TP1_FWD_EXCHANGE_RATE: '1.2', TP1_CONTRACT_TYPE: 'FORW' }, // U0: dois preenchidos em FORW
-    { TP1_EXCHANGE_RATE1: null, TP1_FWD_EXCHANGE_RATE: null, TP1_CONTRACT_TYPE: 'FORW' }, // U1: nenhum preenchido
+    { TP1_EXCHANGE_RATE1: '1.1', TP1_FWD_EXCHANGE_RATE: '1.2', TP1_CONTRACT_TYPE: 'FORW' }, // U0: two populated on FORW
+    { TP1_EXCHANGE_RATE1: null, TP1_FWD_EXCHANGE_RATE: null, TP1_CONTRACT_TYPE: 'FORW' }, // U1: none populated
     { TP1_EXCHANGE_RATE1: '1.1', TP1_FWD_EXCHANGE_RATE: null, TP1_CONTRACT_TYPE: 'FORW' }, // U2: ok
   ]);
   const min1 = R('EMIR-VR-2113-01', '2.113', { count_populated: { refs: ['2.113', '2.114'], min: 1 } });
@@ -108,45 +108,45 @@ test('count_populated e check "all"', { skip }, async () => {
   await db.close();
 });
 
-test('não verificável: campo sem colunas DTCC, coluna em falta, coluna tipada', () => {
+test('not verifiable: field without DTCC columns, missing column, typed column', () => {
   const ctx = { fieldMap: FIELD_MAP, columns: COLUMNS, dialect: dialects.duckdb };
   const dep = compileRule(R('EMIR-VR-2109-01', '2.21', { required: true }, { when: { populated: '2.101' } }), 'BNPP', ctx);
   assert.match(dep.notVerifiable, /2\.101/);
-  // Colunas comuns (REFERENCE_DATE, LEIs, UTI) não são usadas: só campos TP1_/TP2_.
+  // Common columns (REFERENCE_DATE, LEIs, UTI) are not used: TP1_/TP2_ fields only.
   const common = compileRule(R('EMIR-VR-2028-03', '2.44', { compare: { op: '<=', ref: '1.1', as: 'date' } }), 'BNPP', ctx);
-  assert.match(common.notVerifiable, /coluna comum/);
+  assert.match(common.notVerifiable, /common column/);
   const missing = new Map([...COLUMNS].filter(([k]) => k !== 'TP2_VALUATION_AMT'));
   const r = R('EMIR-VR-2021-01', '2.21', { decimal: { digits: 25, decimals: 5 } });
   assert.ok(compileRule(r, 'BNPP', { ...ctx, columns: missing }).sql);
   assert.match(compileRule(r, 'CPTY', { ...ctx, columns: missing }).notVerifiable, /TP2_VALUATION_AMT/);
   const typed = new Map([...COLUMNS, ['TP1_VALUATION_AMT', 'DATE']]);
-  assert.match(compileRule(r, 'BNPP', { ...ctx, columns: typed }).notVerifiable, /tipada/);
-  // decimal numa coluna numérica: verifica sinal e grandeza (não o formato)
+  assert.match(compileRule(r, 'BNPP', { ...ctx, columns: typed }).notVerifiable, /typed column/);
+  // decimal on a numeric column: checks sign and magnitude (not the format)
   const dbl = compileRule(r, 'BNPP', { ...ctx, columns: new Map([...COLUMNS, ['TP1_VALUATION_AMT', 'DOUBLE']]) });
   assert.match(dbl.sql, /ABS\("TP1_VALUATION_AMT"\) < 1e25/);
-  // enum numa coluna tipada continua verificável (compara o valor, não o formato)
+  // enum on a typed column remains verifiable (compares the value, not the format)
   assert.ok(compileRule(R('EMIR-VR-2047-01', '2.47', { enum: ['CASH'] }), 'BNPP', { ...ctx, columns: new Map([...COLUMNS, ['TP1_DELIVERY_TYPE', 'ENUM']]) }).sql);
 });
 
-test('validateRules rejeita códigos, checks e estados inválidos', () => {
+test('validateRules rejects invalid codes, checks and statuses', () => {
   const ok = { rules: [R('EMIR-VR-2047-01', '2.47', { enum: ['CASH'] })] };
   assert.doesNotThrow(() => validateRules(ok, FIELD_MAP));
-  assert.throws(() => validateRules({ rules: [R('VR-1', '2.47', { enum: [] })] }, FIELD_MAP), /código inválido/);
-  assert.throws(() => validateRules({ rules: [R('EMIR-VR-2047-01', '9.99', { enum: [] })] }, FIELD_MAP), /item desconhecido/);
-  assert.throws(() => validateRules({ rules: [R('EMIR-VR-2047-01', '2.47', { foo: 1 })] }, FIELD_MAP), /check inválido/);
-  assert.throws(() => validateRules({ rules: [R('EMIR-VR-2047-01', '2.47', { enum: [] }, { status: 'parcial' })] }, FIELD_MAP), /nota/);
-  assert.throws(() => validateRules({ rules: [ok.rules[0], ok.rules[0]] }, FIELD_MAP), /repetido/);
-  assert.throws(() => validateRules({ rules: [R('EMIR-VR-2101-01', '2.101', { required: true })] }, FIELD_MAP), /não tem colunas TP1_\/TP2_/);
-  assert.throws(() => validateRules({ rules: [R('EMIR-VR-1001-01', '1.1', { required: true })] }, FIELD_MAP), /não tem colunas TP1_\/TP2_/);
+  assert.throws(() => validateRules({ rules: [R('VR-1', '2.47', { enum: [] })] }, FIELD_MAP), /invalid code/);
+  assert.throws(() => validateRules({ rules: [R('EMIR-VR-2047-01', '9.99', { enum: [] })] }, FIELD_MAP), /unknown item/);
+  assert.throws(() => validateRules({ rules: [R('EMIR-VR-2047-01', '2.47', { foo: 1 })] }, FIELD_MAP), /invalid check/);
+  assert.throws(() => validateRules({ rules: [R('EMIR-VR-2047-01', '2.47', { enum: [] }, { status: 'partial' })] }, FIELD_MAP), /needs a note/);
+  assert.throws(() => validateRules({ rules: [ok.rules[0], ok.rules[0]] }, FIELD_MAP), /Duplicate/);
+  assert.throws(() => validateRules({ rules: [R('EMIR-VR-2101-01', '2.101', { required: true })] }, FIELD_MAP), /has no TP1_\/TP2_ columns/);
+  assert.throws(() => validateRules({ rules: [R('EMIR-VR-1001-01', '1.1', { required: true })] }, FIELD_MAP), /has no TP1_\/TP2_ columns/);
 });
 
-test('fluxo completo: violações por lado -> veredicto por break', { skip }, async () => {
+test('full flow: violations per side -> verdict per break', { skip }, async () => {
   const db = await inputDb([
-    { TP1_DELIVERY_TYPE: 'XXXX', TP2_DELIVERY_TYPE: 'CASH' }, // U0: só BNPP
-    { TP1_DELIVERY_TYPE: 'CASH', TP2_DELIVERY_TYPE: 'YYYY' }, // U1: só contraparte
-    { TP1_DELIVERY_TYPE: 'XXXX', TP2_DELIVERY_TYPE: 'YYYY' }, // U2: ambos
-    { TP1_DELIVERY_TYPE: 'CASH', TP2_DELIVERY_TYPE: 'PHYS' }, // U3: divergência
-    { TP1_VALUATION_AMT: '1', TP2_VALUATION_AMT: '2', TP1_DELIVERY_TYPE: 'ZZZZ' }, // U4: campo sem regras; DELIVERY_TYPE inválido mas sem break nesse campo
+    { TP1_DELIVERY_TYPE: 'XXXX', TP2_DELIVERY_TYPE: 'CASH' }, // U0: BNPP only
+    { TP1_DELIVERY_TYPE: 'CASH', TP2_DELIVERY_TYPE: 'YYYY' }, // U1: counterparty only
+    { TP1_DELIVERY_TYPE: 'XXXX', TP2_DELIVERY_TYPE: 'YYYY' }, // U2: both
+    { TP1_DELIVERY_TYPE: 'CASH', TP2_DELIVERY_TYPE: 'PHYS' }, // U3: divergence
+    { TP1_VALUATION_AMT: '1', TP2_VALUATION_AMT: '2', TP1_DELIVERY_TYPE: 'ZZZZ' }, // U4: field without rules; DELIVERY_TYPE invalid but no break in that field
   ]);
   await db.exec(`CREATE TABLE breaks (business_date TEXT, ${KEY.map((k) => `${k} TEXT`).join(', ')}, breaking_field TEXT)`);
   for (const [u, f] of [['U0', 'delivery_type'], ['U1', 'DELIVERY_TYPE'], ['U2', 'DELIVERY_TYPE'], ['U3', 'DELIVERY_TYPE'], ['U4', 'VALUATION_AMT']]) {
@@ -161,48 +161,48 @@ test('fluxo completo: violações por lado -> veredicto por break', { skip }, as
   await db.exec(insertVerdictSql('2026-10-15', db.dialect, 't1'));
   const rows = await db.all('SELECT uti, breaking_field, verdict, bnpp_codes, cpty_codes FROM break_verdict ORDER BY uti');
   assert.deepEqual(rows.map((r) => [r.uti, r.verdict]), [
-    ['U0', 'so_bnpp'], ['U1', 'so_contraparte'], ['U2', 'ambos'], ['U3', 'divergencia'], ['U4', 'sem_regras_verificaveis'],
+    ['U0', 'bnpp_only'], ['U1', 'cpty_only'], ['U2', 'both'], ['U3', 'divergence'], ['U4', 'no_verifiable_rules'],
   ]);
-  assert.equal(rows[0].breaking_field, 'DELIVERY_TYPE', 'campo em minúsculas no data mart liga à regra');
+  assert.equal(rows[0].breaking_field, 'DELIVERY_TYPE', 'lower-case field in the data mart links to the rule');
   assert.equal(rows[0].bnpp_codes, 'EMIR-VR-2047-01');
   assert.equal(rows[0].cpty_codes, null);
   assert.deepEqual(usedColumns(compiled), ['TP1_DELIVERY_TYPE', 'TP2_DELIVERY_TYPE']);
-  // Âmbito: só os breaks do data mart. U4 tem DELIVERY_TYPE inválido mas não tem break nesse campo: não é registado.
+  // Scope: data mart breaks only. U4 has an invalid DELIVERY_TYPE but no break in that field: not recorded.
   const counts = Object.fromEntries((await db.all(violationCountsSql('2026-10-15'))).map((r) => [r.side, Number(r.n)]));
   assert.deepEqual(counts, { BNPP: 2, CPTY: 2 });
   const [u4] = await db.all("SELECT COUNT(*) AS n FROM rule_results WHERE uti = 'U4'");
   assert.equal(Number(u4.n), 0);
 
-  // Detalhe para os operacionais: campo ESMA, valores TP1/TP2 do campo em break, veredicto e erro em texto.
+  // Detail for operations: ESMA field, TP1/TP2 values of the field in break, verdict and error text.
   for (const sql of catalogTablesSql(compiled, FIELD_MAP, describeRule, fieldLabel)) await db.exec(sql);
   await db.exec(DETAIL_DDL);
   await db.exec(insertDetailSql('2026-10-15', db.dialect, ['DELIVERY_TYPE', 'VALUATION_AMT'], 't1'));
-  const det = await db.all('SELECT uti, campo, valor_bnpp, valor_other_cpty, veredicto, erro_bnpp, erro_other_cpty FROM break_detail ORDER BY uti');
+  const det = await db.all('SELECT uti, field_label, bnpp_value, other_cpty_value, verdict_text, bnpp_error, other_cpty_error FROM break_detail ORDER BY uti');
   assert.deepEqual(det[0], {
-    uti: 'U0', campo: '2.47 Delivery type', valor_bnpp: 'XXXX', valor_other_cpty: 'CASH', veredicto: VERDICT_TEXT.so_bnpp,
-    erro_bnpp: "This field shall contain one of 'CASH', 'PHYS', 'OPTL'", erro_other_cpty: null,
+    uti: 'U0', field_label: '2.47 Delivery type', bnpp_value: 'XXXX', other_cpty_value: 'CASH', verdict_text: VERDICT_TEXT.bnpp_only,
+    bnpp_error: "This field shall contain one of 'CASH', 'PHYS', 'OPTL'", other_cpty_error: null,
   });
-  assert.equal(det[3].veredicto, VERDICT_TEXT.divergencia);
-  // Métrica certificada sobre break_verdict
+  assert.equal(det[3].verdict_text, VERDICT_TEXT.divergence);
+  // Certified metric on break_verdict
   const { runMetric } = await import('../src/semantic/runner.js');
   const m = await runMetric(db, { metric: 'rule_verdict', filters: [{ dimension: 'business_date', op: 'eq', value: '2026-10-15' }] }, { audit: false });
   assert.deepEqual(Object.fromEntries(m.rows.map((r) => [r.verdict, Number(r.n_breaks)])),
-    { so_bnpp: 1, so_contraparte: 1, ambos: 1, divergencia: 1, sem_regras_verificaveis: 1 });
-  assert.deepEqual([det[4].campo, det[4].valor_bnpp, det[4].valor_other_cpty], ['2.21 Valuation amount', '1', '2']);
+    { bnpp_only: 1, cpty_only: 1, both: 1, divergence: 1, no_verifiable_rules: 1 });
+  assert.deepEqual([det[4].field_label, det[4].bnpp_value, det[4].other_cpty_value], ['2.21 Valuation amount', '1', '2']);
   await db.close();
 });
 
-test('ruleInputSql: só colunas usadas e semi-join com os breaks', () => {
+test('ruleInputSql: only used columns and semi-join with the breaks', () => {
   const sql = ruleInputSql(loadConfig(), dialects.duckdb, 'src', '2026-10-15', { columns: ['TP1_DELIVERY_TYPE'] });
   assert.match(sql, /s\."TP1_DELIVERY_TYPE"/);
   assert.doesNotMatch(sql, /s\.\*/);
   assert.match(sql, /JOIN \(SELECT DISTINCT report_submitting_entity/);
 });
 
-test('config real: regras válidas, referências resolvidas e compiláveis com todas as colunas TP', () => {
+test('real config: valid rules, resolved references and compilable with every TP column', () => {
   const { fieldMap, rulesDoc } = loadRules();
-  assert.equal(rulesDoc.rules.length, 274, 'códigos VR dos 128 campos com TP1_/TP2_ (passo 3)');
-  assert.ok(rulesDoc.rules.every((r) => fieldMap.items[r.item].tp?.length), 'só campos com colunas TP');
+  assert.equal(rulesDoc.rules.length, 274, 'VR codes of the 128 fields with TP1_/TP2_ (step 3)');
+  assert.ok(rulesDoc.rules.every((r) => fieldMap.items[r.item].tp?.length), 'only fields with TP columns');
   for (const r of rulesDoc.rules) for (const i of referencedItems(r)) assert.ok(fieldMap.items[i], `${r.code}: ${i}`);
   const cols = new Map();
   for (const e of Object.values(fieldMap.items)) {
@@ -210,9 +210,9 @@ test('config real: regras válidas, referências resolvidas e compiláveis com t
     if (e.common) cols.set(e.common, 'VARCHAR');
   }
   const compiled = compileAll(rulesDoc, { fieldMap, columns: cols, dialect: dialects.duckdb });
-  const unexpected = compiled.filter((c) => c.rule.status !== 'nao_verificavel' && Object.values(c.sides).some((s) => !s.sql));
+  const unexpected = compiled.filter((c) => c.rule.status !== 'not_verifiable' && Object.values(c.sides).some((s) => !s.sql));
   assert.deepEqual(unexpected.map((c) => c.rule.code), []);
-  // Os 20 campos do topo têm regras no ficheiro.
+  // The top 20 fields have rules in the file.
   const targets = new Set(compiled.map((c) => c.suffix));
   for (const f of ['VALUATION_AMT', 'UNIQUE_PRODUCT_ID', 'VENUE_OF_EXECUTION', 'ISIN', 'VALUATION_CCY', 'SETTLEMENT_CCY_1', 'DELIVERY_TYPE',
     'PRODUCT_CLASSIFICATION', 'FLOAT_RATE_LEG2_IDENTIFIER', 'CLEARING_OBLIGATION', 'MASTER_AGREEMENT_VRSN_V', 'SETTLEMENT_DATE',
@@ -221,13 +221,13 @@ test('config real: regras válidas, referências resolvidas e compiláveis com t
   }
 });
 
-test('isSuspect: só quando os dois lados violam acima do limiar', () => {
+test('isSuspect: only when both sides violate above the threshold', () => {
   assert.equal(isSuspect(40, 38), true);
-  assert.equal(isSuspect(40, 0.2), false, 'erro de um só lado é um resultado real, não tradução errada');
+  assert.equal(isSuspect(40, 0.2), false, 'an error on one side only is a real result, not a wrong translation');
   assert.equal(isSuspect(null, 50), false);
 });
 
-test('decimal em coluna DOUBLE: sinal e grandeza', { skip }, async () => {
+test('decimal on a DOUBLE column: sign and magnitude', { skip }, async () => {
   const db = await openSqlite();
   await db.exec('CREATE TABLE rule_input (k_uti TEXT, "TP1_NOTIONAL" REAL)');
   for (const [u, v] of [['U0', 10.5], ['U1', -1], ['U2', 1e30], ['U3', null], ['U4', 0]]) {
@@ -243,8 +243,8 @@ test('decimal em coluna DOUBLE: sinal e grandeza', { skip }, async () => {
 
 test('if / equals_any / not_equal', { skip }, async () => {
   const db = await inputDb([
-    { TP1_CONTRACT_TYPE: 'OPTN', TP1_DELIVERY_TYPE: null }, // U0: if OPTN então obrigatório -> viola
-    { TP1_CONTRACT_TYPE: 'SWAP', TP1_DELIVERY_TYPE: 'CASH' }, // U1: senão em branco -> viola
+    { TP1_CONTRACT_TYPE: 'OPTN', TP1_DELIVERY_TYPE: null }, // U0: if OPTN then required -> violates
+    { TP1_CONTRACT_TYPE: 'SWAP', TP1_DELIVERY_TYPE: 'CASH' }, // U1: otherwise blank -> violates
     { TP1_CONTRACT_TYPE: 'SWAP', TP1_DELIVERY_TYPE: null }, // U2: ok
     { TP1_CONTRACT_TYPE: 'OPTN', TP1_DELIVERY_TYPE: 'CASH' }, // U3: ok
   ]);
@@ -253,17 +253,17 @@ test('if / equals_any / not_equal', { skip }, async () => {
   await db.close();
 
   const db2 = await inputDb([
-    { TP1_SETTLEMENT_CCY_1: 'EUR', TP1_DELIVERY_TYPE: 'EUR', TP1_CONTRACT_TYPE: 'X' }, // U0: igual a 2.47 -> equals_any ok; not_equal viola
-    { TP1_SETTLEMENT_CCY_1: 'EUR', TP1_DELIVERY_TYPE: 'USD', TP1_CONTRACT_TYPE: 'EUR' }, // U1: igual a 2.10 -> ok; not_equal ok
-    { TP1_SETTLEMENT_CCY_1: 'EUR', TP1_DELIVERY_TYPE: 'USD', TP1_CONTRACT_TYPE: 'GBP' }, // U2: nenhum -> equals_any viola
-    { TP1_SETTLEMENT_CCY_1: 'EUR', TP1_DELIVERY_TYPE: 'EUR', TP1_CONTRACT_TYPE: 'EUR' }, // U3: igual a 2.47 mas também a unless -> ok
+    { TP1_SETTLEMENT_CCY_1: 'EUR', TP1_DELIVERY_TYPE: 'EUR', TP1_CONTRACT_TYPE: 'X' }, // U0: equal to 2.47 -> equals_any ok; not_equal violates
+    { TP1_SETTLEMENT_CCY_1: 'EUR', TP1_DELIVERY_TYPE: 'USD', TP1_CONTRACT_TYPE: 'EUR' }, // U1: equal to 2.10 -> ok; not_equal ok
+    { TP1_SETTLEMENT_CCY_1: 'EUR', TP1_DELIVERY_TYPE: 'USD', TP1_CONTRACT_TYPE: 'GBP' }, // U2: none -> equals_any violates
+    { TP1_SETTLEMENT_CCY_1: 'EUR', TP1_DELIVERY_TYPE: 'EUR', TP1_CONTRACT_TYPE: 'EUR' }, // U3: equal to 2.47 but also to unless -> ok
   ]);
   assert.deepEqual(await violating(db2, R('EMIR-VR-2077-04', '2.19', { equals_any: ['2.47', '2.10'] })), ['U2']);
   assert.deepEqual(await violating(db2, R('EMIR-VR-2077-05', '2.19', { not_equal: { ref: '2.47', unless: '2.10' } })), ['U0']);
   await db2.close();
 });
 
-test('describeRule: erro de format/condition em texto, sem código', () => {
+test('describeRule: format/condition error as text, without code', () => {
   const fm = FIELD_MAP;
   assert.equal(describeRule(R('EMIR-VR-2019-01', '2.19', { required: true }, { when: { eq: ['2.47', 'CASH'] } }), fm),
     "If Delivery type (2.47) = 'CASH': this field shall be populated");
@@ -271,5 +271,5 @@ test('describeRule: erro de format/condition em texto, sem código', () => {
     'Format: value positive or negative, up to 25 numeric characters including up to 5 decimal places');
   assert.match(describeRule(R('EMIR-VR-2044-02', '2.44', { compare: { op: '>=', ref: '2.42', as: 'date' } }), fm), /Execution timestamp \(2\.42\)/);
   assert.equal(fieldLabel('delivery_type', fm), '2.47 Delivery type');
-  assert.equal(fieldLabel('NAO_EXISTE', fm), 'NAO_EXISTE');
+  assert.equal(fieldLabel('DOES_NOT_EXIST', fm), 'DOES_NOT_EXIST');
 });

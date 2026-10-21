@@ -1,6 +1,6 @@
-// Valida o SQL standard da semantic layer contra um motor real (SQLite embutido no Node >= 22.13),
-// com dados sintéticos e resultados esperados calculados em JavaScript.
-// O DuckDB é validado à parte com `npm run synthetic` + `npm run build:db` (ver README).
+// Validates the semantic layer's standard SQL against a real engine (SQLite built into Node >= 22.13),
+// with synthetic data and expected results computed in JavaScript.
+// DuckDB is validated separately with `npm run synthetic` + `npm run build:db` (see README).
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadConfig } from '../src/config.js';
@@ -16,7 +16,7 @@ const C = config.columns;
 let db;
 let data;
 
-// Chave de produção: REPORT_SUBMITTING_ENTITY, LEIs, UTI, PROPRIETARY (separados), asset class, campo.
+// Production key: REPORT_SUBMITTING_ENTITY, LEIs, UTI, PROPRIETARY (separate), asset class, field.
 const utiOf = (r) => r[C.uti] ?? r[C.proprietary];
 const posOf = (r) =>
   [r[C.report_submitting_entity], r[C.cp1_lei], r[C.cp2_lei], r[C.uti], r[C.proprietary], r[C.asset_class]].join('\u0001');
@@ -57,14 +57,14 @@ before(async () => {
 
 after(async () => db?.close());
 
-test('dados sintéticos contêm duplicados, conflitos e LEIs iguais', { skip: !available && 'node:sqlite indisponível' }, () => {
+test('synthetic data contains duplicates, conflicts and equal LEIs', { skip: !available && 'node:sqlite unavailable' }, () => {
   const { distinct, pairsByKey } = expectations(data.rows);
-  assert.ok(data.rows.length > distinct.length, 'deve haver duplicação');
+  assert.ok(data.rows.length > distinct.length, 'there must be duplication');
   assert.ok([...pairsByKey.values()].some((s) => s.size > 1), 'deve haver conflitos');
   assert.ok(distinct.some((r) => r[C.cp1_lei] === r[C.cp2_lei]), 'deve haver LEI CP1 = LEI CP2');
 });
 
-test('data_quality bate certo com o cálculo em JS', { skip: !available && 'node:sqlite indisponível' }, async () => {
+test('data_quality matches the JS computation', { skip: !available && 'node:sqlite unavailable' }, async () => {
   const [d0, , d2] = data.dates;
   const { rows } = await runMetric(
     db,
@@ -86,7 +86,7 @@ test('data_quality bate certo com o cálculo em JS', { skip: !available && 'node
   }
 });
 
-test('top_fields devolve os 10 campos com mais breaks distintos, por ordem', { skip: !available && 'node:sqlite indisponível' }, async () => {
+test('top_fields returns the 10 fields with the most distinct breaks, in order', { skip: !available && 'node:sqlite unavailable' }, async () => {
   const date = data.dates[1];
   const { rows } = await runMetric(db, { metric: 'top_fields', filters: onDate(date) }, { audit });
   const counts = new Map();
@@ -97,7 +97,7 @@ test('top_fields devolve os 10 campos com mais breaks distintos, por ordem', { s
   assert.deepEqual(rows.map((r) => [r.breaking_field, Number(r.n_breaks)]), expected);
 });
 
-test('breaks_dod compara com a business date anterior disponível', { skip: !available && 'node:sqlite indisponível' }, async () => {
+test('breaks_dod compares with the previous available business date', { skip: !available && 'node:sqlite unavailable' }, async () => {
   const [d0, d1] = data.dates;
   const { rows } = await runMetric(db, { metric: 'breaks_dod', filters: onDate(d1), limit: 100 }, { audit });
   const { distinct } = expectations(data.rows);
@@ -108,12 +108,12 @@ test('breaks_dod compara com a business date anterior disponível', { skip: !ava
     assert.equal(Number(row.previous), count(d0, row.breaking_field));
     assert.equal(Number(row.delta), Number(row.today) - Number(row.previous));
   }
-  // Primeiro dia: sem dia anterior, previous = 0 e delta_pct = null.
+  // First day: no previous day, previous = 0 and delta_pct = null.
   const first = await runMetric(db, { metric: 'breaks_dod', filters: onDate(d0) }, { audit });
   assert.ok(first.rows.every((r) => Number(r.previous) === 0 && r.delta_pct === null));
 });
 
-test('breaks_by_counterparty com filtro por campo', { skip: !available && 'node:sqlite indisponível' }, async () => {
+test('breaks_by_counterparty with a field filter', { skip: !available && 'node:sqlite unavailable' }, async () => {
   const date = data.dates[2];
   const { rows } = await runMetric(
     db,
@@ -133,20 +133,20 @@ test('breaks_by_counterparty com filtro por campo', { skip: !available && 'node:
   assert.deepEqual(rows.map((r) => [r.cp2_lei, Number(r.n_breaks)]), expected);
 });
 
-test('profile: combinações de campos cobrem todas as positions', { skip: !available && 'node:sqlite indisponível' }, async () => {
+test('profile: field combinations cover every position', { skip: !available && 'node:sqlite unavailable' }, async () => {
   const date = data.dates[0];
   const p = await profileDate(db, date, { combos: 1000 });
   const positions = new Set(expectations(data.rows).distinct.filter((r) => r[C.business_date] === date).map(posOf));
   assert.equal(p.combosCoverPositions, positions.size);
   assert.ok(p.combinations.some((c) => c.fields === 'PCKG_TRANS_SPREAD,PCKG_TRANS_SPREAD_CCY,PCKG_TRANS_SPREAD_TYP'));
   assert.ok(Number(p.keyHealth.same_lei) > 0);
-  assert.ok(Number(p.duplicated[0].n_trade_numbers) > 1, 'fan-out deve aparecer como vários trade numbers');
+  assert.ok(Number(p.duplicated[0].n_trade_numbers) > 1, 'fan-out must show up as several trade numbers');
 });
 
-test('UTI nulo usa PROPRIETARY e não colapsa trades diferentes', { skip: !available && 'node:sqlite indisponível' }, async () => {
+test('null UTI uses PROPRIETARY and does not collapse different trades', { skip: !available && 'node:sqlite unavailable' }, async () => {
   const date = data.dates[0];
   const viaAlt = data.rows.filter((r) => r[C.business_date] === date && r[C.uti] == null);
-  assert.ok(viaAlt.length > 0, 'os dados sintéticos devem ter linhas só com PROPRIETARY');
+  assert.ok(viaAlt.length > 0, 'the synthetic data must have rows with PROPRIETARY only');
   const [health] = await db.all(
     `SELECT COUNT(*) AS n FROM breaks WHERE business_date = '${date}' AND uti IS NULL AND proprietary IS NULL`,
   );
@@ -155,10 +155,10 @@ test('UTI nulo usa PROPRIETARY e não colapsa trades diferentes', { skip: !avail
   const [got] = await db.all(
     `SELECT COUNT(*) AS n FROM (SELECT DISTINCT proprietary, cp1_lei, cp2_lei FROM breaks WHERE business_date = '${date}' AND proprietary LIKE 'SYNTHPRP%') p`,
   );
-  assert.equal(Number(got.n), expected, 'cada trade só com PROPRIETARY é uma position própria');
+  assert.equal(Number(got.n), expected, 'each PROPRIETARY-only trade is a position of its own');
 });
 
-// ---- persistence (aprovada em 2026-10-19) ----
+// ---- persistence (approved on 2026-10-19) ----
 
 /** Breaks distintos de uma data, indexados pela chave sem data. */
 function breaksOn(date) {
@@ -170,65 +170,65 @@ function breaksOn(date) {
   return m;
 }
 
-/** Classificação esperada em JS: { field -> { igual, alterado, novo, resolvido } } e o total. */
+/** Expected classification in JS: { field -> { same, changed, new, resolved } } and the total. */
 function expectedPersistence(date, prevDate, { assetClass } = {}) {
   const cur = breaksOn(date);
   const pre = breaksOn(prevDate);
   const byField = new Map();
-  const total = { igual: 0, alterado: 0, novo: 0, resolvido: 0 };
+  const total = { same: 0, changed: 0, new: 0, resolved: 0 };
   const add = (r, status) => {
     if (assetClass && r[C.asset_class] !== assetClass) return;
     const f = r[C.breaking_field];
-    const e = byField.get(f) ?? { igual: 0, alterado: 0, novo: 0, resolvido: 0 };
+    const e = byField.get(f) ?? { same: 0, changed: 0, new: 0, resolved: 0 };
     e[status]++;
     total[status]++;
     byField.set(f, e);
   };
   for (const [k, r] of cur) {
     const p = pre.get(k);
-    if (!p) add(r, 'novo');
-    else if ((r[C.bnpp_value] ?? null) === (p[C.bnpp_value] ?? null) && (r[C.cpty_value] ?? null) === (p[C.cpty_value] ?? null)) add(r, 'igual');
-    else add(r, 'alterado');
+    if (!p) add(r, 'new');
+    else if ((r[C.bnpp_value] ?? null) === (p[C.bnpp_value] ?? null) && (r[C.cpty_value] ?? null) === (p[C.cpty_value] ?? null)) add(r, 'same');
+    else add(r, 'changed');
   }
-  for (const [k, p] of pre) if (!cur.has(k)) add(p, 'resolvido');
+  for (const [k, p] of pre) if (!cur.has(k)) add(p, 'resolved');
   return { byField, total };
 }
 
-const skipNoSqlite = !available && 'node:sqlite indisponível';
+const skipNoSqlite = !available && 'node:sqlite unavailable';
 
-test('persistence: os 4 grupos batem certo com o cálculo em JS (total e por campo)', { skip: skipNoSqlite }, async () => {
+test('persistence: the 4 groups match the JS computation (total and per field)', { skip: skipNoSqlite }, async () => {
   const [d0, d1] = data.dates;
   const exp = expectedPersistence(d1, d0);
-  for (const s of ['igual', 'alterado', 'novo', 'resolvido']) assert.ok(exp.total[s] > 0, `o sintético deve ter breaks "${s}"`);
+  for (const s of ['same', 'changed', 'new', 'resolved']) assert.ok(exp.total[s] > 0, `the synthetic data must have "${s}" breaks`);
 
   const { rows: [tot] } = await runMetric(db, { metric: 'persistence', filters: onDate(d1) }, { audit });
   assert.equal(tot.previous_date, d0);
-  for (const s of ['igual', 'alterado', 'novo', 'resolvido']) assert.equal(tot[s], exp.total[s], s);
-  assert.equal(tot.breaks_today, exp.total.igual + exp.total.alterado + exp.total.novo);
-  assert.equal(tot.breaks_previous, exp.total.igual + exp.total.alterado + exp.total.resolvido);
-  assert.equal(tot.pct_igual, Math.round((exp.total.igual / tot.breaks_today) * 1000) / 10);
+  for (const s of ['same', 'changed', 'new', 'resolved']) assert.equal(tot[s], exp.total[s], s);
+  assert.equal(tot.breaks_today, exp.total.same + exp.total.changed + exp.total.new);
+  assert.equal(tot.breaks_previous, exp.total.same + exp.total.changed + exp.total.resolved);
+  assert.equal(tot.pct_same, Math.round((exp.total.same / tot.breaks_today) * 1000) / 10);
 
   const { rows } = await runMetric(db, { metric: 'persistence', filters: onDate(d1), dimensions: ['breaking_field'] }, { audit });
   assert.equal(rows.length, exp.byField.size);
   for (const r of rows) {
     const e = exp.byField.get(r.breaking_field);
-    for (const s of ['igual', 'alterado', 'novo', 'resolvido']) assert.equal(r[s], e[s], `${r.breaking_field} ${s}`);
+    for (const s of ['same', 'changed', 'new', 'resolved']) assert.equal(r[s], e[s], `${r.breaking_field} ${s}`);
   }
 });
 
-test('persistence: NULL = NULL conta como igual', { skip: skipNoSqlite }, async () => {
+test('persistence: NULL = NULL counts as same', { skip: skipNoSqlite }, async () => {
   const [d0, d1] = data.dates;
   const cur = breaksOn(d1);
   const pre = breaksOn(d0);
-  const nullIguais = [...cur].filter(([k, r]) => {
+  const nullSame = [...cur].filter(([k, r]) => {
     const p = pre.get(k);
     return p && r[C.cpty_value] == null && p[C.cpty_value] == null && r[C.bnpp_value] === p[C.bnpp_value];
   });
-  assert.ok(nullIguais.length > 0, 'o sintético deve ter breaks iguais com CPTY nulo');
-  // Se NULL ≠ NULL, estes breaks sairiam como "alterado" e o total de iguais não bateria (teste anterior).
+  assert.ok(nullSame.length > 0, 'the synthetic data must have same breaks with a null CPTY');
+  // If NULL ≠ NULL, these breaks would come out as "changed" and the total of same would not match (previous test).
 });
 
-test('persistence: filtro por dimensão usa o valor de D (D-1 nos resolvidos)', { skip: skipNoSqlite }, async () => {
+test('persistence: dimension filter uses the value of D (D-1 for resolved)', { skip: skipNoSqlite }, async () => {
   const [d0, d1] = data.dates;
   const exp = expectedPersistence(d1, d0, { assetClass: 'CREDIT' });
   const { rows: [tot] } = await runMetric(
@@ -236,31 +236,31 @@ test('persistence: filtro por dimensão usa o valor de D (D-1 nos resolvidos)', 
     { metric: 'persistence', filters: [...onDate(d1), { dimension: 'asset_class', op: 'eq', value: 'CREDIT' }] },
     { audit },
   );
-  for (const s of ['igual', 'alterado', 'novo', 'resolvido']) assert.equal(tot[s], exp.total[s], s);
+  for (const s of ['same', 'changed', 'new', 'resolved']) assert.equal(tot[s], exp.total[s], s);
 });
 
-test('persistence: datas excluídas são saltadas; primeira data não tem comparação', { skip: skipNoSqlite }, async () => {
+test('persistence: excluded dates are skipped; the first date has no comparison', { skip: skipNoSqlite }, async () => {
   const [d0, d1, d2] = data.dates;
   const exp = expectedPersistence(d2, d0);
   const { rows: [tot] } = await runMetric(db, { metric: 'persistence', filters: onDate(d2) }, { audit, excludedDates: [d1] });
   assert.equal(tot.previous_date, d0);
-  for (const s of ['igual', 'alterado', 'novo', 'resolvido']) assert.equal(tot[s], exp.total[s], s);
+  for (const s of ['same', 'changed', 'new', 'resolved']) assert.equal(tot[s], exp.total[s], s);
 
   const first = await runMetric(db, { metric: 'persistence', filters: onDate(d0) }, { audit });
   assert.equal(first.rows.length, 1);
   assert.equal(first.rows[0].previous_date, null);
   assert.equal(first.rows[0].breaks_today, breaksOn(d0).size);
-  assert.equal(first.rows[0].pct_igual, null);
-  assert.equal(first.rows[0].novo, null, 'sem dia anterior não é "100% novo"');
+  assert.equal(first.rows[0].pct_same, null);
+  assert.equal(first.rows[0].new, null, 'without a previous day it is not "100% new"');
 
   const dod = await runMetric(db, { metric: 'breaks_dod', filters: onDate(d2) }, { audit, excludedDates: [d1] });
   assert.ok(dod.rows.every((r) => r.previous_date === d0));
 
   const none = await runMetric(db, { metric: 'persistence', filters: onDate('2030-01-02') }, { audit });
-  assert.equal(none.rows.length, 0, 'data sem dados não devolve tudo como resolvido');
+  assert.equal(none.rows.length, 0, 'a date without data does not return everything as resolved');
 });
 
-test('profile: mudança de identificador (PROPRIETARY -> UTI) é contada', { skip: skipNoSqlite }, async () => {
+test('profile: identifier change (PROPRIETARY -> UTI) is counted', { skip: skipNoSqlite }, async () => {
   const [d0, d1] = data.dates;
   const p = await profileDate(db, d1);
   const posKeys = (date) => new Set(expectations(data.rows).distinct.filter((r) => r[C.business_date] === date).map(posOf));
@@ -279,6 +279,6 @@ test('profile: mudança de identificador (PROPRIETARY -> UTI) é contada', { ski
   }).length;
   assert.equal(p.idChange.previous_date, d0);
   assert.equal(Number(p.idChange.new_positions), newPos.size);
-  assert.ok(changed > 0, 'o sintético deve ter trades que passam de PROPRIETARY para UTI');
+  assert.ok(changed > 0, 'the synthetic data must have trades moving from PROPRIETARY to UTI');
   assert.equal(Number(p.idChange.id_changed_positions), changed);
 });

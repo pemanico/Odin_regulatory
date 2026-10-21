@@ -1,5 +1,5 @@
 {
- "_doc": "Item ESMA (Table.Item do Excel de regras) -> colunas do ficheiro DTCC. tp = sufixos dos pares TP1_/TP2_ (BNPP = TP1, contraparte = TP2); common = coluna comum aos dois lados; tp vazio = campo sem colunas no ficheiro DTCC (regras que dependem dele não são verificáveis). Gerado a partir do Excel EMIR-Refit_Reconciliation status matching + ficheiro de mapeamento Field name -> DTCC; correções manuais assinaladas em origem.",
+ "_doc": "ESMA item (Table.Item in the rules Excel) -> DTCC file columns. tp = suffixes of the TP1_/TP2_ pairs (BNPP = TP1, counterparty = TP2); common = column shared by both sides; empty tp = field without columns in the DTCC file (rules that depend on it are not verifiable). Generated from the Excel 'EMIR-Refit_Reconciliation status matching' + the 'Field name -> DTCC' mapping file; manual corrections flagged in source.",
  "version": "2026-10-20.1",
  "items": {
   "1.1": {
@@ -273,7 +273,7 @@
    "tp": [
     "MASTER_AGREEMENT_VRSN_V"
    ],
-   "origem": "manual (confirmado 2026-10-20)"
+   "source": "manual (confirmed 2026-10-20)"
   },
   "2.37": {
    "field": "Intragroup",
@@ -330,7 +330,7 @@
    "tp": [
     "SETTLEMENT_DATE"
    ],
-   "origem": "manual (confirmado 2026-10-20)"
+   "source": "manual (confirmed 2026-10-20)"
   },
   "2.47": {
    "field": "Delivery type",
@@ -704,7 +704,7 @@
     "SPREAD_LEG2",
     "SPREAD_LEG2_TYP"
    ],
-   "origem": "manual (confirmado 2026-10-20)"
+   "source": "manual (confirmed 2026-10-20)"
   },
   "2.110": {
    "field": "Spread currency of leg 2",

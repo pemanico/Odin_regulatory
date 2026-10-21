@@ -1,5 +1,5 @@
-// Parser de argumentos minimalista para os scripts (sem dependências).
-// --chave valor | --chave=valor | --flag ; o resto vai para `_`.
+// Minimal argument parser for the scripts (no dependencies).
+// --key value | --key=value | --flag ; everything else goes to `_`.
 export function parseArgs(argv) {
   const out = { _: [] };
   for (let i = 0; i < argv.length; i++) {

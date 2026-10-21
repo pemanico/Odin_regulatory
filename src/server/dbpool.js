@@ -1,26 +1,26 @@
-// Ligação curta à base DuckDB (plano aprovado em 2026-10-20, pergunta 7):
-// o servidor abre a base em READ_ONLY quando chega um pedido e fecha-a quando já não há pedidos em curso.
-// Assim `npm run build:db` e `npm run rules` podem correr com o servidor ligado (o DuckDB só aceita um processo
-// com escrita OU vários só de leitura). Pedidos em simultâneo partilham a mesma ligação.
+// Short-lived connection to the DuckDB database (plan approved on 2026-10-20, question 7):
+// the server opens the database READ_ONLY when a request arrives and closes it when no request is in flight.
+// This way `npm run build:db` and `npm run rules` can run while the server is up (DuckDB only accepts one process
+// with write access OR several read-only ones). Concurrent requests share the same connection.
 
 export class DbBusyError extends Error {
   constructor(cause) {
     super(
-      'A base de dados está a ser atualizada (npm run build:db ou npm run rules a correr?). Tente de novo dentro de momentos.',
+      'The database is being updated (npm run build:db or npm run rules running?). Try again in a moment.',
     );
     this.name = 'DbBusyError';
     this.cause = cause;
   }
 }
 
-/** true se o erro do driver for de lock do ficheiro (outro processo com escrita). */
+/** true if the driver error is a file lock (another process with write access). */
 export function isLockError(err) {
   return /lock|being used by another process|conflicting/i.test(String(err?.message ?? ''));
 }
 
 /**
  * @param open   () => Promise<db>  (db = { all, exec, close, dialect })
- * @param opts.keepOpen  não fechar no fim (testes com SQLite em memória)
+ * @param opts.keepOpen  do not close at the end (tests with in-memory SQLite)
  */
 export function createDbPool(open, { keepOpen = false } = {}) {
   let db = null;
@@ -53,7 +53,7 @@ export function createDbPool(open, { keepOpen = false } = {}) {
   }
 
   return {
-    /** Corre `fn(db)` com a base aberta. */
+    /** Runs `fn(db)` with the database open. */
     async with(fn) {
       const d = await acquire();
       try {

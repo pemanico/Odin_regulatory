@@ -1,13 +1,13 @@
-// Executa uma métrica: compila, corre no motor e regista auditoria.
+// Runs a metric: compiles it, runs it on the engine and writes the audit log.
 import { compileMetric } from './compiler.js';
 import { audit as defaultAudit } from '../audit.js';
 
 /**
- * @param db  interface { all(sql) } (DuckDB ou SQLite de testes)
+ * @param db  interface { all(sql) } (DuckDB or the SQLite test adapter)
  * @param request  { metric, dimensions?, filters?, limit? }
- * @param opts.audit  função de auditoria (false para desligar)
- * @param opts.source  origem do pedido (cli, api, agent...)
- * @param opts.excludedDates  business dates a saltar nas comparações entre dias (config.excludedDates)
+ * @param opts.audit  audit function (false to switch off)
+ * @param opts.source  origin of the request (cli, api, agent...)
+ * @param opts.excludedDates  business dates to skip in day-on-day comparisons (config.excludedDates)
  */
 export async function runMetric(db, request, { audit = defaultAudit, source = 'cli', excludedDates = [] } = {}) {
   const t0 = Date.now();

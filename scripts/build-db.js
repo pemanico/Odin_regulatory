@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-// Constrói a base DuckDB local a partir dos Parquet de breaks:
-//   breaks_raw = linhas brutas, com nomes lógicos
-//   breaks     = vista deduplicada (1 linha por break)
-// Uso: npm run build:db [-- --glob "data/breaks/*.parquet"] [--views]
+// Builds the local DuckDB database from the breaks Parquet files:
+//   breaks_raw = raw rows, with logical names
+//   breaks     = deduplicated view (1 row per break)
+// Usage: npm run build:db [-- --glob "data/breaks/*.parquet"] [--views]
+// WARNING: deletes and recreates the database file, including the rules engine tables (run npm run rules again).
 import * as fs from 'node:fs';
 import { dirname } from 'node:path';
 import { loadConfig } from '../src/config.js';
@@ -14,11 +15,11 @@ const args = parseArgs(process.argv.slice(2));
 const config = loadConfig(args.glob ? { source: { breaksGlob: args.glob } } : {});
 const { breaksGlob, dbPath } = config.source;
 
-// fs.globSync existe a partir do Node 22; no Node 20 o DuckDB valida o glob sozinho.
+// fs.globSync exists from Node 22; on Node 20 DuckDB validates the glob on its own.
 const files = fs.globSync ? fs.globSync(breaksGlob) : null;
 if (files && files.length === 0) {
-  console.error(`Nenhum ficheiro Parquet encontrado em: ${breaksGlob}`);
-  console.error('Ajusta ODIN_BREAKS_GLOB no .env ou gera dados sintéticos com `npm run synthetic`.');
+  console.error(`No Parquet files found in: ${breaksGlob}`);
+  console.error('Adjust ODIN_BREAKS_GLOB in .env or generate synthetic data with `npm run synthetic`.');
   process.exit(1);
 }
 
@@ -41,7 +42,7 @@ try {
       (SELECT MIN(business_date) FROM breaks) AS first_date,
       (SELECT MAX(business_date) FROM breaks) AS last_date
   `);
-  console.log(`Base criada em ${dbPath} (${((Date.now() - t0) / 1000).toFixed(1)}s, ${files ? files.length : '?'} ficheiro(s))`);
+  console.log(`Database created at ${dbPath} (${((Date.now() - t0) / 1000).toFixed(1)}s, ${files ? files.length : '?'} file(s))`);
   console.table([summary]);
 } finally {
   await db.close();

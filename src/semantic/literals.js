@@ -1,6 +1,6 @@
-// Renderização segura de literais SQL.
-// Os valores dos filtros podem vir do LLM: são validados por tipo e escapados aqui.
-// Identificadores (colunas, tabelas) NUNCA vêm do pedido: vêm só do catálogo (whitelist).
+// Safe rendering of SQL literals.
+// Filter values may come from the LLM: they are validated by type and escaped here.
+// Identifiers (columns, tables) NEVER come from the request: only from the catalog (whitelist).
 
 export class ValidationError extends Error {
   constructor(message) {
@@ -19,21 +19,21 @@ export function isValidDate(s) {
 }
 
 export function dateLiteral(value) {
-  if (!isValidDate(value)) throw new ValidationError(`Data inválida (esperado YYYY-MM-DD): ${JSON.stringify(value)}`);
+  if (!isValidDate(value)) throw new ValidationError(`Invalid date (expected YYYY-MM-DD): ${JSON.stringify(value)}`);
   return `'${value}'`;
 }
 
 export function stringLiteral(value) {
-  if (typeof value !== 'string') throw new ValidationError(`Esperado texto: ${JSON.stringify(value)}`);
-  if (value.length > MAX_STRING) throw new ValidationError(`Texto demasiado longo (máx. ${MAX_STRING})`);
-  if (/[\u0000-\u001f]/.test(value)) throw new ValidationError('Texto contém caracteres de controlo');
+  if (typeof value !== 'string') throw new ValidationError(`Expected text: ${JSON.stringify(value)}`);
+  if (value.length > MAX_STRING) throw new ValidationError(`Text too long (max. ${MAX_STRING})`);
+  if (/[\u0000-\u001f]/.test(value)) throw new ValidationError('Text contains control characters');
   return `'${value.replace(/'/g, "''")}'`;
 }
 
 export function intValue(value, { min = 1, max = 1000 } = {}) {
   const n = Number(value);
   if (!Number.isInteger(n) || n < min || n > max) {
-    throw new ValidationError(`Inteiro inválido (entre ${min} e ${max}): ${JSON.stringify(value)}`);
+    throw new ValidationError(`Invalid integer (between ${min} and ${max}): ${JSON.stringify(value)}`);
   }
   return n;
 }

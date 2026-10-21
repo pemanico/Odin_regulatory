@@ -1,8 +1,8 @@
-// Texto legível de uma regra (DSL de compile.js), para mostrar ao operacional o erro de format/condition
-// que o valor viola. Gerado a partir da tradução (não copia o texto do Excel), em inglês como o documento ESMA.
+// Human-readable text of a rule (compile.js DSL), to show the operations user the format/condition error
+// the value violates. Generated from the translation (the Excel text is not copied), in English like the ESMA document.
 import { DATE_RE, TIMESTAMP_RE } from './compile.js';
 
-/** Formatos conhecidos (regex da DSL -> descrição). */
+/** Known formats (DSL regex -> description). */
 const FORMATS = {
   '[A-Z]{3}': '3 alphabetic characters (ISO 4217 currency code)',
   '[A-Z]{3}/[A-Z]{3}': 'two ISO 4217 currency codes separated by "/" (7 characters)',
@@ -88,15 +88,15 @@ export function describeCheck(check, fieldMap) {
   }
 }
 
-/** Mensagem de erro de uma regra: condição (when) + o que tem de ser verdade; nota se a regra for parcial. */
+/** Error message of a rule: condition (when) + what must hold. */
 export function describeRule(rule, fieldMap) {
-  if (rule.status === 'nao_verificavel') return `not verifiable: ${rule.nota}`;
+  if (rule.status === 'not_verifiable') return `not verifiable: ${rule.note}`;
   const body = describeCheck(rule.check, fieldMap);
   const text = rule.when ? `If ${describePredicate(rule.when, fieldMap)}: ${body}` : body.charAt(0).toUpperCase() + body.slice(1);
   return text;
 }
 
-/** Nome do campo ESMA de um sufixo TP ("2.22 Valuation currency"); o próprio sufixo se não estiver no mapa. */
+/** ESMA field name of a TP suffix ("2.22 Valuation currency"); the suffix itself when it is not in the map. */
 export function fieldLabel(suffix, fieldMap) {
   const s = String(suffix ?? '').toUpperCase();
   for (const [item, e] of Object.entries(fieldMap.items)) {

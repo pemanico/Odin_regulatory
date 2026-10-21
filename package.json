@@ -2,7 +2,7 @@
   "name": "odin-regulatory",
   "version": "0.1.0",
   "private": true,
-  "description": "KPIs e triagem de breaks regulatórios (EMIR primeiro) sobre data marts processados por Spark.",
+  "description": "KPIs and triage of regulatory breaks (EMIR first) on data marts processed by Spark.",
   "type": "module",
   "engines": {
     "node": ">=20"

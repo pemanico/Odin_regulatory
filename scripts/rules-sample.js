@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-// Amostra de breaks para validação manual do motor de regras (pelos operacionais / Ordep).
+// Sample of breaks for manual validation of the rules engine (by operations / Ordep).
 //
 //   npm run rules:sample -- --date 2026-10-15 [--n 10] [--field VALUATION_CCY]
 //
-// Escolhe N breaks de break_detail, repartidos pelos veredictos (amostra determinística: o mesmo N e a mesma
-// data dão sempre os mesmos breaks), e escreve data/reports/sample-<data>.csv com: chave de produção, campo
-// (nome do documento de regras), valor BNPP (TP1_<campo>), valor other cpty (TP2_<campo>), veredicto e o erro
-// de format/condition de cada lado, mais duas colunas vazias para a validação (correto S/N, comentário).
-// O CSV tem identificadores e valores: fica só no PC. No ecrã aparecem só nº, campo e veredicto.
-// Pré-requisito: npm run rules -- --date <data>.
+// Picks N breaks from break_detail, spread across the verdicts (deterministic sample: the same N and the same
+// date always give the same breaks), and writes data/reports/sample-<date>.csv with: production key, field
+// (name in the rules document), BNPP value (TP1_<field>), other cpty value (TP2_<field>), verdict and the
+// format/condition error on each side, plus two empty columns for the validation (correct Y/N, comment).
+// The CSV contains identifiers and values: it stays on the PC. Only number, field and verdict are printed.
+// Prerequisite: npm run rules -- --date <date>.
 import fs from 'node:fs';
 import { resolve } from 'node:path';
 import { loadConfig, ROOT } from '../src/config.js';
@@ -21,7 +21,7 @@ import { toCsv } from '../src/synthetic/generate.js';
 
 const args = parseArgs(process.argv.slice(2));
 if (!isValidDate(args.date)) {
-  console.error('Uso: npm run rules:sample -- --date YYYY-MM-DD [--n 10] [--field CAMPO]');
+  console.error('Usage: npm run rules:sample -- --date YYYY-MM-DD [--n 10] [--field FIELD]');
   process.exit(1);
 }
 const D = args.date;
@@ -31,11 +31,11 @@ const config = loadConfig();
 const db = await openDuckDb(config.source.dbPath);
 try {
   const fieldFilter = args.field ? ` AND breaking_field = ${stringLiteral(String(args.field).toUpperCase())}` : '';
-  const present = new Map((await db.all(`SELECT veredicto, COUNT(*) AS n FROM break_detail
-WHERE business_date = '${D}'${fieldFilter} GROUP BY veredicto`)).map((r) => [r.veredicto, Number(r.n)]));
-  if (present.size === 0) throw new Error(`Sem detalhe em ${D}: correr primeiro npm run rules -- --date ${D}`);
+  const present = new Map((await db.all(`SELECT verdict_text, COUNT(*) AS n FROM break_detail
+WHERE business_date = '${D}'${fieldFilter} GROUP BY verdict_text`)).map((r) => [r.verdict_text, Number(r.n)]));
+  if (present.size === 0) throw new Error(`No detail on ${D}: run npm run rules -- --date ${D} first`);
 
-  // Quotas por veredicto: repartição igual pela ordem de VERDICTS; o resto vai para os primeiros.
+  // Quotas per verdict: equal split in VERDICTS order; the remainder goes to the first ones.
   const order = VERDICTS.map((v) => VERDICT_TEXT[v]).filter((t) => present.has(t));
   const base = Math.floor(N / order.length);
   const quota = Object.fromEntries(order.map((t) => [t, base]));
@@ -46,7 +46,7 @@ WHERE business_date = '${D}'${fieldFilter} GROUP BY veredicto`)).map((r) => [r.v
   for (const t of order) {
     if (!quota[t]) continue;
     picks.push(...(await db.all(`SELECT * FROM break_detail
-WHERE business_date = '${D}' AND veredicto = ${stringLiteral(t)}${fieldFilter}
+WHERE business_date = '${D}' AND verdict_text = ${stringLiteral(t)}${fieldFilter}
 ORDER BY md5(${keyConcat} || '|' || breaking_field)
 LIMIT ${quota[t]}`)));
   }
@@ -55,24 +55,24 @@ LIMIT ${quota[t]}`)));
     n: i + 1,
     business_date: D,
     ...Object.fromEntries(POSITION_KEY.map((k) => [k, p[k]])),
-    campo: p.campo,
-    valor_bnpp: p.valor_bnpp ?? '',
-    valor_other_cpty: p.valor_other_cpty ?? '',
-    veredicto: p.veredicto,
-    erro_bnpp: p.erro_bnpp ?? '',
-    erro_other_cpty: p.erro_other_cpty ?? '',
-    validacao_correto_S_N: '',
-    comentario: '',
+    field: p.field_label,
+    bnpp_value: p.bnpp_value ?? '',
+    other_cpty_value: p.other_cpty_value ?? '',
+    verdict: p.verdict_text,
+    bnpp_error: p.bnpp_error ?? '',
+    other_cpty_error: p.other_cpty_error ?? '',
+    validation_correct_Y_N: '',
+    comment: '',
   }));
 
   const outDir = resolve(ROOT, 'data/reports');
   fs.mkdirSync(outDir, { recursive: true });
   const out = resolve(outDir, `sample-${D}.csv`);
   fs.writeFileSync(out, toCsv(rows, Object.keys(rows[0])));
-  console.log(`Amostra de ${rows.length} breaks de ${D}:`);
-  console.table(rows.map(({ n, campo, veredicto }) => ({ n, campo, veredicto })));
-  console.log(`\nFicheiro para validar (chave e valores — só local, não colar): ${out}`);
-  console.log('Validar cada linha contra o ficheiro DTCC e o documento de regras; devolver só "n + correto S/N + motivo".');
+  console.log(`Sample of ${rows.length} breaks on ${D}:`);
+  console.table(rows.map(({ n, field, verdict }) => ({ n, field, verdict })));
+  console.log(`\nFile to validate (key and values — local only, do not paste): ${out}`);
+  console.log('Check each row against the DTCC file and the rules document; report back only "n + correct Y/N + reason".');
 } catch (err) {
   console.error(`${err.name}: ${err.message}`);
   process.exitCode = 1;

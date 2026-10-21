@@ -1,46 +1,46 @@
-// Semantic layer — catálogo de métricas certificadas.
-// Cada métrica tem grão, medida, dimensões e filtros FIXOS e documentados.
-// O LLM (fase 6–8) só escolhe métrica + dimensões + filtros deste catálogo; nunca escreve SQL.
+// Semantic layer — catalog of certified metrics.
+// Each metric has a FIXED, documented grain, measure, dimensions and filters.
+// The LLM only picks metric + dimensions + filters from this catalog; it never writes SQL.
 //
-// Grão base: 1 break distinto = BUSINESS_DATE + chave de produção (REPORT_SUBMITTING_ENTITY, LEI CP1, LEI CP2,
-// UTI, PROPRIETARY, ASSET_CLASS, BREAKING_FIELD) — vista `breaks`.
+// Base grain: 1 distinct break = BUSINESS_DATE + production key (REPORT_SUBMITTING_ENTITY, LEI CP1, LEI CP2,
+// UTI, PROPRIETARY, ASSET_CLASS, BREAKING_FIELD) — `breaks` view.
 
-/** Dimensões permitidas (whitelist). A chave é o nome lógico da coluna. */
+/** Allowed dimensions (whitelist). The key is the logical column name. */
 export const DIMENSIONS = {
   business_date: { type: 'date', label: 'Business date' },
-  breaking_field: { type: 'string', label: 'Campo em break' },
+  breaking_field: { type: 'string', label: 'Breaking field' },
   asset_class: { type: 'string', label: 'Asset class' },
-  cp1_lei: { type: 'string', label: 'LEI counterparty 1' },
-  cp2_lei: { type: 'string', label: 'LEI counterparty 2 (contraparte)' },
+  cp1_lei: { type: 'string', label: 'Counterparty 1 LEI' },
+  cp2_lei: { type: 'string', label: 'Counterparty 2 LEI (other counterparty)' },
   business_line: { type: 'string', label: 'Business line' },
-  activity_l1: { type: 'string', label: 'Atividade L1' },
-  activity_l2: { type: 'string', label: 'Atividade L2' },
-  activity_l3: { type: 'string', label: 'Atividade L3' },
-  activity_l4: { type: 'string', label: 'Atividade L4' },
-  rec_category: { type: 'string', label: 'Categoria DTCC' },
-  pairing: { type: 'string', label: 'Estado de pairing' },
-  reconciliation: { type: 'string', label: 'Estado de reconciliação' },
-  valuation_reconciliation: { type: 'string', label: 'Estado de reconciliação de valuation' },
-  verdict: { type: 'string', label: 'Veredicto das regras ESMA (so_bnpp, so_contraparte, ambos, divergencia, sem_regras_verificaveis)' },
-  key_verdict: { type: 'string', label: 'Veredicto da transação/Key (bnpp, contraparte, misto, sem_explicacao)' },
+  activity_l1: { type: 'string', label: 'Activity L1' },
+  activity_l2: { type: 'string', label: 'Activity L2' },
+  activity_l3: { type: 'string', label: 'Activity L3' },
+  activity_l4: { type: 'string', label: 'Activity L4' },
+  rec_category: { type: 'string', label: 'DTCC category' },
+  pairing: { type: 'string', label: 'Pairing status' },
+  reconciliation: { type: 'string', label: 'Reconciliation status' },
+  valuation_reconciliation: { type: 'string', label: 'Valuation reconciliation status' },
+  verdict: { type: 'string', label: 'ESMA rules verdict (bnpp_only, cpty_only, both, divergence, no_verifiable_rules)' },
+  key_verdict: { type: 'string', label: 'Transaction/Key verdict (bnpp, counterparty, mixed, unexplained)' },
 };
 
-/** Operadores de filtro permitidos. */
+/** Allowed filter operators. */
 export const FILTER_OPS = ['eq', 'in', 'between', 'gte', 'lte'];
 
 /**
- * Métricas certificadas (as 6 do plano aprovado + persistence, 2026-10-19 + rule_verdict, key_verdict e
+ * Certified metrics (the 6 of the approved plan + persistence, 2026-10-19 + rule_verdict, key_verdict and
  * field_combinations, 2026-10-20).
  * kind:
- *  - 'aggregate': SELECT dims, medida FROM tabela GROUP BY dims (compilador genérico)
- *  - 'custom':    SQL próprio, construído em compiler.js
- *  - 'pending':   ainda indisponível (falta informação)
+ *  - 'aggregate': SELECT dims, measure FROM table GROUP BY dims (generic compiler)
+ *  - 'custom':    its own SQL, built in compiler.js
+ *  - 'pending':   not available yet (information missing)
  */
 export const METRICS = {
   breaks_by_field: {
     kind: 'aggregate',
-    title: 'Breaks por campo',
-    description: 'Número de breaks distintos por BREAKING_FIELD. Grão: break distinto (deduplicado).',
+    title: 'Breaks by field',
+    description: 'Number of distinct breaks per BREAKING_FIELD. Grain: distinct (deduplicated) break.',
     from: 'breaks',
     measure: { name: 'n_breaks', sql: 'COUNT(*)' },
     defaultDimensions: ['breaking_field'],
@@ -50,10 +50,10 @@ export const METRICS = {
   },
   breaks_dod: {
     kind: 'custom',
-    title: 'Variação face ao dia anterior',
+    title: 'Day-on-day change',
     description:
-      'Breaks distintos por campo na business date pedida vs. a business date anterior DISPONÍVEL nos dados ' +
-      '(não o dia de calendário anterior: fins de semana, feriados e datas excluídas na config são saltados).',
+      'Distinct breaks per field on the requested business date vs. the previous business date AVAILABLE in the data ' +
+      '(not the previous calendar day: weekends, holidays and dates excluded in the config are skipped).',
     requiredFilters: ['business_date'],
     requiredOps: { business_date: ['eq'] },
     allowedFilterDimensions: Object.keys(DIMENSIONS).filter((d) => d !== 'business_date'),
@@ -61,13 +61,13 @@ export const METRICS = {
   },
   persistence: {
     kind: 'custom',
-    title: 'Persistência face ao dia anterior',
+    title: 'Persistence vs. the previous day',
     description:
-      'Classifica os breaks distintos da business date pedida (D) face à business date anterior disponível (D-1, ' +
-      'saltando as datas excluídas): igual (mesma chave e mesmos valores BNPP e CPTY, NULL = NULL), alterado (mesma ' +
-      'chave, algum valor diferente), novo (chave só em D) e resolvido (chave só em D-1). As percentagens são sobre ' +
-      'os breaks de D. É um POTENCIAL de herança da categorização, não uma poupança (falta o backtest com o histórico). ' +
-      'Dimensões e filtros usam o valor de D (o de D-1 nos resolvidos).',
+      'Classifies the distinct breaks of the requested business date (D) against the previous available business date ' +
+      '(D-1, skipping excluded dates): same (same key and same BNPP and CPTY values, NULL = NULL), changed (same key, ' +
+      'some value different), new (key only in D) and resolved (key only in D-1). Percentages are over the breaks of D. ' +
+      'It is a POTENTIAL for inheriting the categorisation, not a saving (the backtest against the history is missing). ' +
+      'Dimensions and filters use the value of D (the value of D-1 for resolved breaks).',
     requiredFilters: ['business_date'],
     requiredOps: { business_date: ['eq'] },
     allowedDimensions: ['breaking_field', 'asset_class'],
@@ -77,11 +77,11 @@ export const METRICS = {
   },
   rule_verdict: {
     kind: 'aggregate',
-    title: 'Breaks por veredicto das regras ESMA',
+    title: 'Breaks by ESMA rules verdict',
     description:
-      'Breaks distintos por veredicto do motor de regras (validation rules ESMA aplicadas a TP1 = BNPP e TP2 = contraparte): ' +
-      'so_bnpp, so_contraparte, ambos, divergencia (os dois valores cumprem as regras verificáveis) e ' +
-      'sem_regras_verificaveis. Requer npm run rules para a business date.',
+      'Distinct breaks per verdict of the rules engine (ESMA validation rules applied to TP1 = BNPP and TP2 = counterparty): ' +
+      'bnpp_only, cpty_only, both, divergence (both values comply with the verifiable rules) and ' +
+      'no_verifiable_rules. Requires npm run rules for the business date.',
     from: 'break_verdict',
     measure: { name: 'n_breaks', sql: 'COUNT(*)' },
     defaultDimensions: ['verdict'],
@@ -92,11 +92,11 @@ export const METRICS = {
   },
   key_verdict: {
     kind: 'aggregate',
-    title: 'Transações (Keys) por veredicto',
+    title: 'Transactions (Keys) by verdict',
     description:
-      'Transações distintas (Key = chave de produção sem o campo) por veredicto da Key: bnpp (só há campos com erro ' +
-      'do lado BNPP), contraparte (só do lado da contraparte), misto (erros dos dois lados, em campos diferentes ou no ' +
-      'mesmo campo) e sem_explicacao (nenhum campo com o lado identificado pelas regras ESMA). Requer npm run rules.',
+      'Distinct transactions (Key = production key without the field) per Key verdict: bnpp (only fields with an error ' +
+      'on the BNPP side), counterparty (only on the counterparty side), mixed (errors on both sides, in different fields ' +
+      'or in the same field) and unexplained (no field with the wrong side identified by the ESMA rules). Requires npm run rules.',
     from: 'key_summary',
     measure: { name: 'n_keys', sql: 'COUNT(*)' },
     defaultDimensions: ['key_verdict'],
@@ -107,10 +107,10 @@ export const METRICS = {
   },
   field_combinations: {
     kind: 'custom',
-    title: 'Combinações de campos em break por transação',
+    title: 'Combinations of breaking fields per transaction',
     description:
-      'Conjuntos de campos em break que aparecem juntos na mesma transação (Key), com o nº de transações e o ' +
-      'veredicto das Keys. O filtro breaking_field devolve as combinações que CONTÊM esse campo. Requer npm run rules.',
+      'Sets of breaking fields that occur together in the same transaction (Key), with the number of transactions and ' +
+      'the Key verdicts. The breaking_field filter returns the combinations that CONTAIN that field. Requires npm run rules.',
     requiredFilters: ['business_date'],
     requiredOps: { business_date: ['eq'], breaking_field: ['eq'] },
     allowedFilterDimensions: ['business_date', 'breaking_field', 'asset_class', 'key_verdict', 'cp2_lei'],
@@ -118,8 +118,8 @@ export const METRICS = {
   },
   top_fields: {
     kind: 'aggregate',
-    title: 'Top N de campos em break',
-    description: 'Os N campos com mais breaks distintos numa business date (ou intervalo).',
+    title: 'Top N breaking fields',
+    description: 'The N fields with the most distinct breaks on a business date (or range).',
     from: 'breaks',
     measure: { name: 'n_breaks', sql: 'COUNT(*)' },
     defaultDimensions: ['breaking_field'],
@@ -129,8 +129,8 @@ export const METRICS = {
   },
   breaks_by_counterparty: {
     kind: 'aggregate',
-    title: 'Breaks por contraparte',
-    description: 'Breaks distintos por LEI da contraparte (counterparty 2), opcionalmente por campo.',
+    title: 'Breaks by counterparty',
+    description: 'Distinct breaks per counterparty LEI (counterparty 2), optionally per field.',
     from: 'breaks',
     measure: { name: 'n_breaks', sql: 'COUNT(*)' },
     defaultDimensions: ['cp2_lei'],
@@ -140,28 +140,28 @@ export const METRICS = {
   },
   reference_id_distribution: {
     kind: 'pending',
-    title: 'Distribuição de reference IDs (histórico)',
-    description: 'Quantas vezes cada reference ID foi aplicado pelos operacionais, por campo.',
+    title: 'Reference ID distribution (history)',
+    description: 'How many times each reference ID was applied by operations, per field.',
     pendingReason:
-      'Falta o schema do histórico de categorizações (colunas da chave + reference ID) e da tabela de reference IDs. ' +
-      'Ver CLAUDE.md, questões em aberto.',
+      'The schema of the categorisation history (key columns + reference ID) and of the reference ID table is missing. ' +
+      'See CLAUDE.md, open questions.',
   },
   data_quality: {
     kind: 'custom',
-    title: 'Qualidade de dados: linhas brutas vs. breaks distintos',
+    title: 'Data quality: raw rows vs. distinct breaks',
     description:
-      'Por business date: linhas brutas, breaks distintos, positions distintas, fator de duplicação e ' +
-      'chaves de break com valores diferentes entre duplicados (conflicting_keys).',
+      'Per business date: raw rows, distinct breaks, distinct positions, duplication factor and ' +
+      'break keys with different values across duplicates (conflicting_keys).',
     requiredFilters: ['business_date'],
     allowedFilterDimensions: [],
     defaultLimit: 366,
   },
 };
 
-/** Descrição do catálogo para o agente (tool schema) e para a UI. */
+/** Catalog description for the agent (tool schema) and the UI. */
 export function describeCatalog() {
   return {
-    grain: 'break distinto = BUSINESS_DATE + REPORT_SUBMITTING_ENTITY + LEI CP1 + LEI CP2 + UTI + PROPRIETARY + ASSET_CLASS + BREAKING_FIELD (chave de produção)',
+    grain: 'distinct break = BUSINESS_DATE + REPORT_SUBMITTING_ENTITY + LEI CP1 + LEI CP2 + UTI + PROPRIETARY + ASSET_CLASS + BREAKING_FIELD (production key)',
     metrics: Object.entries(METRICS).map(([id, m]) => ({
       id,
       title: m.title,

@@ -1,120 +1,120 @@
-// Motor de regras EMIR (validation rules ESMA), avaliadas separadamente para cada lado de um break.
+// EMIR rules engine (ESMA validation rules), evaluated separately for each side of a break.
 //
-// Configuração (config/rules/):
-//   field-map.json  item ESMA ("2.47") -> sufixo(s) TP do ficheiro DTCC, ou coluna comum (UTI, REFERENCE_DATE...)
-//   emir-vr.json    uma entrada por código VR (DSL declarativa, ver docs abaixo)
+// Configuration (config/rules/):
+//   field-map.json  ESMA item ("2.47") -> TP suffix(es) in the DTCC file, or a common column (UTI, REFERENCE_DATE...)
+//   emir-vr.json    one entry per VR code (declarative DSL, see below)
 //
-// Lados: BNPP = TP1_<sufixo>; contraparte = TP2_<sufixo>. Cada lado é avaliado só com os SEUS campos;
-// colunas comuns valem para os dois lados.
+// Sides: BNPP = TP1_<suffix>; counterparty = TP2_<suffix>. Each side is evaluated with ITS OWN fields only;
+// common columns apply to both sides.
 //
-// DSL de uma regra:
-//   { code, item, column?, when?, check, status, nota }
-//   item     item ESMA alvo (o campo validado); column = sufixo TP se o item tiver mais de um
-//   when     condição (opcional) sobre campos do mesmo lado:
+// Rule DSL:
+//   { code, item, column?, when?, check, status, note }
+//   item     target ESMA item (the validated field); column = TP suffix when the item has more than one
+//   when     optional condition on fields of the same side:
 //              {eq:[ref,v]} {ne:[ref,v]} {in:[ref,[...]]} {not_in:[ref,[...]]} {populated:ref} {blank:ref}
 //              {all:[...]} {any:[...]} {not:{...}}
-//            ref = item ESMA ("2.47"), "self" (o campo alvo) ou "common:<COLUNA>"
-//   check    o que tem de ser verdade (se `when` for verdadeiro); violação = when ∧ ¬check
+//            ref = ESMA item ("2.47"), "self" (the target field) or "common:<COLUMN>"
+//   check    what must hold (when `when` is true); violation = when ∧ ¬check
 //              {required:true}  {blank:true}  {enum:[...]}  {not_in:[...]}  {regex:"..."}
 //              {date:true}  {timestamp:true}  {year:true}
-//              {decimal:{digits, decimals, sign:"any"|"nonneg"|"positive", allow?:[valores aceites]}}
-//              {compare:{op, ref | value, as:"date"|"timestamp"|"number"}}  (só se os dois valores forem válidos)
+//              {decimal:{digits, decimals, sign:"any"|"nonneg"|"positive", allow?:[accepted values]}}
+//              {compare:{op, ref | value, as:"date"|"timestamp"|"number"}}  (only when both values are valid)
 //              {count_populated:{refs:[...], min?, max?}}
-//              {all:[check, check, ...]}  (todos têm de ser cumpridos)
-//              {if:{when:predicado, then:check, else?:check}}  ("se X então Y, senão Z"; sem else = cumpre)
-//              {equals_any:[ref, ...]}  (valor igual a um dos campos referidos; só se preenchido)
-//              {not_equal:{ref, unless?:ref}}  (valor diferente do campo ref, exceto se igual a `unless`)
-//            Verificações de valor (enum, regex, decimal, ...) só se aplicam a valores preenchidos.
-//   status   "verificavel" | "parcial" (só parte da regra é verificável; nota diz qual) | "nao_verificavel"
+//              {all:[check, check, ...]}  (all must hold)
+//              {if:{when:predicate, then:check, else?:check}}  ("if X then Y, else Z"; no else = passes)
+//              {equals_any:[ref, ...]}  (value equals one of the referenced fields; only when populated)
+//              {not_equal:{ref, unless?:ref}}  (value differs from field ref, unless it equals `unless`)
+//            Value checks (enum, regex, decimal, ...) only apply to populated values.
+//   status   "verifiable" | "partial" (only part of the rule can be verified; the note says which) | "not_verifiable"
 //
-// Resultado da compilação: expressão SQL booleana "viola" para um lado, ou { notVerifiable: motivo }.
+// Compilation result: a boolean SQL expression "violates" for one side, or { notVerifiable: reason }.
 import { ValidationError } from '../semantic/literals.js';
 
 export const SIDES = { BNPP: 'TP1', CPTY: 'TP2' };
 const CHECKS = ['all', 'if', 'equals_any', 'not_equal', 'required', 'blank', 'enum', 'not_in', 'regex', 'date', 'timestamp', 'year', 'decimal', 'compare', 'count_populated'];
-const STATUSES = ['verificavel', 'parcial', 'nao_verificavel'];
+export const STATUSES = ['verifiable', 'partial', 'not_verifiable'];
 
 export const DATE_RE = '[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])';
 export const TIMESTAMP_RE = `${DATE_RE}T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]Z`;
 
 const sqlString = (v) => `'${String(v).replace(/'/g, "''")}'`;
 const quoteIdent = (name) => {
-  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) throw new ValidationError(`Nome de coluna inválido: ${name}`);
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) throw new ValidationError(`Invalid column name: ${name}`);
   return `"${name}"`;
 };
 
 class NotVerifiable extends Error {}
 
-/** Tipos numéricos do Parquet/DuckDB (verificação de decimal passa a sinal + grandeza). */
+/** Parquet/DuckDB numeric types (the decimal check becomes sign + magnitude). */
 const NUMERIC_TYPE = /^(DOUBLE|FLOAT|REAL|DECIMAL|NUMERIC|BIGINT|INTEGER|INT|SMALLINT|TINYINT|HUGEINT|UBIGINT|UINTEGER)/;
 
-/** Valida a estrutura do ficheiro de regras (falha cedo, com o código da regra). */
+/** Validates the rules file structure (fails early, with the rule code). */
 export function validateRules(rulesDoc, fieldMap) {
   const seen = new Set();
   for (const r of rulesDoc.rules ?? []) {
     const where = r.code ?? JSON.stringify(r).slice(0, 60);
-    if (!/^EMIR-VR-\d{4}-\d{2}$/.test(r.code ?? '')) throw new ValidationError(`Regra com código inválido: ${where}`);
-    if (seen.has(r.code)) throw new ValidationError(`Código repetido: ${r.code}`);
+    if (!/^EMIR-VR-\d{4}-\d{2}$/.test(r.code ?? '')) throw new ValidationError(`Rule with an invalid code: ${where}`);
+    if (seen.has(r.code)) throw new ValidationError(`Duplicate code: ${r.code}`);
     seen.add(r.code);
-    if (!fieldMap.items[r.item]) throw new ValidationError(`${r.code}: item desconhecido ${r.item}`);
-    // Só se validam campos com pares TP1_/TP2_ no ficheiro DTCC (decisão 2026-10-20).
+    if (!fieldMap.items[r.item]) throw new ValidationError(`${r.code}: unknown item ${r.item}`);
+    // Only fields with TP1_/TP2_ pairs in the DTCC file are validated (decision 2026-10-20).
     if (!fieldMap.items[r.item].tp?.length) {
-      throw new ValidationError(`${r.code}: o item ${r.item} não tem colunas TP1_/TP2_ no ficheiro DTCC (só esses campos são validados)`);
+      throw new ValidationError(`${r.code}: item ${r.item} has no TP1_/TP2_ columns in the DTCC file (only those fields are validated)`);
     }
-    if (!STATUSES.includes(r.status)) throw new ValidationError(`${r.code}: status inválido ${r.status}`);
-    if (r.status !== 'nao_verificavel') {
+    if (!STATUSES.includes(r.status)) throw new ValidationError(`${r.code}: invalid status ${r.status}`);
+    if (r.status !== 'not_verifiable') {
       const keys = Object.keys(r.check ?? {});
-      if (keys.length !== 1 || !CHECKS.includes(keys[0])) throw new ValidationError(`${r.code}: check inválido ${JSON.stringify(r.check)}`);
+      if (keys.length !== 1 || !CHECKS.includes(keys[0])) throw new ValidationError(`${r.code}: invalid check ${JSON.stringify(r.check)}`);
     }
-    if (r.status !== 'verificavel' && !r.nota) throw new ValidationError(`${r.code}: regra ${r.status} precisa de nota`);
+    if (r.status !== 'verifiable' && !r.note) throw new ValidationError(`${r.code}: a ${r.status} rule needs a note`);
   }
   return rulesDoc;
 }
 
-/** Sufixo TP do campo alvo de uma regra. */
+/** TP suffix of a rule's target field. */
 export function targetSuffix(rule, fieldMap) {
   const e = fieldMap.items[rule.item];
   const tps = e?.tp ?? [];
   if (rule.column) {
-    if (!tps.includes(rule.column)) throw new ValidationError(`${rule.code}: column ${rule.column} não pertence ao item ${rule.item}`);
+    if (!tps.includes(rule.column)) throw new ValidationError(`${rule.code}: column ${rule.column} does not belong to item ${rule.item}`);
     return rule.column;
   }
   if (tps.length === 1) return tps[0];
-  if (tps.length > 1) throw new ValidationError(`${rule.code}: item ${rule.item} tem vários sufixos, indicar column`);
+  if (tps.length > 1) throw new ValidationError(`${rule.code}: item ${rule.item} has several suffixes, set column`);
   return null;
 }
 
 /**
- * Contexto de compilação de um lado.
- * @param columns  Map nome físico (maiúsculas) -> tipo, das colunas existentes no ficheiro DTCC
+ * Compilation context for one side.
+ * @param columns  Map physical name (upper case) -> type, of the columns present in the DTCC file
  */
 function sideContext(rule, side, fieldMap, columns, dialect) {
   const prefix = SIDES[side];
   const colName = (suffix) => {
     const want = `${prefix}_${suffix}`.toUpperCase();
-    if (!columns.has(want)) throw new NotVerifiable(`coluna ${prefix}_${suffix} não existe no ficheiro DTCC`);
+    if (!columns.has(want)) throw new NotVerifiable(`column ${prefix}_${suffix} does not exist in the DTCC file`);
     return want;
   };
   const column = (ref) => {
     if (ref === 'self') {
       const s = targetSuffix(rule, fieldMap);
-      if (!s) throw new NotVerifiable(`item ${rule.item} sem colunas no ficheiro DTCC`);
+      if (!s) throw new NotVerifiable(`item ${rule.item} has no columns in the DTCC file`);
       return colName(s);
     }
-    // Só campos TP1_/TP2_ (decisão 2026-10-20): referências a colunas comuns (UTI, LEIs, REFERENCE_DATE) não são usadas.
+    // TP1_/TP2_ fields only (decision 2026-10-20): references to common columns (UTI, LEIs, REFERENCE_DATE) are not used.
     if (String(ref).startsWith('common:')) {
-      throw new NotVerifiable(`compara com a coluna comum ${String(ref).slice(7)} (sem TP1_/TP2_)`);
+      throw new NotVerifiable(`compares with the common column ${String(ref).slice(7)} (no TP1_/TP2_)`);
     }
     const e = fieldMap.items[ref];
-    if (!e) throw new ValidationError(`${rule.code}: referência a item desconhecido ${ref}`);
-    if (e.common) throw new NotVerifiable(`compara com ${ref} (${e.field}), coluna comum sem TP1_/TP2_`);
-    if (!e.tp?.length) throw new NotVerifiable(`depende do campo ${ref} (${e.field}), que não está no ficheiro DTCC`);
+    if (!e) throw new ValidationError(`${rule.code}: reference to unknown item ${ref}`);
+    if (e.common) throw new NotVerifiable(`compares with ${ref} (${e.field}), a common column without TP1_/TP2_`);
+    if (!e.tp?.length) throw new NotVerifiable(`depends on field ${ref} (${e.field}), which is not in the DTCC file`);
     return colName(e.tp[0]);
   };
-  /** Valor normalizado (texto aparado; vazio = NULL). */
+  /** Normalised value (trimmed text; empty = NULL). */
   const val = (ref) => `NULLIF(TRIM(${dialect.castText(quoteIdent(column(ref)))}), '')`;
   const typeOf = (ref) => columns.get(column(ref)) ?? 'VARCHAR';
-  /** Coluna física sem conversão para texto (para verificações numéricas em colunas tipadas). */
+  /** Physical column without a text cast (for numeric checks on typed columns). */
   const raw = (ref) => quoteIdent(column(ref));
   return { val, typeOf, raw };
 }
@@ -132,11 +132,11 @@ function compilePredicate(p, ctx) {
     case 'ne': return `COALESCE(${ctx.val(a[0])} <> ${sqlString(a[1])}, FALSE)`;
     case 'in': return `COALESCE(${ctx.val(a[0])} IN (${a[1].map(sqlString).join(', ')}), FALSE)`;
     case 'not_in': return `COALESCE(${ctx.val(a[0])} NOT IN (${a[1].map(sqlString).join(', ')}), FALSE)`;
-    default: throw new ValidationError(`Predicado desconhecido: ${JSON.stringify(p)}`);
+    default: throw new ValidationError(`Unknown predicate: ${JSON.stringify(p)}`);
   }
 }
 
-/** Regex de um número decimal com limites de dígitos (o ponto e o sinal não contam). */
+/** Regex for a decimal number with digit limits (the point and the sign do not count). */
 function decimalOk(v, spec, dialect) {
   const { digits, decimals = 0, sign = 'any', allow = [] } = spec;
   const signRe = sign === 'any' ? '-?' : '';
@@ -150,7 +150,7 @@ function decimalOk(v, spec, dialect) {
   return allow.length ? `(${ok} OR ${v} IN (${allow.map(sqlString).join(', ')}))` : ok;
 }
 
-/** Expressão "o valor cumpre o check" (NULL tratado conforme o tipo de check). */
+/** Expression "the value passes the check" (NULL handled according to the check type). */
 function compileCheck(check, ctx, dialect) {
   const [kind] = Object.keys(check);
   const spec = check[kind];
@@ -158,7 +158,7 @@ function compileCheck(check, ctx, dialect) {
   const textual = () => {
     const t = String(ctx.typeOf('self')).toUpperCase();
     if (!t.startsWith('VARCHAR') && t !== 'TEXT' && t !== 'STRING') {
-      throw new NotVerifiable(`coluna tipada (${t}) no Parquet: o formato original do reporte não está disponível`);
+      throw new NotVerifiable(`typed column (${t}) in the Parquet: the original reported format is not available`);
     }
   };
   const ifPopulated = (expr) => `(${v} IS NULL OR ${expr})`;
@@ -187,8 +187,8 @@ function compileCheck(check, ctx, dialect) {
     case 'decimal': {
       const t = String(ctx.typeOf('self')).toUpperCase();
       if (NUMERIC_TYPE.test(t)) {
-        // Coluna numérica no Parquet: o formato (casas decimais, ponto) perdeu-se, mas o sinal e a grandeza
-        // continuam verificáveis. Parte inteira com mais de `digits` dígitos viola qualquer formato permitido.
+        // Numeric column in the Parquet: the format (decimal places, point) is lost, but sign and magnitude
+        // can still be verified. An integer part with more than `digits` digits violates any allowed format.
         const x = ctx.raw('self');
         const parts = [`ABS(${x}) < 1e${Number(spec.digits)}`];
         if (spec.sign === 'nonneg') parts.push(`${x} >= 0`);
@@ -202,13 +202,13 @@ function compileCheck(check, ctx, dialect) {
     }
     case 'compare': {
       const ops = ['>=', '<=', '>', '<', '='];
-      if (!ops.includes(spec.op)) throw new ValidationError(`compare: operador inválido ${spec.op}`);
+      if (!ops.includes(spec.op)) throw new ValidationError(`compare: invalid operator ${spec.op}`);
       const other = spec.ref ? ctx.val(spec.ref) : sqlString(spec.value);
       let a = v;
       let b = other;
       let valid;
       if (spec.as === 'date') {
-        // Compara a parte da data (YYYY-MM-DD) como texto: funciona para datas e timestamps ISO 8601.
+        // Compares the date part (YYYY-MM-DD) as text: works for ISO 8601 dates and timestamps.
         a = `SUBSTR(${v}, 1, 10)`;
         b = `SUBSTR(${other}, 1, 10)`;
         valid = `${dialect.regexFull(a, DATE_RE)} AND ${dialect.regexFull(b, DATE_RE)}`;
@@ -220,9 +220,9 @@ function compileCheck(check, ctx, dialect) {
         a = dialect.castNumber(a);
         b = dialect.castNumber(b);
       } else {
-        throw new ValidationError(`compare: "as" inválido ${spec.as}`);
+        throw new ValidationError(`compare: invalid "as" ${spec.as}`);
       }
-      // Sem os dois valores válidos não há comparação (as regras de formato tratam disso).
+      // Without two valid values there is no comparison (the format rules cover that).
       return `(NOT COALESCE(${valid}, FALSE) OR ${a} ${spec.op} ${b})`;
     }
     case 'count_populated': {
@@ -233,16 +233,16 @@ function compileCheck(check, ctx, dialect) {
       return `(${parts.join(' AND ')})`;
     }
     default:
-      throw new ValidationError(`Check desconhecido: ${kind}`);
+      throw new ValidationError(`Unknown check: ${kind}`);
   }
 }
 
 /**
- * Compila uma regra para um lado.
- * @returns {{ sql: string } | { notVerifiable: string }}  sql = expressão booleana "viola" (nunca NULL)
+ * Compiles one rule for one side.
+ * @returns {{ sql: string } | { notVerifiable: string }}  sql = boolean expression "violates" (never NULL)
  */
 export function compileRule(rule, side, { fieldMap, columns, dialect }) {
-  if (rule.status === 'nao_verificavel') return { notVerifiable: rule.nota };
+  if (rule.status === 'not_verifiable') return { notVerifiable: rule.note };
   try {
     const ctx = sideContext(rule, side, fieldMap, columns, dialect);
     const ok = compileCheck(rule.check, ctx, dialect);
@@ -254,7 +254,7 @@ export function compileRule(rule, side, { fieldMap, columns, dialect }) {
   }
 }
 
-/** Compila todas as regras para os dois lados. */
+/** Compiles every rule for both sides. */
 export function compileAll(rulesDoc, ctx) {
   return rulesDoc.rules.map((rule) => {
     const out = { rule, suffix: targetSuffix(rule, ctx.fieldMap), sides: {} };

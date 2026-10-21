@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Corre uma métrica certificada a partir da linha de comandos.
+// Runs a certified metric from the command line.
 //
 //   npm run metric -- --list
 //   npm run metric -- top_fields --date 2026-10-15
@@ -8,7 +8,7 @@
 //   npm run metric -- breaks_dod --date 2026-10-15
 //   npm run metric -- persistence --date 2026-10-15 [--dims breaking_field]
 //   npm run metric -- data_quality --from 2026-10-12 --to 2026-10-15
-//   (acrescentar --sql para ver só o SQL, --json para saída JSON)
+//   (add --sql to print the SQL only, --json for JSON output)
 import { loadConfig } from '../src/config.js';
 import { parseArgs } from '../src/cli.js';
 import { describeCatalog } from '../src/semantic/catalog.js';
@@ -20,12 +20,12 @@ const args = parseArgs(process.argv.slice(2));
 
 if (args.list || args._.length === 0) {
   const cat = describeCatalog();
-  console.log(`Grão: ${cat.grain}\n`);
+  console.log(`Grain: ${cat.grain}\n`);
   for (const m of cat.metrics) {
-    console.log(`- ${m.id}${m.available ? '' : '  [INDISPONÍVEL]'}\n    ${m.description}`);
-    if (!m.available) console.log(`    Motivo: ${m.pendingReason}`);
+    console.log(`- ${m.id}${m.available ? '' : '  [UNAVAILABLE]'}\n    ${m.description}`);
+    if (!m.available) console.log(`    Reason: ${m.pendingReason}`);
   }
-  console.log(`\nDimensões: ${Object.keys(cat.dimensions).join(', ')}`);
+  console.log(`\nDimensions: ${Object.keys(cat.dimensions).join(', ')}`);
   process.exit(0);
 }
 
@@ -33,7 +33,7 @@ const request = { metric: args._[0], filters: [] };
 if (args.date) request.filters.push({ dimension: 'business_date', op: 'eq', value: args.date });
 if (args.from || args.to) {
   if (!args.from || !args.to) {
-    console.error('--from e --to têm de ser usados juntos');
+    console.error('--from and --to must be used together');
     process.exit(1);
   }
   request.filters.push({ dimension: 'business_date', op: 'between', value: [args.from, args.to] });
@@ -41,7 +41,7 @@ if (args.from || args.to) {
 for (const f of args.filter ?? []) {
   const eq = f.indexOf('=');
   if (eq < 1) {
-    console.error(`Filtro inválido (esperado dim=valor ou dim=a,b): ${f}`);
+    console.error(`Invalid filter (expected dim=value or dim=a,b): ${f}`);
     process.exit(1);
   }
   const dimension = f.slice(0, eq);
@@ -65,7 +65,7 @@ try {
     if (args.json) {
       console.log(JSON.stringify(result, null, 2));
     } else {
-      console.log(`${result.title} — ${result.rows.length} linha(s), ${result.ms} ms`);
+      console.log(`${result.title} — ${result.rows.length} row(s), ${result.ms} ms`);
       console.table(result.rows);
     }
   } finally {
