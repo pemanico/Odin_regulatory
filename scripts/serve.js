@@ -31,7 +31,10 @@ if (!existsSync(config.source.dbPath)) {
 const pool = createDbPool(() => openDuckDb(config.source.dbPath, { readOnly: true }));
 const api = createApi(pool, { excludedDates: config.excludedDates });
 const staticDir = resolve(ROOT, 'web/dist');
-const app = createApp(express, api, { staticDir });
+const app = createApp(express, api, {
+  staticDir,
+  log: (line) => console.log(`${new Date().toISOString().slice(11, 19)} ${line}`),
+});
 
 const port = Number(process.env.ODIN_PORT || 3001);
 const host = process.env.ODIN_HOST || '127.0.0.1';

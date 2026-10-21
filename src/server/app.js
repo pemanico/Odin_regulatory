@@ -7,11 +7,20 @@ import { statusFor } from './api.js';
  * @param express  express module (injected: the import is in scripts/serve.js)
  * @param api      createApi(...)
  * @param opts.staticDir  folder of the built frontend (web/dist); if it does not exist, only the API is served
+ * @param opts.log  function to log each API request (e.g. console.log); omitted = no request log
  */
-export function createApp(express, api, { staticDir } = {}) {
+export function createApp(express, api, { staticDir, log } = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.use(express.json({ limit: '100kb' }));
+  // Request log in the server console: method, path (no query string: it may hold identifiers), status, duration.
+  if (log) {
+    app.use('/api', (req, res, next) => {
+      const t0 = Date.now();
+      res.on('finish', () => log(`${req.method} /api${req.path} ${res.statusCode} ${Date.now() - t0} ms`));
+      next();
+    });
+  }
 
   const handle = (fn) => async (req, res) => {
     try {

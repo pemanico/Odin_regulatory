@@ -217,12 +217,13 @@ export function Query({ date }) {
   const questions = useAsync(() => api.questions(), []);
   const [items, setItems] = useState([]);
   const [advanced, setAdvanced] = useState(false);
-  const endRef = useRef(null);
+  const topRef = useRef(null);
 
   const ask = async (question, template) => {
     const id = ++seq;
     const request = withDate(template, date);
-    setItems((xs) => [...xs, { id, question, request, date, loading: true }]);
+    // Newest answer first, right below the suggestions, so it is always in view.
+    setItems((xs) => [{ id, question, request, date, loading: true }, ...xs]);
     try {
       const result = await api.query(request);
       setItems((xs) => xs.map((x) => (x.id === id ? { ...x, loading: false, result } : x)));
@@ -230,7 +231,7 @@ export function Query({ date }) {
       setItems((xs) => xs.map((x) => (x.id === id ? { ...x, loading: false, error } : x)));
     }
   };
-  useEffect(() => endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), [items.length]);
+  useEffect(() => topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), [items.length]);
 
   return (
     <div className="query">
@@ -245,10 +246,9 @@ export function Query({ date }) {
         </div>
       </div>
 
-      <div className="thread" aria-live="polite">
+      <div className="thread" aria-live="polite" ref={topRef}>
         {!items.length && <div className="empty">Pick a suggested question or use the advanced query.</div>}
         {items.map((it) => <ResultCard key={it.id} item={it} onRemove={() => setItems((xs) => xs.filter((x) => x.id !== it.id))} />)}
-        <div ref={endRef} />
       </div>
 
       <div className="composer">
