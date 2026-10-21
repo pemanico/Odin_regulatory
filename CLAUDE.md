@@ -4,7 +4,7 @@
 > - Qualquer assistente (Claude do banco, Claude Code, ou outro) deve **ler este ficheiro antes de qualquer trabalho**.
 > - No fim de cada sessão de trabalho, **atualizar** as secções "Estado atual", "Registo de decisões" e "Questões em aberto".
 > - **Nunca colocar dados reais neste ficheiro** (UTIs, valores, nomes de contrapartes). Só estrutura, decisões e métricas agregadas.
-> - Última atualização: 2026-10-20, noite (backend + frontend da demo feitos; próximo: validar no PC do escritório e o agente)
+> - Última atualização: 2026-10-21 (demo a arrancar no PC do escritório; DTCC só de 15/10; próximo: validar a demo e o agente)
 
 ---
 
@@ -404,6 +404,8 @@ Existe em Parquet e em Exadata, ligado à chave do break **com os valores report
 35. **Requisito futuro — data quality:** validar todas as transações do ficheiro DTCC (não só os breaks) com o mesmo motor de regras; inclui o alerta de qualidade por dia.
 36. **Códigos reais de CONFIRMED no ficheiro DTCC** (regra 2029-01 viola em 93% dos breaks nos dois lados): `npm run describe -- "data/dtcc/**/*.parquet" --values TP1_CONFIRMED,TP2_CONFIRMED`. Provavelmente o ficheiro usa outros códigos; o mesmo pode acontecer noutros enums.
 37. **Cobertura do critério "explicação pelas regras"**: na 1.ª execução só ~1,3% dos breaks têm um lado identificado. Rever com o Ordep o que a demo promete (ver 3.3.2).
+45. **Ficheiro DTCC só de 15/10 no PC do escritório** (confirmado em 2026-10-21): `npm run rules -- --date 2026-10-13` falha por falta do DTCC. Copiar do S3 o DTCC de 13 e 14/10 (só pastas com `_SUCCESS`) para `data/dtcc/{asset_class}/{data}/` e correr `rules` para essas datas. Não é preciso repetir o `build:db`. Até lá, a demo só tem 15/10 (o KPI de variação compara com 14/10 pelos breaks, que existem).
+46. **Projeto no PC veio do zip do GitHub** (`Odin_regulatory-main`), não de `git clone`: o `git pull` não funciona, e `.env`, `config/local.json` e `data/` têm de ser copiados à mão. Passar para `git clone`.
 39. **O que faz um operacional com os ~170 mil breaks de VALUATION_AMT no Excel?** (filtra por contraparte, ordena por valor, categoriza em massa por algum critério?) Decide o que o ecrã 3 tem de fazer mais depressa. Levar à reunião com os operacionais.
 40. **Perguntas reais dos operacionais** (10–15) para substituir os chips de `config/questions.json`, que são o conjunto de teste do agente.
 41. **1.ª execução da demo no PC do escritório:** `npm install` (Express, React, Vite, `@vitejs/plugin-react` pelo Artifactory); `npm run rules` para 13, 14 e 15/10 (grava `key_summary`); `npm run build`; `npm start`. Medir o tempo de `/api/keys` com filtro de campo em VALUATION_AMT (join `key_summary` × `break_verdict`, ~170 mil). O frontend só foi compilado com esbuild e testado sobre SQLite com dados sintéticos; Vite, Express e DuckDB nunca correram juntos.
