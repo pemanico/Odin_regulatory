@@ -1,124 +1,134 @@
 # Odin Regulatory — EMIR Breaks
 
-KPIs e triagem assistida de breaks de reconciliação EMIR (relatório DTCC), sobre data marts já processados por Spark.
-Contexto completo, plano aprovado, decisões e questões em aberto: **[CLAUDE.md](CLAUDE.md)** (ler primeiro).
+KPIs and assisted triage of EMIR reconciliation breaks (DTCC report), on data marts already processed by Spark.
+Full context, approved plan, decisions and open questions: **[CLAUDE.md](CLAUDE.md)** (read it first).
 
-> Este repositório tem só código. **Nunca** commitar dados (Parquet, CSV, Excel, bases DuckDB): o `.gitignore` bloqueia-os.
+> This repository holds code only. **Never** commit data (Parquet, CSV, Excel, DuckDB databases): `.gitignore` blocks them.
 
-## Requisitos
-- Node.js ≥ 20 (os testes com SQLite precisam de Node ≥ 22.13; em versões anteriores são saltados)
-- Acesso ao registo npm (direto ou via proxy interno) para instalar o `@duckdb/node-api`
+## Requirements
+- Node.js ≥ 20 (the SQLite tests need Node ≥ 22.13; on older versions they are skipped)
+- Access to the npm registry (directly or through the internal proxy) to install `@duckdb/node-api`, Express, React and Vite
 
-## Arranque rápido (dados sintéticos)
+## Getting the code
+Use `git clone https://github.com/pemanico/Odin_regulatory.git` rather than the GitHub zip: with a clone, `git pull` updates the code.
+`.env`, `config/local.json` and `data/` are not in Git: copy them from the previous folder when moving to a new one.
+
+## Quick start (synthetic data)
 ```bash
 npm install
-npm test                                   # testes da semantic layer
-npm run synthetic                          # gera data/synthetic/*.parquet (identificadores falsos SYNTH*)
+npm test                                   # automated tests
+npm run synthetic                          # generates data/synthetic/*.parquet (fake SYNTH* identifiers)
 ```
-Criar um ficheiro `.env` (copiar de `.env.example`) com:
+Create a `.env` file (copy `.env.example`) with:
 ```
 ODIN_BREAKS_GLOB=data/synthetic/*.parquet
 ODIN_EXCLUDED_DATES=
 ```
-Depois:
+Then:
 ```bash
-npm run build:db                           # cria data/odin.duckdb com breaks_raw e breaks (dedup)
-npm run metric -- --list                   # métricas disponíveis
+npm run build:db                           # creates data/odin.duckdb with breaks_raw and breaks (dedup)
+npm run metric -- --list                   # available metrics
 npm run metric -- top_fields --date 2026-10-12
 npm run profile -- --date 2026-10-13
 ```
+The synthetic generator does not create a DTCC file, so `npm run rules` and the web demo need real data.
 
-## Com dados reais
-1. Copiar os Parquet da tabela de breaks para `data/breaks/`, com a estrutura do S3: `data/breaks/{asset_class}/{AAAA-MM-DD}/*.parquet`. São lidos todos juntos. Só copiar pastas com `_SUCCESS` (execução completa do pipeline); o `build:db` ainda não verifica isto.
-2. No `.env`: `ODIN_BREAKS_GLOB=data/breaks/**/*.parquet` (o `**` apanha as subpastas). Se `BUSINESS_DATE` vier como texto `dd/mm/yyyy`, acrescentar também `ODIN_BUSINESS_DATE_FORMAT=%d/%m/%Y`.
-3. Se os nomes das colunas forem diferentes, corrigir o mapeamento em `config/local.json` (mesma estrutura de `config/default.json`; só as chaves a alterar).
-4. `npm run build:db` e depois `npm run profile -- --date <data>`. O profile esconde UTIs e LEIs por omissão; `--show-ids` mostra-os, só para consulta no ecrã (nunca colar esse output). **É o primeiro passo com dados reais:** confirma a duplicação, as chaves e os grupos de campos correlacionados.
+## With real data
+1. Copy the breaks table Parquet files to `data/breaks/`, with the S3 structure: `data/breaks/{asset_class}/{YYYY-MM-DD}/*.parquet`. They are all read together. Only copy folders with `_SUCCESS` (complete pipeline run); `build:db` does not check this yet.
+2. In `.env`: `ODIN_BREAKS_GLOB=data/breaks/**/*.parquet` (the `**` matches the subfolders). If `BUSINESS_DATE` comes as `dd/mm/yyyy` text, also add `ODIN_BUSINESS_DATE_FORMAT=%d/%m/%Y`.
+3. If the column names differ, fix the mapping in `config/local.json` (same structure as `config/default.json`; only the keys to change). Today the office PC needs `{ "columns": { "business_line": "BNPP_GLOBAL_BUSINESS_LINE" } }`.
+4. `npm run build:db` and then `npm run profile -- --date <date>`. The profile hides UTIs and LEIs by default; `--show-ids` shows them, for on-screen use only (never paste that output). **This is the first step with real data:** it confirms duplication, keys and groups of correlated fields.
 
-## Estrutura de outros Parquet (ex.: ficheiro DTCC)
-`npm run describe -- "<glob>"` mostra nº de ficheiros e linhas, colunas e tipos (separando `TP1_`/`TP2_` e os pares assimétricos) e linhas por business date / asset class. `--key COL1,COL2` mede a unicidade de uma chave candidata; `--all` lista também as colunas `TP1_`/`TP2_`. Não mostra valores: pode ser colado.
+> `build:db` **deletes and recreates** `data/odin.duckdb`, including the rules engine tables. Always run `npm run rules` for every date afterwards.
 
-## Mapeamento `BREAKING_FIELD` → `TP1_`/`TP2_` (ficheiro DTCC)
-Pré-requisito: `build:db` feito e um dia do ficheiro DTCC em `data/dtcc/{asset_class}/{data}/` (`ODIN_DTCC_GLOB`).
+## Structure of other Parquet files (e.g. the DTCC file)
+`npm run describe -- "<glob>"` shows the number of files and rows, columns and types (separating `TP1_`/`TP2_` and asymmetric pairs) and rows per business date / asset class. `--key COL1,COL2` measures the uniqueness of a candidate key; `--all` also lists the `TP1_`/`TP2_` columns. It shows no values: safe to paste.
+
+## Mapping `BREAKING_FIELD` → `TP1_`/`TP2_` (DTCC file)
+Prerequisite: `build:db` done and one day of the DTCC file in `data/dtcc/{asset_class}/{date}/` (`ODIN_DTCC_GLOB`).
 ```bash
-npm run map-fields -- --date 2026-10-15                 # top 20 campos
-npm run map-fields -- --date 2026-10-15 --map CAMPO=SUFIXO --map ...   # mapeamento manual dos que não batem pelo nome
-npm run map-fields -- --date 2026-10-15 --all-pairs     # valida os ~179 pares; CSV completo em data/reports/
-npm run map-fields -- --date 2026-10-15 --explain VALUATION_CCY        # diferenças sem break por estado do relatório
+npm run map-fields -- --date 2026-10-15                 # top 20 fields
+npm run map-fields -- --date 2026-10-15 --map FIELD=SUFFIX --map ...   # manual mapping of the ones whose names do not match
+npm run map-fields -- --date 2026-10-15 --all-pairs     # validates the ~179 pairs; full CSV in data/reports/
+npm run map-fields -- --date 2026-10-15 --explain VALUATION_CCY        # differences without a break by report status
 ```
-Para cada campo: `pct_found` (breaks encontrados no DTCC pela chave), `pct_break_diff` (breaks com TP1 ≠ TP2; ≈100 = sufixo certo) e `pct_nobreak_diff` (transações sem break com TP1 ≠ TP2; ≈0 = comparação igual à do Spark). Campos sem par com o mesmo nome aparecem com candidatos, nunca mapeados automaticamente. Só contagens.
+For each field: `pct_found` (breaks found in the DTCC file by key), `pct_break_diff` (breaks with TP1 ≠ TP2; ≈100 = right suffix) and `pct_nobreak_diff` (transactions without a break with TP1 ≠ TP2; ≈0 = same comparison as Spark). Fields without a pair of the same name are shown with candidates, never mapped automatically. Counts only.
 
-## Motor de regras (validation rules ESMA por lado)
-Configuração em `config/rules/`: `field-map.json` (item ESMA → colunas `TP1_`/`TP2_`) e `emir-vr.json` (uma entrada por código VR, DSL descrita em `src/rules/compile.js`).
+## Rules engine (ESMA validation rules per side)
+Configuration in `config/rules/`: `field-map.json` (ESMA item → `TP1_`/`TP2_` columns) and `emir-vr.json` (one entry per VR code, DSL described in `src/rules/compile.js`).
 ```bash
-npm run rules -- --date 2026-10-15           # grava rule_results e break_verdict; veredicto por break/campo e regras suspeitas
-npm run rules -- --date 2026-10-15 --stats   # idem + tabela completa por regra (CSV sempre em data/reports/)
+npm run rules -- --date 2026-10-15           # writes rule_results, break_verdict, break_detail and key_summary; verdict per break/field and suspect rules
+npm run rules -- --date 2026-10-15 --stats   # same + full table per rule (CSV always in data/reports/)
 ```
-Detalhe por break (tabela `break_detail` e `data/reports/break-verdict-<data>.csv`, só local): chave de produção, **campo** (nome do documento de regras, ex. "2.22 Valuation currency"), **valor_bnpp** (`TP1_<campo>`), **valor_other_cpty** (`TP2_<campo>`), veredicto e **erro_bnpp / erro_other_cpty** (a regra de format/condition violada, em texto).
-Validação manual: `npm run rules:sample -- --date 2026-10-15 [--n 10] [--field CAMPO]` escreve `data/reports/sample-<data>.csv` com as mesmas colunas + correto S/N e comentário. Só local.
+Detail per break (`break_detail` table and `data/reports/break-verdict-<date>.csv`, local only): production key, **field_label** (name in the rules document, e.g. "2.22 Valuation currency"), **bnpp_value** (`TP1_<field>`), **other_cpty_value** (`TP2_<field>`), verdict and **bnpp_error / other_cpty_error** (the format/condition rule violated, as text).
+Manual validation: `npm run rules:sample -- --date 2026-10-15 [--n 10] [--field FIELD]` writes `data/reports/sample-<date>.csv` with the same columns + correct Y/N and comment. Local only.
 
-Âmbito: as regras só correm sobre os breaks do data mart, e cada regra só nos breaks do seu campo. Validar o ficheiro DTCC inteiro é "data quality" (requisito futuro). Regra suspeita = viola nos dois lados em > 5% dos breaks do seu campo.
-Veredictos: `so_bnpp`, `so_contraparte`, `ambos`, `divergencia` (os dois lados cumprem as regras verificáveis) e `sem_regras_verificaveis`. O motor é SQL determinístico (DuckDB); não usa o LLM. Só mostra contagens.
+Scope: the rules only run on the data mart breaks, and each rule only on the breaks of its own field. Validating the whole DTCC file is "data quality" (future requirement). Suspect rule = violates on both sides in > 5% of the breaks of its field.
+Verdicts: `bnpp_only`, `cpty_only`, `both`, `divergence` (both sides comply with the verifiable rules) and `no_verifiable_rules`. The engine is deterministic SQL (DuckDB); it does not use the LLM. Counts only.
 
-## Demo web (backend + frontend)
-Pré-requisitos: `npm install` (instala também Express, React e Vite) e, **para cada business date**, `npm run rules -- --date <data>`. É o `rules` que grava a tabela `key_summary` usada pela UI; datas corridas antes de 2026-10-20 (noite) têm de ser corridas outra vez.
+> **English migration (2026-10-21):** identifiers and columns changed from Portuguese to English. The first `npm run rules` after updating drops the old rule tables; run it again for **every** business date.
+
+## Web demo (backend + frontend)
+Prerequisites: `npm install` (also installs Express, React and Vite) and, **for every business date**, `npm run rules -- --date <date>`. `rules` writes the `key_summary` table used by the UI.
 ```bash
-npm run build      # compila o frontend para web/dist (repetir depois de mudar web/)
-npm start          # http://localhost:3001  (porta: ODIN_PORT; só escuta em localhost, sem autenticação)
-npm run dev        # desenvolvimento: API com --watch + Vite em http://localhost:5173
+npm run build      # builds the frontend into web/dist (repeat after changing web/)
+npm start          # http://localhost:3001  (port: ODIN_PORT; listens on localhost only, no authentication)
+npm run dev        # development: API with --watch + Vite on http://localhost:5173
 ```
-- **Ecrãs:** `1` Consulta (perguntas sugeridas + consulta avançada, em fio de conversa; o texto livre fica para o agente), `2` Top 10 (campo, Δ vs dia anterior, barra de veredictos, % com lado identificado), `3` Drill-down (combinações de campos → transações/Keys → todos os breaks da Key com valor BNPP = `TP1_<campo>`, valor other cpty = `TP2_<campo>`, veredicto e regra violada). Atalhos: `1`/`2`/`3`, `j`/`k`, `Enter`, `Esc`, `/`, `n`/`p`.
-- **O seletor de datas só mostra datas com `key_summary`** (regras corridas), fora das `excludedDates`.
-- **A base é aberta em READ_ONLY só durante cada pedido:** `npm run rules` e `build:db` podem correr com o servidor ligado. Se um pedido apanhar a escrita a meio, a UI mostra "base a ser atualizada"; basta repetir.
-- **Perguntas sugeridas:** `config/questions.json` (pergunta → pedido estruturado esperado). É também o conjunto de teste do agente.
+- **Screens:** `1` Query (suggested questions + advanced query, as a conversation thread; free text is for the agent), `2` Top 10 (field, Δ vs previous day, verdict bar, % with the side identified), `3` Drill-down (field combinations → transactions/Keys → all breaks of the Key with BNPP value = `TP1_<field>`, other cpty value = `TP2_<field>`, verdict and rule violated). Shortcuts: `1`/`2`/`3`, `j`/`k`, `Enter`, `Esc`, `/`, `n`/`p`.
+- **The date selector only shows dates with `key_summary`** (rules run), outside `excludedDates`.
+- **The database is opened READ_ONLY only during each request:** `npm run rules` and `build:db` can run while the server is up. If a request hits a write in progress, the UI shows "the database is being updated"; just retry.
+- **Suggested questions:** `config/questions.json` (question → expected structured request). It is also the agent's test set.
 
-| Endpoint | Para quem | O que devolve |
+| Endpoint | For | Returns |
 |---|---|---|
-| `GET /api/meta` | UI | jurisdições (só EMIR ativa), datas com regras, versão das regras |
-| `GET /api/metrics` | **tool `list_metrics`** | catálogo de métricas certificadas |
-| `POST /api/query` | **tool `query_metric`** | linhas agregadas de uma métrica (com o SQL) |
-| `GET /api/tools` | agente (futuro) | schemas das tools (`list_metrics`, `query_metric`, `open_drilldown`) |
-| `GET /api/questions` | UI | perguntas sugeridas |
-| `GET /api/keys` | **só UI** | transações (Keys) paginadas, com filtros: `field`, `field_verdict`, `combo`, `key_verdict`, `asset_class`, `cp2_lei`, `trade`, `min_fields`, `sort`, `page` |
-| `GET /api/keys/:id?date=` | **só UI** | todos os breaks da Key (campo ESMA, TP1, TP2, veredicto, erros) |
+| `GET /api/meta` | UI | jurisdictions (only EMIR enabled), dates with rules, rules version |
+| `GET /api/metrics` | **tool `list_metrics`** | catalog of certified metrics |
+| `POST /api/query` | **tool `query_metric`** | aggregated rows of a metric (with the SQL) |
+| `GET /api/tools` | agent (future) | tool schemas (`list_metrics`, `query_metric`, `open_drilldown`) |
+| `GET /api/questions` | UI | suggested questions |
+| `GET /api/keys` | **UI only** | paginated transactions (Keys), with filters: `field`, `field_verdict`, `combo`, `key_verdict`, `asset_class`, `cp2_lei`, `trade`, `min_fields`, `sort`, `page` |
+| `GET /api/keys/:id?date=` | **UI only** | all breaks of the Key (ESMA field, TP1, TP2, verdict, errors) |
 
-**Regra de arquitetura:** o agente só vê agregados. `/api/keys` devolve UTIs, LEIs e valores e **nunca** é uma tool. A tool `open_drilldown` só devolve à UI os filtros do ecrã 3 (o URL `#/drill?...`). Todos os pedidos ficam em `logs/audit-<data>.jsonl` (parâmetros e nº de linhas, sem dados).
+**Architecture rule:** the agent only sees aggregates. `/api/keys` returns UTIs, LEIs and values and is **never** a tool. The `open_drilldown` tool only returns the screen 3 filters to the UI (the `#/drill?...` URL). Every request is logged in `logs/audit-<date>.jsonl` (parameters and row count, no data).
 
-Veredicto de uma transação (Key = chave de produção sem o campo): `bnpp` (só há campos com erro BNPP), `contraparte` (só da contraparte), `misto` (erros dos dois lados; um campo `ambos` conta como misto), `sem_explicacao` (nenhum campo com lado identificado).
+Verdict of a transaction (Key = production key without the field): `bnpp` (only fields with a BNPP error), `counterparty` (only counterparty errors), `mixed` (errors on both sides; a `both` field counts as mixed), `unexplained` (no field with the side identified).
 
-## Métricas (semantic layer)
-| Métrica | O que responde |
+## Metrics (semantic layer)
+| Metric | What it answers |
 |---|---|
-| `breaks_by_field` | Breaks distintos por campo (e outras dimensões permitidas) |
-| `breaks_dod` | Variação por campo face à business date anterior disponível |
-| `persistence` | Breaks de D face a D-1: igual / alterado / novo / resolvido. Potencial de herança da categorização, **não** poupança |
-| `top_fields` | Top N de campos em break |
-| `breaks_by_counterparty` | Breaks por LEI da contraparte |
-| `reference_id_distribution` | *Pendente:* falta o schema do histórico de categorizações |
-| `rule_verdict` | Breaks por veredicto das regras ESMA (por campo, asset class, contraparte); requer `npm run rules` |
-| `key_verdict` | Transações (Keys) por veredicto da Key (bnpp, contraparte, misto, sem_explicacao); requer `npm run rules` |
-| `field_combinations` | Combinações de campos em break na mesma transação, com o nº de transações; o filtro `breaking_field` devolve as que contêm o campo |
-| `data_quality` | Linhas brutas vs. breaks distintos, fator de duplicação, chaves com valores em conflito |
+| `breaks_by_field` | Distinct breaks per field (and other allowed dimensions) |
+| `breaks_dod` | Change per field vs. the previous available business date |
+| `persistence` | Breaks of D vs. D-1: same / changed / new / resolved. Potential for inheriting the categorisation, **not** a saving |
+| `top_fields` | Top N breaking fields |
+| `breaks_by_counterparty` | Breaks per counterparty LEI |
+| `reference_id_distribution` | *Pending:* the schema of the categorisation history is missing |
+| `rule_verdict` | Breaks per ESMA rules verdict (per field, asset class, counterparty); requires `npm run rules` |
+| `key_verdict` | Transactions (Keys) per Key verdict (bnpp, counterparty, mixed, unexplained); requires `npm run rules` |
+| `field_combinations` | Combinations of breaking fields in the same transaction, with the number of transactions; the `breaking_field` filter returns the ones containing the field |
+| `data_quality` | Raw rows vs. distinct breaks, duplication factor, keys with conflicting values |
 
-Exemplos:
+Examples:
 ```bash
 npm run metric -- breaks_by_field --from 2026-10-12 --to 2026-10-15 --dims business_date,breaking_field
 npm run metric -- breaks_by_counterparty --date 2026-10-15 --filter breaking_field=VALUATION_AMT
 npm run metric -- breaks_dod --date 2026-10-15 --filter asset_class=COMMODITY
 npm run metric -- data_quality --from 2026-10-12 --to 2026-10-15
-npm run metric -- persistence --date 2026-10-15                       # total do dia
-npm run metric -- persistence --date 2026-10-15 --dims breaking_field # por campo
-npm run metric -- top_fields --date 2026-10-15 --sql      # só mostra o SQL gerado
+npm run metric -- persistence --date 2026-10-15                       # day total
+npm run metric -- persistence --date 2026-10-15 --dims breaking_field # per field
+npm run metric -- top_fields --date 2026-10-15 --sql      # prints the generated SQL only
 ```
-**Datas excluídas:** as comparações entre dias (`breaks_dod`, `persistence`) saltam as datas de `excludedDates` em `config/default.json` (hoje `2026-10-12`, dia anómalo) e recusam-nas como data pedida. Para dados sintéticos, pôr `ODIN_EXCLUDED_DATES=` (vazio) no `.env`.
+**Excluded dates:** day-on-day comparisons (`breaks_dod`, `persistence`) skip the dates in `excludedDates` in `config/default.json` (today `2026-10-12`, an anomalous day) and reject them as the requested date. For synthetic data, set `ODIN_EXCLUDED_DATES=` (empty) in `.env`.
 
-Cada execução fica registada em `logs/audit-<data>.jsonl` (pedido, SQL, nº de linhas, duração; sem dados).
+Every run is logged in `logs/audit-<date>.jsonl` (request, SQL, row count, duration; no data).
 
-## Problemas conhecidos
-- **`npm run build` falha a instalar/correr o Vite:** o `@vitejs/plugin-react` e o `vite` vêm do Artifactory como o resto. Se faltar algum pacote, `npm install` outra vez e ver o erro. O frontend só foi compilado com esbuild no ambiente de desenvolvimento; a 1.ª compilação com Vite é no PC do escritório.
-- **A UI diz "Ainda não há resultados das regras"** ou não mostra uma data: falta `npm run rules -- --date <data>` (grava `key_summary`).
-- **`Não foi possível carregar @duckdb/node-api`**: falta correr `npm install`.
-- **Erro do driver DuckDB depois de instalado**: a API do `@duckdb/node-api` ainda está em evolução. O único ficheiro ligado ao driver é `src/db/duckdb.js`; ajustar aí (`DuckDBInstance.create`, `connect`, `runAndReadAll`, `getRowObjects`).
-- **`npm install` dá `E403 Intranetbrowsingblocked`** no Artifactory interno (`artifactory.cib.echonet`): o npm está a mandar o pedido para a intranet pelo proxy de internet. Correção: `npm config set noproxy ".echonet,localhost,127.0.0.1"`. O aviso `Unknown user config "always-auth"` é inofensivo.
-- **Windows / PowerShell — `.env` ignorado:** `echo ... > .env` grava em UTF-16. Criar com `Set-Content -Path .env -Value "..." -Encoding ascii` (acrescentar linhas com `Add-Content -Encoding ascii`).
-- **Windows / PowerShell — `config/local.json` com erro de JSON:** no PowerShell 5.1, `-Encoding utf8` grava com BOM. Criar no VS Code ou com `[IO.File]::WriteAllText("$PWD\config\local.json", '<json>')`.
-- **`Binder Error: Referenced column ... not found`** no `build:db`: o nome físico da coluna difere de `config/default.json`. Corrigir só essa chave em `config/local.json`. O DuckDB reporta uma coluna de cada vez; para ver o schema todo, correr `DESCRIBE SELECT * FROM read_parquet('<ficheiro>')`.
+## Known issues
+- **`npm run rules` fails with "No DTCC transactions on <date> with a break in the data mart":** usually the DTCC file for that date is missing in `data/dtcc/`. The message lists the dates available on each side.
+- **`npm run build` fails to install/run Vite:** `@vitejs/plugin-react` and `vite` come from Artifactory like the rest. If a package is missing, run `npm install` again and check the error. The frontend was only built with esbuild in the development environment; the first Vite build is on the office PC.
+- **The UI says "No rules results yet"** or does not show a date: `npm run rules -- --date <date>` is missing (writes `key_summary`).
+- **`Could not load @duckdb/node-api`**: run `npm install`.
+- **DuckDB driver error after installing**: the `@duckdb/node-api` API is still evolving. The only file tied to the driver is `src/db/duckdb.js`; adjust it there (`DuckDBInstance.create`, `connect`, `runAndReadAll`, `getRowObjects`).
+- **`npm install` returns `E403 Intranetbrowsingblocked`** on the internal Artifactory (`artifactory.cib.echonet`): npm is sending the intranet request through the internet proxy. Fix: `npm config set noproxy ".echonet,localhost,127.0.0.1"`. The `Unknown user config "always-auth"` warning is harmless.
+- **Windows / PowerShell — `.env` ignored:** `echo ... > .env` writes UTF-16. Create it with `Set-Content -Path .env -Value "..." -Encoding ascii` (append lines with `Add-Content -Encoding ascii`).
+- **Windows / PowerShell — `config/local.json` JSON error:** in PowerShell 5.1, `-Encoding utf8` writes a BOM. Create it in VS Code or with `[IO.File]::WriteAllText("$PWD\config\local.json", '<json>')`.
+- **`Binder Error: Referenced column ... not found`** in `build:db`: the physical column name differs from `config/default.json`. Fix only that key in `config/local.json`. DuckDB reports one column at a time; to see the whole schema, run `DESCRIBE SELECT * FROM read_parquet('<file>')`.

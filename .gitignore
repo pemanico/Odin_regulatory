@@ -1,7 +1,7 @@
-# Dependências
+# Dependencies
 node_modules/
 
-# Dados — NUNCA commitar dados reais nem sintéticos
+# Data — NEVER commit real or synthetic data
 data/
 *.parquet
 *.csv
@@ -9,12 +9,12 @@ data/
 *.duckdb.wal
 *.xlsx
 
-# Logs e auditoria locais
+# Local logs and audit
 logs/
 
-# Configuração local
+# Local configuration
 .env
 config/local.json
 
-# Frontend compilado
+# Built frontend
 web/dist/
