@@ -7,10 +7,10 @@ import { TooltipProvider } from './components/Tooltip.jsx';
 import { KpiStrip } from './components/KpiStrip.jsx';
 import { Top10 } from './views/Top10.jsx';
 import { Drill } from './views/Drill.jsx';
-import { Consulta } from './views/Consulta.jsx';
+import { Query } from './views/Query.jsx';
 
 const VIEWS = [
-  { id: 'consulta', key: '1', label: 'Consulta' },
+  { id: 'query', key: '1', label: 'Query' },
   { id: 'top10', key: '2', label: 'Top 10' },
   { id: 'drill', key: '3', label: 'Drill-down' },
 ];
@@ -22,7 +22,7 @@ export function App() {
   const [date, setDate] = useState(null);
   const dates = meta.data?.dates ?? [];
 
-  // Data: a do URL (drill-down partilhado / agente) ou a mais recente com regras.
+  // Date: the one in the URL (shared drill-down / agent) or the most recent one with rules.
   useEffect(() => {
     if (!dates.length) return;
     const wanted = route.params.date;
@@ -36,11 +36,11 @@ export function App() {
     <TooltipProvider>
       <div className="app">
         <header className="topbar">
-          <div className="brand"><span className="mark">◆ ODIN</span> Regulatory <small>breaks de reconciliação</small></div>
-          <div className="seg" role="group" aria-label="Jurisdição">
+          <div className="brand"><span className="mark">◆ ODIN</span> Regulatory <small>reconciliation breaks</small></div>
+          <div className="seg" role="group" aria-label="Jurisdiction">
             {(meta.data?.jurisdictions ?? [{ id: 'EMIR', label: 'EMIR', enabled: true }]).map((j) => (
               <button key={j.id} aria-pressed={jurisdiction === j.id} disabled={!j.enabled}
-                title={j.enabled ? j.label : `${j.label}: ainda não disponível`} onClick={() => setJurisdiction(j.id)}>
+                title={j.enabled ? j.label : `${j.label}: not available yet`} onClick={() => setJurisdiction(j.id)}>
                 {j.label}
               </button>
             ))}
@@ -60,17 +60,17 @@ export function App() {
               {dates.map((d) => <option key={d.date} value={d.date}>{fmtDate(d.date)}</option>)}
             </select>
           </label>
-          {current && <span className="badge" title="Versão do catálogo de regras ESMA usada nesta data">regras {current.rulesVersion}</span>}
+          {current && <span className="badge" title="Version of the ESMA rules catalog used on this date">rules {current.rulesVersion}</span>}
         </header>
 
         {date ? <KpiStrip date={date} /> : <div className="kpis" />}
 
         <main className="main">
-          {meta.error && <div className="error">Não foi possível ligar à API: {meta.error.message}</div>}
+          {meta.error && <div className="error">Could not reach the API: {meta.error.message}</div>}
           {meta.data?.hint && <div className="error">{meta.data.hint}</div>}
           {date && route.view === 'top10' && <Top10 date={date} />}
           {date && route.view === 'drill' && <Drill date={date} params={route.params} />}
-          {date && route.view === 'consulta' && <Consulta date={date} />}
+          {date && route.view === 'query' && <Query date={date} />}
         </main>
       </div>
     </TooltipProvider>

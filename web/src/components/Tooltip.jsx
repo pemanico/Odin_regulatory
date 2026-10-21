@@ -1,4 +1,4 @@
-// Tooltip único da aplicação (segue o rato). Uso: const tip = useTooltip(); tip.show(e, conteúdo); tip.hide().
+// Single application tooltip (follows the mouse). Usage: const tip = useTooltip(); tip.show(e, content); tip.hide().
 import { createContext, useContext, useState, useCallback } from 'react';
 
 const Ctx = createContext({ show() {}, hide() {} });

@@ -1,6 +1,6 @@
-// Ecrã 1: consulta em fio de conversa. Hoje o pedido vem de uma pergunta sugerida (chip) ou da consulta avançada;
-// quando o agente estiver ligado, vem do texto livre — o cartão de resposta é o mesmo (query_metric -> tabela/gráfico).
-// As perguntas sugeridas (config/questions.json) são o conjunto de teste do agente.
+// Screen 1: query as a conversation thread. Today the request comes from a suggested question (chip) or the advanced query;
+// once the agent is connected it comes from free text — the answer card is the same (query_metric -> table/chart).
+// The suggested questions (config/questions.json) are the agent's test set.
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../api.js';
 import { useAsync } from '../hooks.js';
@@ -11,12 +11,14 @@ import { VerdictTag } from '../components/Verdict.jsx';
 import { useTooltip } from '../components/Tooltip.jsx';
 
 const COLUMN_LABELS = {
-  breaking_field: 'Campo', n_breaks: 'Breaks', n_keys: 'Transações', verdict: 'Veredicto', key_verdict: 'Veredicto da transação',
-  asset_class: 'Asset class', cp2_lei: 'LEI contraparte', cp1_lei: 'LEI counterparty 1', business_date: 'Business date',
-  today: 'Hoje', previous: 'Dia anterior', previous_date: 'Data anterior', delta: 'Δ', delta_pct: 'Δ %', combo: 'Combinação',
-  n_fields: 'Campos', bnpp: 'BNPP', contraparte: 'Contraparte', misto: 'Misto', sem_explicacao: 'Sem explicação',
-  raw_rows: 'Linhas brutas', distinct_breaks: 'Breaks distintos', distinct_positions: 'Transações', conflicting_keys: 'Chaves em conflito',
-  dup_factor: 'Fator de duplicação', business_line: 'Business line',
+  breaking_field: 'Field', n_breaks: 'Breaks', n_keys: 'Transactions', verdict: 'Verdict', key_verdict: 'Transaction verdict',
+  asset_class: 'Asset class', cp2_lei: 'Counterparty LEI', cp1_lei: 'Counterparty 1 LEI', business_date: 'Business date',
+  today: 'Today', previous: 'Previous day', previous_date: 'Previous date', delta: 'Δ', delta_pct: 'Δ %', combo: 'Combination',
+  n_fields: 'Fields', bnpp: 'BNPP', counterparty: 'Counterparty', mixed: 'Mixed', unexplained: 'Unexplained',
+  raw_rows: 'Raw rows', distinct_breaks: 'Distinct breaks', distinct_positions: 'Transactions', conflicting_keys: 'Conflicting keys',
+  dup_factor: 'Duplication factor', business_line: 'Business line',
+  same: 'Same', changed: 'Changed', new: 'New', resolved: 'Resolved', breaks_today: 'Breaks today', breaks_previous: 'Breaks previous day',
+  pct_same: '% same', pct_changed: '% changed', pct_new: '% new',
 };
 const HIDDEN = new Set(['combo_key']);
 const MEASURES = ['n_breaks', 'n_keys', 'today'];
@@ -31,14 +33,14 @@ function cell(col, v) {
   if (col === 'delta_pct' || col.startsWith('pct_')) return fmtPct(v);
   if (col.endsWith('date')) return fmtDate(v);
   if (typeof v === 'number' || (typeof v === 'string' && /^-?\d+(\.\d+)?$/.test(v) && !/lei|trade|uti/.test(col))) {
-    return Number.isInteger(Number(v)) ? fmtInt(v) : Number(v).toLocaleString('de-DE', { maximumFractionDigits: 2 });
+    return Number.isInteger(Number(v)) ? fmtInt(v) : Number(v).toLocaleString('en-GB', { maximumFractionDigits: 2 });
   }
   return <span className={/lei|combo/.test(col) ? 'mono' : undefined}>{String(v)}</span>;
 }
 
 const isNumericCol = (rows, col) => rows.every((r) => r[col] === null || !Number.isNaN(Number(r[col]))) && !/lei|date/.test(col);
 
-/** Filtros do drill-down a partir de uma linha agregada (null se a linha não aponta para breaks). */
+/** Drill-down filters from an aggregated row (null if the row does not point to breaks). */
 function drillParams(row, request, date) {
   const p = { date };
   for (const f of request.filters ?? []) {
@@ -51,7 +53,7 @@ function drillParams(row, request, date) {
   if (row.combo_key) p.combo = row.combo_key;
   for (const k of ['asset_class', 'cp2_lei', 'key_verdict']) if (row[k]) p[k] = row[k];
   if (row.verdict) p.field_verdict = row.verdict;
-  if (p.field_verdict && !p.field) delete p.field_verdict; // o veredicto por break só filtra dentro de um campo
+  if (p.field_verdict && !p.field) delete p.field_verdict; // the per-break verdict only filters within a field
   const useful = Object.keys(p).length > 1;
   if (!useful) return null;
   p.view = p.field && !p.combo && !p.field_verdict ? 'combos' : 'keys';
@@ -76,7 +78,7 @@ function Bars({ rows, labelCol, valueCol }) {
           </div>
         );
       })}
-      {rows.length > 15 && <div className="hint">+{rows.length - 15} linhas na tabela</div>}
+      {rows.length > 15 && <div className="hint">+{rows.length - 15} more rows in the table</div>}
     </div>
   );
 }
@@ -93,20 +95,20 @@ function ResultCard({ item, onRemove }) {
   return (
     <article className="panel card">
       <div className="panel-head">
-        <div className="q"><span className="who">PERGUNTA</span><b>{question}</b></div>
+        <div className="q"><span className="who">QUESTION</span><b>{question}</b></div>
         <div className="spacer" />
         <div className="meta">
           <span className="mono">{request.metric}</span>
           <span>{fmtDate(date)}</span>
-          {result && <span>{fmtInt(rows.length)} linhas · {result.ms} ms</span>}
-          {result && <button className="btn link" onClick={() => setShowSql((s) => !s)}>{showSql ? 'esconder SQL' : 'ver SQL'}</button>}
-          <button className="btn link" onClick={onRemove} aria-label="Remover resposta">×</button>
+          {result && <span>{fmtInt(rows.length)} rows · {result.ms} ms</span>}
+          {result && <button className="btn link" onClick={() => setShowSql((s) => !s)}>{showSql ? 'hide SQL' : 'show SQL'}</button>}
+          <button className="btn link" onClick={onRemove} aria-label="Remove answer">×</button>
         </div>
       </div>
       {showSql && <pre className="sql">{result.sql}</pre>}
-      {loading && <div className="empty">A calcular…</div>}
+      {loading && <div className="empty">Computing…</div>}
       {error && <div className="error" style={{ margin: 12 }}>{error.message}</div>}
-      {result && !rows.length && <div className="empty">Sem resultados para esta data.</div>}
+      {result && !rows.length && <div className="empty">No results for this date.</div>}
       {rows.length > 0 && (
         <div className={`body${chart ? '' : ' single'}`}>
           <div className="tablewrap">
@@ -123,7 +125,7 @@ function ResultCard({ item, onRemove }) {
                   return (
                     <tr key={i}>
                       {cols.map((c) => <td key={c} className={isNumericCol(rows, c) ? 'num' : undefined}>{cell(c, r[c])}</td>)}
-                      {anyDrill && <td className="num">{dp && <a href={href('drill', dp)} title="Ver os breaks (drill-down)">ver breaks →</a>}</td>}
+                      {anyDrill && <td className="num">{dp && <a href={href('drill', dp)} title="See the breaks (drill-down)">see breaks →</a>}</td>}
                     </tr>
                   );
                 })}
@@ -159,13 +161,13 @@ function Builder({ date, onAsk }) {
       ],
       ...(limit ? { limit: Number(limit) } : {}),
     };
-    onAsk(`Consulta avançada: ${m?.title ?? metric}`, request);
+    onAsk(`Advanced query: ${m?.title ?? metric}`, request);
   };
 
   return (
     <form className="builder" onSubmit={submit}>
       <div className="row">
-        <label className="secondary">Métrica{' '}
+        <label className="secondary">Metric{' '}
           <select value={metric} onChange={(e) => { setMetric(e.target.value); setDims(null); }}>
             {metrics.map((x) => <option key={x.id} value={x.id}>{x.title}</option>)}
           </select>
@@ -174,7 +176,7 @@ function Builder({ date, onAsk }) {
       </div>
       {m?.allowedDimensions && (
         <div className="row">
-          <span className="secondary">Agrupar por</span>
+          <span className="secondary">Group by</span>
           <div className="dims">
             {m.allowedDimensions.filter((d) => d !== 'business_date').map((d) => (
               <label key={d}>
@@ -188,7 +190,7 @@ function Builder({ date, onAsk }) {
       )}
       {filters.map((f, i) => (
         <div className="row" key={i}>
-          <span className="secondary">Filtro</span>
+          <span className="secondary">Filter</span>
           <select value={f.dimension} onChange={(e) => setFilters(filters.map((x, j) => (j === i ? { ...x, dimension: e.target.value } : x)))}>
             <option value="">—</option>
             {allDims.map((d) => <option key={d} value={d}>{catalog.data.dimensions[d]?.label ?? d}</option>)}
@@ -196,22 +198,22 @@ function Builder({ date, onAsk }) {
           <span className="muted">=</span>
           <input type="text" value={f.value} size={24} onChange={(e) => setFilters(filters.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)))} />
           {i === filters.length - 1 && filters.length < 3 && (
-            <button type="button" className="btn link" onClick={() => setFilters([...filters, { dimension: '', value: '' }])}>+ filtro</button>
+            <button type="button" className="btn link" onClick={() => setFilters([...filters, { dimension: '', value: '' }])}>+ filter</button>
           )}
         </div>
       ))}
       <div className="row">
-        <label className="secondary">Limite{' '}<input type="number" min="1" max="10000" style={{ width: 80 }} value={limit} placeholder={m?.defaultLimit} onChange={(e) => setLimit(e.target.value)} /></label>
-        <span className="hint">Business date: {fmtDate(date)} (a do topo)</span>
+        <label className="secondary">Limit{' '}<input type="number" min="1" max="10000" style={{ width: 80 }} value={limit} placeholder={m?.defaultLimit} onChange={(e) => setLimit(e.target.value)} /></label>
+        <span className="hint">Business date: {fmtDate(date)} (from the top bar)</span>
         <div className="spacer" />
-        <button className="btn primary" type="submit">Consultar</button>
+        <button className="btn primary" type="submit">Run</button>
       </div>
     </form>
   );
 }
 
 let seq = 0;
-export function Consulta({ date }) {
+export function Query({ date }) {
   const questions = useAsync(() => api.questions(), []);
   const [items, setItems] = useState([]);
   const [advanced, setAdvanced] = useState(false);
@@ -231,11 +233,11 @@ export function Consulta({ date }) {
   useEffect(() => endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }), [items.length]);
 
   return (
-    <div className="consulta">
+    <div className="query">
       <div className="panel">
         <div className="panel-head">
-          <h2>Perguntas sugeridas</h2>
-          <span className="hint">respondidas com métricas certificadas; cada resposta mostra o SQL e leva aos breaks</span>
+          <h2>Suggested questions</h2>
+          <span className="hint">answered with certified metrics; each answer shows the SQL and links to the breaks</span>
         </div>
         <div style={{ padding: 12 }} className="suggest">
           {(questions.data ?? []).map((q) => <button key={q.id} onClick={() => ask(q.text, q.request)}>{q.text}</button>)}
@@ -244,7 +246,7 @@ export function Consulta({ date }) {
       </div>
 
       <div className="thread" aria-live="polite">
-        {!items.length && <div className="empty">Escolha uma pergunta sugerida ou use a consulta avançada.</div>}
+        {!items.length && <div className="empty">Pick a suggested question or use the advanced query.</div>}
         {items.map((it) => <ResultCard key={it.id} item={it} onRemove={() => setItems((xs) => xs.filter((x) => x.id !== it.id))} />)}
         <div ref={endRef} />
       </div>
@@ -252,8 +254,8 @@ export function Consulta({ date }) {
       <div className="composer">
         {advanced && <div className="panel" style={{ marginBottom: 8 }}><Builder date={date} onAsk={ask} /></div>}
         <div className="prompt">
-          <input type="text" disabled placeholder="Pergunta livre: disponível quando o agente estiver ligado. Use as sugestões ou a consulta avançada." />
-          <button className="btn" onClick={() => setAdvanced((a) => !a)}>{advanced ? 'Fechar consulta avançada' : 'Consulta avançada'}</button>
+          <input type="text" disabled placeholder="Free-text question: available once the agent is connected. Use the suggestions or the advanced query." />
+          <button className="btn" onClick={() => setAdvanced((a) => !a)}>{advanced ? 'Close advanced query' : 'Advanced query'}</button>
         </div>
       </div>
     </div>

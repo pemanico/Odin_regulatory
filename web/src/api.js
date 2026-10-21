@@ -1,9 +1,9 @@
-// Cliente da API. As tools do agente (metrics/query) e os endpoints só da UI (keys) são separados de propósito.
+// API client. The agent tools (metrics/query) and the UI-only endpoints (keys) are kept apart on purpose.
 async function call(path, opts = {}) {
   const res = await fetch(path, { headers: { 'content-type': 'application/json' }, ...opts });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const err = new Error(body.message || `Erro ${res.status}`);
+    const err = new Error(body.message || `Error ${res.status}`);
     err.status = res.status;
     throw err;
   }
@@ -25,5 +25,5 @@ export const api = {
   key: (id, date) => call(`/api/keys/${encodeURIComponent(id)}?${qs({ date })}`),
 };
 
-/** Pedido com a data selecionada. */
+/** Filters with the selected date. */
 export const onDate = (date, extra = []) => [{ dimension: 'business_date', op: 'eq', value: date }, ...extra];

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-/** Carrega dados assíncronos; volta a carregar quando `deps` mudam. Ignora respostas obsoletas. */
+/** Loads async data; reloads when `deps` change. Ignores stale responses. */
 export function useAsync(fn, deps) {
   const [state, setState] = useState({ loading: true, data: null, error: null });
   const seq = useRef(0);
@@ -16,7 +16,7 @@ export function useAsync(fn, deps) {
   return state;
 }
 
-/** Atalhos de teclado (ignorados quando o foco está num campo de texto, exceto Escape). */
+/** Keyboard shortcuts (ignored while focus is in a text field, except Escape). */
 export function useKeys(handlers, deps) {
   useEffect(() => {
     const on = (e) => {

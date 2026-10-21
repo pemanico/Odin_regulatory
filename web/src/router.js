@@ -1,5 +1,5 @@
-// Router por hash (#/top10, #/drill?field=ISIN...). O estado do drill-down vive no URL:
-// é o que a tool open_drilldown do agente vai produzir, e permite copiar/partilhar a vista.
+// Hash router (#/top10, #/drill?field=ISIN...). The drill-down state lives in the URL:
+// it is what the agent's open_drilldown tool will produce, and it allows copying/sharing the view.
 import { useEffect, useState } from 'react';
 
 export function parseHash(hash = window.location.hash) {

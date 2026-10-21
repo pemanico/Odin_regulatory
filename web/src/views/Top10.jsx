@@ -1,5 +1,5 @@
-// Ecrã 2: top 10 de breaking fields na business date, com variação face ao dia anterior e a composição por veredicto.
-// Clicar numa linha abre o drill-down do campo; clicar num segmento abre só os breaks desse veredicto.
+// Screen 2: top 10 breaking fields on the business date, with the day-on-day change and the split by verdict.
+// Clicking a row opens the field drill-down; clicking a segment opens only the breaks with that verdict.
 import { useState } from 'react';
 import { api, onDate } from '../api.js';
 import { useAsync, useKeys } from '../hooks.js';
@@ -39,37 +39,37 @@ export function Top10({ date }) {
   return (
     <section className="panel">
       <div className="panel-head">
-        <h2>Top {n} campos em break</h2>
-        <div className="seg" role="group" aria-label="Número de campos">
+        <h2>Top {n} breaking fields</h2>
+        <div className="seg" role="group" aria-label="Number of fields">
           {[10, 20].map((k) => <button key={k} aria-pressed={n === k} onClick={() => setN(k)}>Top {k}</button>)}
         </div>
         <span className="hint">
-          {data.data?.prevDate ? `Variação vs ${shortDate(data.data.prevDate)} (dia anterior disponível)` : 'Sem dia anterior disponível'}
-          {' · '}<kbd>j</kbd>/<kbd>k</kbd> navegar, <kbd>Enter</kbd> abrir
+          {data.data?.prevDate ? `Change vs ${shortDate(data.data.prevDate)} (previous available day)` : 'No previous day available'}
+          {' · '}<kbd>j</kbd>/<kbd>k</kbd> navigate, <kbd>Enter</kbd> open
         </span>
         <div className="spacer" />
         <Legend defs={VERDICTS} />
       </div>
       {data.error && <div className="error">{data.error.message}</div>}
-      {data.loading && !rows.length ? <div className="empty">A carregar…</div> : (
+      {data.loading && !rows.length ? <div className="empty">Loading…</div> : (
         <table className="grid">
           <thead>
             <tr>
               <th className="rank">#</th>
-              <th>Campo</th>
+              <th>Field</th>
               <th className="num">Breaks</th>
-              <th className="num">% do top</th>
+              <th className="num">% of top</th>
               <th className="num">Δ D-1</th>
               <th className="num">Δ %</th>
-              <th style={{ width: '34%' }}>Veredicto das regras ESMA</th>
-              <th className="num" title="Breaks em que as regras identificam o lado errado (BNPP, contraparte ou ambos)">Lado identificado</th>
+              <th style={{ width: '34%' }}>ESMA rules verdict</th>
+              <th className="num" title="Breaks in which the rules identify the wrong side (BNPP, counterparty or both)">Side identified</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r, i) => {
               const f = fieldName(r.breaking_field);
               const counts = data.data.byField[f] ?? {};
-              const ident = (counts.so_bnpp ?? 0) + (counts.so_contraparte ?? 0) + (counts.ambos ?? 0);
+              const ident = (counts.bnpp_only ?? 0) + (counts.cpty_only ?? 0) + (counts.both ?? 0);
               return (
                 <tr key={f} className={`clickable${i === sel ? ' selected' : ''}`} onClick={() => open(r)} onMouseEnter={() => setSel(i)}>
                   <td className="rank num">{i + 1}</td>
@@ -82,7 +82,7 @@ export function Top10({ date }) {
                     <VerdictBar defs={VERDICTS} counts={counts} title={f}
                       onPick={(v) => open(r, { field_verdict: v, view: 'keys' })} />
                   </td>
-                  <td className="num">{Object.keys(counts).length ? fmtPct(pct(ident, r.today)) : <span className="muted" title="Sem resultados das regras">—</span>}</td>
+                  <td className="num">{Object.keys(counts).length ? fmtPct(pct(ident, r.today)) : <span className="muted" title="No rules results">—</span>}</td>
                 </tr>
               );
             })}

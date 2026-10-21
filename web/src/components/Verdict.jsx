@@ -1,11 +1,11 @@
-// Barra empilhada de veredictos, etiqueta e legenda. A cor nunca está sozinha: tooltip, legenda e números.
+// Stacked verdict bar, tag and legend. Colour is never alone: tooltip, legend and numbers.
 import { useTooltip } from './Tooltip.jsx';
 import { fmtInt, fmtPct, pct } from '../format.js';
 
 /**
- * @param defs    VERDICTS ou KEY_VERDICTS
+ * @param defs    VERDICTS or KEY_VERDICTS
  * @param counts  { [id]: n }
- * @param onPick  (id) => void  (clicar num segmento)
+ * @param onPick  (id) => void  (click on a segment)
  */
 export function VerdictBar({ defs, counts, onPick, small = false, title }) {
   const tip = useTooltip();
@@ -27,7 +27,7 @@ export function VerdictBar({ defs, counts, onPick, small = false, title }) {
                   {title && <div className="t-title">{title}</div>}
                   <div className="t-row"><span>{d.label}</span></div>
                   <div className="t-row"><span className="mono">{fmtInt(n)}</span><span className="mono">{fmtPct(pct(n, total))}</span></div>
-                  {onPick && <div className="t-row muted">clique para ver estes breaks</div>}
+                  {onPick && <div className="t-row muted">click to see these breaks</div>}
                 </>
               ))
             }

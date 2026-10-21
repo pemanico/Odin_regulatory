@@ -1,7 +1,7 @@
-// Faixa de 4 KPIs do dia. Tudo via query_metric (as mesmas tools que o agente vai usar).
+// Strip with the 4 KPIs of the day. Everything via query_metric (the same tools the agent will use).
 import { api, onDate } from '../api.js';
 import { useAsync } from '../hooks.js';
-import { fmtInt, fmtPct, fmtSignedPct, pct, shortDate } from '../format.js';
+import { fmtInt, fmtDec, fmtPct, fmtSignedPct, pct, shortDate } from '../format.js';
 
 export function KpiStrip({ date }) {
   const dod = useAsync(() => api.query({ metric: 'breaks_dod', filters: onDate(date), limit: 10000 }), [date]);
@@ -13,32 +13,32 @@ export function KpiStrip({ date }) {
   const prevDate = rows[0]?.previous_date;
   const kv = Object.fromEntries((keys.data?.rows ?? []).map((r) => [r.key_verdict, Number(r.n_keys)]));
   const nKeys = Object.values(kv).reduce((s, n) => s + n, 0);
-  const identified = (kv.bnpp ?? 0) + (kv.contraparte ?? 0) + (kv.misto ?? 0);
+  const identified = (kv.bnpp ?? 0) + (kv.counterparty ?? 0) + (kv.mixed ?? 0);
   const fields = rows.filter((r) => Number(r.today) > 0).length;
 
   const loading = dod.loading || keys.loading;
   const v = (x) => (loading ? '…' : x);
   return (
-    <section className="kpis" aria-label="Indicadores do dia">
+    <section className="kpis" aria-label="Indicators of the day">
       <div className="kpi">
         <div className="label">Breaks</div>
         <div className="value">{v(fmtInt(today))}</div>
-        <div className="sub">{v(`${fmtInt(fields)} campos em break`)}</div>
+        <div className="sub">{v(`${fmtInt(fields)} breaking fields`)}</div>
       </div>
       <div className="kpi">
-        <div className="label">Variação vs {prevDate ? shortDate(prevDate) : 'dia anterior'}</div>
+        <div className="label">Change vs {prevDate ? shortDate(prevDate) : 'previous day'}</div>
         <div className="value">{v(prevDate ? fmtSignedPct(pct(today - prev, prev)) : '—')}</div>
-        <div className="sub">{v(prevDate ? `${fmtInt(prev)} breaks em ${shortDate(prevDate)}` : 'sem dia anterior disponível')}</div>
+        <div className="sub">{v(prevDate ? `${fmtInt(prev)} breaks on ${shortDate(prevDate)}` : 'no previous day available')}</div>
       </div>
       <div className="kpi">
-        <div className="label">Transações (Keys)</div>
+        <div className="label">Transactions (Keys)</div>
         <div className="value">{v(fmtInt(nKeys))}</div>
-        <div className="sub">{v(nKeys ? `${(today / nKeys).toLocaleString('de-DE', { maximumFractionDigits: 1 })} campos por transação` : '—')}</div>
+        <div className="sub">{v(nKeys ? `${fmtDec(today / nKeys)} fields per transaction` : '—')}</div>
       </div>
-      <div className="kpi" title="Transações em que nenhum campo tem o lado errado identificado pelas regras ESMA">
-        <div className="label">Sem explicação pelas regras</div>
-        <div className="value">{v(fmtPct(pct(kv.sem_explicacao ?? 0, nKeys)))}</div>
-        <div className="sub">{v(`${fmtInt(identified)} transações com lado identificado`)}</div>
+      <div className="kpi" title="Transactions in which no field has the wrong side identified by the ESMA rules">
+        <div className="label">Unexplained by the rules</div>
+        <div className="value">{v(fmtPct(pct(kv.unexplained ?? 0, nKeys)))}</div>
+        <div className="sub">{v(`${fmtInt(identified)} transactions with the side identified`)}</div>
       </div>
       {(dod.error || keys.error) && <div className="error" style={{ gridColumn: '1 / -1', margin: 8 }}>{(dod.error || keys.error).message}</div>}
     </section>
