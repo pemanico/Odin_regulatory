@@ -5,7 +5,8 @@
 > - At the end of each working session, **update** the sections "Current status", "Decision log" and "Open questions".
 > - **Never put real data in this file** (UTIs, values, counterparty names). Structure, decisions and aggregated metrics only.
 > - **Language:** the whole project is in English (code, UI, identifiers, documentation) since 2026-10-21 — BNP Paribas is international. Conversations with Ordep may be in Portuguese.
-> - Last update: 2026-10-22 (demo running on the office PC with real data, drill-down 382 ms; DTCC file only for 15/10; next: 13–14/10 DTCC files, then the agent)
+> - Last update: 2026-10-22, end of session (demo running on the office PC; 15/10 being compared with production by a colleague; requirements guide in `docs/requirements.md`; next session: plan the next phase — agent, knowledge RAG with OpenSearch, server deployment)
+> - **Requirements and onboarding of new jurisdictions:** [`docs/requirements.md`](docs/requirements.md).
 
 ---
 
@@ -342,6 +343,10 @@ It exists in Parquet and in Exadata, linked to the break key **with the reported
 | 2026-10-21 | `npm run rules` detects the legacy (Portuguese) rule tables and drops them (`rule_results`, `break_verdict`, `break_detail`, `key_summary`); every business date must be run again (Claude) |
 | 2026-10-21 | `npm run rules` diagnoses an empty input (no DTCC transactions with a break on the date): lists the database used and the dates/counts on each side, and says which one is missing (Claude) |
 | 2026-10-21 | Number formatting in the UI: en-GB (comma thousands, point decimals); dates stay dd/mm/yyyy (Claude) |
+| 2026-10-22 | React effects never return a value (`useEffect(() => { ... })`): recent Chrome/Edge return a Promise from `scrollIntoView`, which crashed the Query screen. Error boundary per screen and per answer card (Claude) |
+| 2026-10-22 | **Other dates (13–14/10) paused** (Ordep): a colleague is comparing the 15/10 results with production first |
+| 2026-10-22 | **Move to the next phase** (Ordep): knowledge RAG (upload of internal documents through the web app, indexed in OpenSearch) and running the application on servers (Node.js). Order of the phase (agent / RAG / server) not decided yet — open question 48; Claude recommends agent first |
+| 2026-10-22 | **Requirements guide written from the code and the decisions, not by reverse engineering into per-file markdown** (Claude, accepted by Ordep): `docs/requirements.md` — principles, data contract, rules engine, metrics, API/UI, non-functional requirements, refactors R1–R10 needed before the second jurisdiction, onboarding checklist |
 
 ---
 
@@ -419,6 +424,12 @@ It exists in Parquet and in Exadata, linked to the break key **with the reported
 44. **The synthetic generator does not create the DTCC file:** with synthetic data `npm run rules` cannot run and the UI has no dates. To develop the UI outside the office, also generate a synthetic DTCC file (TP1_/TP2_ of the fields in break).
 45. **DTCC file only for 15/10 on the office PC** (confirmed on 2026-10-21): `npm run rules -- --date 2026-10-13` fails because the DTCC file is missing. Copy the 13 and 14/10 DTCC files from S3 (only folders with `_SUCCESS`) to `data/dtcc/{asset_class}/{date}/` and run `rules` for those dates. No need to repeat `build:db`. Until then the demo only has 15/10 (the change KPI compares with 14/10 through the breaks, which exist).
 46. **The project on the PC came from the GitHub zip** (`Odin_regulatory-main`), not from `git clone`: `git pull` does not work, and `.env`, `config/local.json` and `data/` have to be copied by hand. Move to `git clone`.
+48. **Order of the next phase** (asked on 2026-10-22, not answered): (a) agent first (gateway + `list_metrics`/`query_metric` + free text on screen 1), then knowledge RAG as a second tool, server last — **Claude's recommendation**: it unblocks the presentation and RAG is only useful with an agent; (b) RAG first (upload + indexing + search, no agent yet); (c) server first (authentication, data off the PC), then agent and RAG on the server.
+49. **Internal LLM gateway:** format (Anthropic Messages / OpenAI / own), tool-calling support, and **whether an embeddings model is available** (Claude has no embeddings API). Without embeddings, the RAG can start with lexical/BM25 search in OpenSearch (works well on regulatory documents full of codes and field names).
+50. **OpenSearch:** is there a cluster available to the team (version, k-NN plugin, authentication, who operates it, network access from the app server)?
+51. **Knowledge upload governance:** who may upload, which document classifications are allowed (no client data?), versioning and deletion, audit of uploads, file types (PDF, DOCX, XLSX, MD).
+52. **Server deployment:** which servers (Windows/Linux, on-prem/cloud), SSO for authentication, entitlements (the drill-down shows UTIs/LEIs), where the data lives (Parquet on the server, S3 via DuckDB `httpfs`, or ClickHouse), HTTPS, multi-user. Revokes the "localhost, no authentication" assumption (q. 43).
+53. **Result of the 15/10 comparison with production** (colleague of Ordep): agreement per verdict/field, cases where the tool is wrong. Counts only.
 47. **After the English migration (2026-10-21):** the existing `data/odin.duckdb` has rule tables with Portuguese identifiers. The first `npm run rules` drops them; run it again for every date (15/10 today, 13–14/10 once the DTCC files are there). `build:db` does not need repeating.
 
 ## 7. Current status
@@ -460,7 +471,9 @@ It exists in Parquet and in Exadata, linked to the break key **with the reported
 - **Done (2026-10-21):** `npm run rules` diagnoses a missing DTCC date. On the office PC: project started from the zip in a new folder; `build:db` OK; DTCC file only for 15/10 (questions 45–46).
 - **Done (2026-10-21):** **whole application in English** (code, identifiers, database schema, UI, API/CLI messages, metric catalog, agent tools, rules config, tests, README, CLAUDE.md). Legacy rule tables are dropped by `npm run rules` (question 47). 54 tests. UI re-verified with synthetic data (headless browser, no console errors).
 - **Fixed (2026-10-22):** Query screen crashed on the office PC when clicking a suggested question ("TypeError: G is not a function"). Cause: effects written as `useEffect(() => expr)` return `expr`; recent Chrome/Edge make `scrollIntoView` return a Promise, which React then calls as the cleanup function. All effects now use braces. Also added an error boundary per screen and per answer card, `npm start` logs each API request, and the newest answer shows first. Rule for the frontend: **never return a value from an effect** (always `useEffect(() => { ... })`).
+- **Done (2026-10-22):** demo validated on the office PC with real data for 15/10 (all screens, drill-down 382 ms). **Requirements and jurisdiction onboarding guide** written: `docs/requirements.md`.
 - **Next steps:**
+  0. **Next session (new chat, grill-me):** decide the order of the next phase (q. 48) and design it; inputs needed: gateway format and embeddings (q. 49), OpenSearch availability (q. 50), upload governance (q. 51), server constraints (q. 52).
   1. **Demo validated on the office PC (2026-10-22):** all screens working, drill-down 382 ms. Open: copy the 13–14/10 DTCC files (q. 45) and run `rules` for those dates; record the % unexplained.
   2. **Agent (next session, grill-me):** format of the internal LLM gateway (Anthropic Messages / OpenAI / own) and tool calling support. The tools already exist: `GET /api/tools`. Wire up the free text of screen 1; measure the translation against `config/questions.json`.
   3. **Validation with production data (Ordep):** `npm run rules` + `rules:sample`; fix the CONFIRMED rule (q. 36) with `describe --values`.
@@ -469,22 +482,23 @@ It exists in Parquet and in Exadata, linked to the break key **with the reported
   6. **To design later (grill-me):** grouping the divergences by BNPP × counterparty value pair (breaks → decisions reduction factor); persistence "same/changed" with TP1/TP2 values; data quality on the whole DTCC file (q. 35); tie-break with the TSR booking.
   - **On hold (categorisation postponed):** history schema, phase 2 of persistence, backtest.
 
-### Start prompt for the next session (agent)
+### Start prompt for the next session (next phase: agent, knowledge RAG, server)
 ```
-Context: "Odin Regulatory — EMIR Breaks" project, Node.js + DuckDB demo on EMIR reconciliation breaks (DTCC report).
-Repo: github.com/pemanico/Odin_regulatory (branch main). Everything in the project is in English.
+Context: "Odin Regulatory — EMIR Breaks" project, Node.js + DuckDB + React demo on EMIR reconciliation breaks (DTCC report).
+Repo: github.com/pemanico/Odin_regulatory (branch main). Everything in the project is in English; we talk in Portuguese.
 
-Before anything else, clone the repo and read CLAUDE.md and README.md at the root (approved plans in sections 2 and 2.1,
-decisions, open questions and next steps in section 7).
+Before anything else, clone the repo and read CLAUDE.md, README.md and docs/requirements.md (approved plans in sections 2
+and 2.1 of CLAUDE.md, decision log, open questions, current status and next steps in section 7).
 
-Where we are: rules engine closed; backend (Express, src/server/) + frontend (React + Vite, web/) done on 2026-10-20,
-translated to English on 2026-10-21. The agent tools already exist (GET /api/tools: list_metrics, query_metric,
-open_drilldown); the free text of screen 1 is disabled waiting for the agent. Real data for 13–15/10 on my PC
-(Windows x64, Node v24, PowerShell); 12/10 is excluded.
-Result of the 1st demo run on the PC: <paste what worked and what failed (questions 41, 45, 47)>.
+Where we are (2026-10-22): rules engine closed; backend (Express, src/server/) + frontend (React + Vite, web/) running on my
+office PC with real data for 15/10 (drill-down 382 ms). A colleague is comparing 15/10 with production; other dates are
+paused. The agent tools already exist (GET /api/tools) but there is no agent yet; free text on the Query screen is disabled.
 
-Goal of this session: the agent (Claude via the bank's internal gateway, with tool calling). The LLM only sees
-aggregates; /api/keys is never a tool. The questions in config/questions.json are the agent's test set.
+Goal of this session: plan the next phase in grill-me mode, starting with open question 48 (order: agent / knowledge RAG
+with OpenSearch / server deployment). The RAG goal: upload internal knowledge documents through the web app, index them in
+OpenSearch and give the agent a search_knowledge tool (cited excerpts, never break rows). I also want the application
+running on servers (Node.js). Inputs I will bring: <gateway format + embeddings (q. 49)>, <OpenSearch availability (q. 50)>,
+<server constraints (q. 52)>, <15/10 comparison result (q. 53)>.
 
 Rules:
 - I run the commands on the office PC and paste the results. You have no access to the data.
@@ -499,6 +513,7 @@ Rules:
 ```
 config/default.json        physical -> logical column mapping, paths (override: config/local.json, .env)
 config/questions.json      suggested questions of screen 1 = the agent's test set
+docs/requirements.md       requirements and jurisdiction onboarding guide (principles, data contract, refactors R1–R10, checklist)
 config/rules/              field-map.json (ESMA item -> TP columns) and emir-vr.json (VR rules in the DSL)
 src/config.js              loads config + .env
 src/db/dialects.js         engine-specific SQL (duckdb, sqlite for tests)

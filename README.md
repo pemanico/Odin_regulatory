@@ -2,6 +2,7 @@
 
 KPIs and assisted triage of EMIR reconciliation breaks (DTCC report), on data marts already processed by Spark.
 Full context, approved plan, decisions and open questions: **[CLAUDE.md](CLAUDE.md)** (read it first).
+Requirements and how to onboard a new jurisdiction: **[docs/requirements.md](docs/requirements.md)**.
 
 > This repository holds code only. **Never** commit data (Parquet, CSV, Excel, DuckDB databases): `.gitignore` blocks them.
 
