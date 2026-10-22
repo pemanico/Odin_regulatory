@@ -5,7 +5,7 @@
 > - At the end of each working session, **update** the sections "Current status", "Decision log" and "Open questions".
 > - **Never put real data in this file** (UTIs, values, counterparty names). Structure, decisions and aggregated metrics only.
 > - **Language:** the whole project is in English (code, UI, identifiers, documentation) since 2026-10-21 — BNP Paribas is international. Conversations with Ordep may be in Portuguese.
-> - Last update: 2026-10-21 (whole application translated to English; demo starting on the office PC; DTCC file only for 15/10; next: validate the demo, then the agent)
+> - Last update: 2026-10-22 (demo running on the office PC with real data, drill-down 382 ms; DTCC file only for 15/10; next: 13–14/10 DTCC files, then the agent)
 
 ---
 
@@ -413,7 +413,7 @@ It exists in Parquet and in Exadata, linked to the break key **with the reported
 38. ~~Rules comparing with common columns.~~ **Closed (2026-10-20, Ordep):** they become not verifiable (2002-02, 2003-05, 2028-03, 2032-03, 2045-05, 2077-04, 2078-04); the compiler also rejects references to common columns.
 39. **What does an operations user do with the ~170 thousand VALUATION_AMT breaks in Excel?** (filter by counterparty, sort by value, bulk-categorise by some criterion?) Decides what screen 3 has to do faster. Take it to the meeting with operations.
 40. **Real questions from operations** (10–15) to replace the chips in `config/questions.json`, which are the agent's test set. Now in English: confirm that operations will ask the agent in English.
-41. **1st run of the demo on the office PC:** `npm install` (Express, React, Vite, `@vitejs/plugin-react` through Artifactory); `npm run rules` for 13, 14 and 15/10 (writes `key_summary`); `npm run build`; `npm start`. Measure the time of `/api/keys` with a field filter on VALUATION_AMT (join `key_summary` × `break_verdict`, ~170 thousand). The frontend was only built with esbuild and tested on SQLite with synthetic data; Vite, Express and DuckDB have never run together.
+41. ~~**1st run of the demo on the office PC.**~~ **Done (2026-10-22, Ordep):** Vite build, Express and DuckDB run together on the office PC; all three screens work (after the Query fix). `/api/keys` drill-down on VALUATION_AMT (Transactions view, 15/10): **382 ms**. Still to record: the "Unexplained by the rules" % and the Key verdict table of `npm run rules`. Original text: **1st run of the demo on the office PC:** `npm install` (Express, React, Vite, `@vitejs/plugin-react` through Artifactory); `npm run rules` for 13, 14 and 15/10 (writes `key_summary`); `npm run build`; `npm start`. Measure the time of `/api/keys` with a field filter on VALUATION_AMT (join `key_summary` × `break_verdict`, ~170 thousand). The frontend was only built with esbuild and tested on SQLite with synthetic data; Vite, Express and DuckDB have never run together.
 42. **CSV export** of the filtered Key list: left out of the plan. Operations live in Excel, and they will probably ask for it in the first demo.
 43. **Where the demo runs:** assumed `localhost` on the presenter's PC, without authentication. To confirm.
 44. **The synthetic generator does not create the DTCC file:** with synthetic data `npm run rules` cannot run and the UI has no dates. To develop the UI outside the office, also generate a synthetic DTCC file (TP1_/TP2_ of the fields in break).
@@ -461,7 +461,7 @@ It exists in Parquet and in Exadata, linked to the break key **with the reported
 - **Done (2026-10-21):** **whole application in English** (code, identifiers, database schema, UI, API/CLI messages, metric catalog, agent tools, rules config, tests, README, CLAUDE.md). Legacy rule tables are dropped by `npm run rules` (question 47). 54 tests. UI re-verified with synthetic data (headless browser, no console errors).
 - **Fixed (2026-10-22):** Query screen crashed on the office PC when clicking a suggested question ("TypeError: G is not a function"). Cause: effects written as `useEffect(() => expr)` return `expr`; recent Chrome/Edge make `scrollIntoView` return a Promise, which React then calls as the cleanup function. All effects now use braces. Also added an error boundary per screen and per answer card, `npm start` logs each API request, and the newest answer shows first. Rule for the frontend: **never return a value from an effect** (always `useEffect(() => { ... })`).
 - **Next steps:**
-  1. **Validate the demo on the office PC (Ordep):** questions 41, 45 and 47. Paste only aggregates and errors, never rows.
+  1. **Demo validated on the office PC (2026-10-22):** all screens working, drill-down 382 ms. Open: copy the 13–14/10 DTCC files (q. 45) and run `rules` for those dates; record the % unexplained.
   2. **Agent (next session, grill-me):** format of the internal LLM gateway (Anthropic Messages / OpenAI / own) and tool calling support. The tools already exist: `GET /api/tools`. Wire up the free text of screen 1; measure the translation against `config/questions.json`.
   3. **Validation with production data (Ordep):** `npm run rules` + `rules:sample`; fix the CONFIRMED rule (q. 36) with `describe --values`.
   4. **Meeting with operations:** universe ~2.3M/day (q. 9); is `PROPRIETARY` the identifier the counterparty sees?; 3–5 hard cases (q. 5); what they do in Excel (q. 39); their real questions, in English (q. 40); CSV export (q. 42).
