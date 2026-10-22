@@ -233,7 +233,11 @@ export function Query({ date }) {
       setItems((xs) => xs.map((x) => (x.id === id ? { ...x, loading: false, error } : x)));
     }
   };
-  useEffect(() => topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), [items.length]);
+  // Braces matter: an effect must return nothing or a cleanup function. Recent browsers make scrollIntoView return a
+  // Promise; returned from the effect, React calls it as cleanup -> "TypeError: x is not a function".
+  useEffect(() => {
+    if (items.length) topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [items.length]);
 
   return (
     <div className="query">

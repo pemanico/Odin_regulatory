@@ -45,8 +45,8 @@ export function Drill({ date, params }) {
 
   const [fieldInput, setFieldInput] = useState(p.field ?? '');
   const [tradeInput, setTradeInput] = useState(p.trade ?? '');
-  useEffect(() => setFieldInput(p.field ?? ''), [p.field]);
-  useEffect(() => setTradeInput(p.trade ?? ''), [p.trade]);
+  useEffect(() => { setFieldInput(p.field ?? ''); }, [p.field]);
+  useEffect(() => { setTradeInput(p.trade ?? ''); }, [p.trade]);
   const tradeRef = useRef(null);
 
   const active = Object.keys(FILTER_LABELS).filter((k) => p[k]);
