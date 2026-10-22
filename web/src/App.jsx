@@ -8,6 +8,7 @@ import { KpiStrip } from './components/KpiStrip.jsx';
 import { Top10 } from './views/Top10.jsx';
 import { Drill } from './views/Drill.jsx';
 import { Query } from './views/Query.jsx';
+import { ErrorBoundary } from './components/ErrorBoundary.jsx';
 
 const VIEWS = [
   { id: 'query', key: '1', label: 'Query' },
@@ -68,9 +69,11 @@ export function App() {
         <main className="main">
           {meta.error && <div className="error">Could not reach the API: {meta.error.message}</div>}
           {meta.data?.hint && <div className="error">{meta.data.hint}</div>}
-          {date && route.view === 'top10' && <Top10 date={date} />}
-          {date && route.view === 'drill' && <Drill date={date} params={route.params} />}
-          {date && route.view === 'query' && <Query date={date} />}
+          <ErrorBoundary key={route.view} label={`The ${route.view} screen`}>
+            {date && route.view === 'top10' && <Top10 date={date} />}
+            {date && route.view === 'drill' && <Drill date={date} params={route.params} />}
+            {date && route.view === 'query' && <Query date={date} />}
+          </ErrorBoundary>
         </main>
       </div>
     </TooltipProvider>

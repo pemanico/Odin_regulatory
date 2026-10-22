@@ -9,6 +9,7 @@ import { fmtInt, fmtPct, fmtSigned, fmtDate, fieldName } from '../format.js';
 import { VERDICT, KEY_VERDICT } from '../verdicts.js';
 import { VerdictTag } from '../components/Verdict.jsx';
 import { useTooltip } from '../components/Tooltip.jsx';
+import { ErrorBoundary } from '../components/ErrorBoundary.jsx';
 
 const COLUMN_LABELS = {
   breaking_field: 'Field', n_breaks: 'Breaks', n_keys: 'Transactions', verdict: 'Verdict', key_verdict: 'Transaction verdict',
@@ -22,7 +23,8 @@ const COLUMN_LABELS = {
 };
 const HIDDEN = new Set(['combo_key']);
 const MEASURES = ['n_breaks', 'n_keys', 'today'];
-const withDate = (req, date) => JSON.parse(JSON.stringify(req).replaceAll('$date', date));
+// split/join instead of replaceAll: works in older corporate browsers.
+const withDate = (req, date) => JSON.parse(JSON.stringify(req).split('$date').join(date));
 
 function cell(col, v) {
   if (v === null || v === undefined) return <span className="muted">—</span>;
@@ -248,7 +250,14 @@ export function Query({ date }) {
 
       <div className="thread" aria-live="polite" ref={topRef}>
         {!items.length && <div className="empty">Pick a suggested question or use the advanced query.</div>}
-        {items.map((it) => <ResultCard key={it.id} item={it} onRemove={() => setItems((xs) => xs.filter((x) => x.id !== it.id))} />)}
+        {items.map((it) => {
+          const remove = () => setItems((xs) => xs.filter((x) => x.id !== it.id));
+          return (
+            <ErrorBoundary key={it.id} label={`The answer to "${it.question}"`} onReset={remove}>
+              <ResultCard item={it} onRemove={remove} />
+            </ErrorBoundary>
+          );
+        })}
       </div>
 
       <div className="composer">
